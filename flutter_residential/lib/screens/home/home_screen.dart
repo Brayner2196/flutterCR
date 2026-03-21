@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'dashboard/dashboard_screen.dart';
+import '../usuarios/usuarios_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -108,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _Tab(
           label: 'Usuarios',
           icono: Icons.people_outline,
-          screen: const _PlaceholderScreen(titulo: 'Usuarios'),
+          screen: const UsuariosScreen(),
         ),
       );
     }
