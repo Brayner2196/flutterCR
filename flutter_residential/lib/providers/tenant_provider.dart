@@ -76,6 +76,29 @@ class TenantProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> activar(int id) async {
+    try {
+      await TenantService.activar(id);
+      final index = _tenants.indexWhere((t) => t.id == id);
+      if (index != -1) {
+        final t = _tenants[index];
+        _tenants[index] = TenantResponse(
+          id: t.id,
+          schemaName: t.schemaName,
+          nombre: t.nombre,
+          codigo: t.codigo,
+          activo: true,
+          direccion: t.direccion,
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   void limpiar() {
     _tenants = [];
     _error = null;

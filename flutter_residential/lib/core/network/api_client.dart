@@ -42,4 +42,10 @@ class ApiClient {
     final headers = await _headers();
     return http.delete(uri, headers: headers);
   }
+
+  static Future<http.Response> patch(String path) async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}$path');
+    final headers = await _headers();
+    return http.patch(uri, headers: headers);
+  }
 }

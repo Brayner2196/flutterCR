@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/tenant_provider.dart';
 import 'dashboard/dashboard_screen.dart';
 import '../usuarios/usuarios_screen.dart';
 import '../tenants/tenants_screen.dart';
@@ -31,6 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          // Botón refresh para la tab de Tenants
+          if (tabs[_tabActual].label == 'Tenants')
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Actualizar',
+              onPressed: () => context.read<TenantProvider>().cargarTodos(),
+            ),
           // Info del conjunto
           if (auth.nombreConjunto != null)
             Padding(

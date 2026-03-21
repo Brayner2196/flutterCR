@@ -28,6 +28,32 @@ class _TenantsScreenState extends State<TenantsScreen> {
     );
   }
 
+  Future<void> _confirmarActivar(TenantResponse tenant) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Activar Tenant'),
+        content: Text('¿Deseas activar "${tenant.nombre}" nuevamente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Activar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmado == true && mounted) {
+      try {
+        await context.read<TenantProvider>().activar(tenant.id);
+      } catch (_) {}
+    }
+  }
+
   Future<void> _confirmarDesactivar(TenantResponse tenant) async {
     final confirmado = await showDialog<bool>(
       context: context,
@@ -91,6 +117,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                       tenant: t,
                       onEditar: () => _abrirFormulario(tenant: t),
                       onDesactivar: () => _confirmarDesactivar(t),
+                      onActivar: () => _confirmarActivar(t),
                     );
                   },
                 ),

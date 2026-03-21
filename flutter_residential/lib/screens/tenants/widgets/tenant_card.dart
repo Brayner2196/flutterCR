@@ -5,12 +5,14 @@ class TenantCard extends StatelessWidget {
   final TenantResponse tenant;
   final VoidCallback onEditar;
   final VoidCallback onDesactivar;
+  final VoidCallback onActivar;
 
   const TenantCard({
     super.key,
     required this.tenant,
     required this.onEditar,
     required this.onDesactivar,
+    required this.onActivar,
   });
 
   @override
@@ -56,6 +58,7 @@ class TenantCard extends StatelessWidget {
                   onSelected: (value) {
                     if (value == 'editar') onEditar();
                     if (value == 'desactivar') onDesactivar();
+                    if (value == 'activar') onActivar();
                   },
                   itemBuilder: (_) => [
                     const PopupMenuItem(
@@ -78,6 +81,19 @@ class TenantCard extends StatelessWidget {
                             SizedBox(width: 8),
                             Text('Desactivar',
                                 style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      )
+                    else
+                      const PopupMenuItem(
+                        value: 'activar',
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle_outline, size: 20,
+                                color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('Activar',
+                                style: TextStyle(color: Colors.green)),
                           ],
                         ),
                       ),

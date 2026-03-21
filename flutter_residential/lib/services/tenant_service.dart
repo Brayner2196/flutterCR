@@ -41,7 +41,7 @@ class TenantService {
         'nombre': body['nombre'],
         'codigo': body['codigo'],
         'activo': true,
-        'direccion': null,
+        'direccion': datos['direccion'],
       });
     }
 
@@ -66,6 +66,15 @@ class TenantService {
     if (response.statusCode != 204) {
       final body = jsonDecode(response.body);
       throw Exception(body['message'] ?? 'Error al desactivar tenant');
+    }
+  }
+
+  static Future<void> activar(int id) async {
+    final response = await ApiClient.patch('${ApiConstants.tenants}/$id/activar');
+
+    if (response.statusCode != 204) {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Error al activar tenant');
     }
   }
 }
