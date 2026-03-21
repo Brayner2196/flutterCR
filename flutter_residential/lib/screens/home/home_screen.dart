@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'dashboard/dashboard_screen.dart';
 import '../usuarios/usuarios_screen.dart';
+import '../tenants/tenants_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,7 +105,17 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ];
 
-    if (auth.isSuperAdmin || auth.isAdmin) {
+    if (auth.isSuperAdmin) {
+      tabs.add(
+        _Tab(
+          label: 'Tenants',
+          icono: Icons.apartment_outlined,
+          screen: const TenantsScreen(),
+        ),
+      );
+    }
+
+    if (auth.isAdmin) {
       tabs.add(
         _Tab(
           label: 'Usuarios',

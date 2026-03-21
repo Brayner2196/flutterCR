@@ -36,4 +36,10 @@ class ApiClient {
     final headers = await _headers();
     return http.put(uri, headers: headers, body: jsonEncode(body));
   }
+
+  static Future<http.Response> delete(String path) async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}$path');
+    final headers = await _headers();
+    return http.delete(uri, headers: headers);
+  }
 }

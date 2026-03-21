@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/usuario_provider.dart';
+import 'providers/tenant_provider.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
           create: (_) => AuthProvider()..cargarSesionGuardada(),
         ),
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
+        ChangeNotifierProvider(create: (_) => TenantProvider()),
       ],
       child: MaterialApp(
         title: 'Conjunto Residencial',

@@ -98,7 +98,10 @@ class DashboardScreen extends StatelessWidget {
   List<Widget> _accesosPorRol(AuthProvider auth, ThemeData theme) {
     final items = <_Acceso>[];
 
-    if (auth.isSuperAdmin || auth.isAdmin) {
+    if (auth.isSuperAdmin) {
+      items.add(_Acceso('Tenants', Icons.apartment_outlined, Colors.indigo, () => onNavegar(1)));
+    }
+    if (auth.isAdmin) {
       items.add(_Acceso('Usuarios', Icons.people_outline, Colors.blue, () => onNavegar(1)));
     }
     if (auth.isAdmin) {
