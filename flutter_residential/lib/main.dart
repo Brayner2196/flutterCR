@@ -17,9 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider()..cargarSesionGuardada(),
-        ),
+        ChangeNotifierProvider(create: (_) => AuthProvider()..cargarSesionGuardada(),),
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
         ChangeNotifierProvider(create: (_) => TenantProvider()),
       ],

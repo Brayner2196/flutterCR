@@ -55,9 +55,7 @@ class AuthProvider extends ChangeNotifier {
 
   /// Paso 1 del login — puede resultar en autenticado o en selección de tenant
   Future<bool> login(String email, String password) async {
-    _status = AuthStatus.cargando;
     _error = null;
-    notifyListeners();
 
     try {
       final resultado = await AuthService.login(email, password);
@@ -87,9 +85,7 @@ class AuthProvider extends ChangeNotifier {
 
   /// Paso 2 del login multi-tenant — el usuario eligió su conjunto
   Future<void> seleccionarTenant(String tenantId) async {
-    _status = AuthStatus.cargando;
     _error = null;
-    notifyListeners();
 
     try {
       final resultado = await AuthService.seleccionarTenant(

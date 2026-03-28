@@ -110,7 +110,7 @@ class _SeleccionTenantScreenState extends State<SeleccionTenantScreen> {
                             decoration: BoxDecoration(
                               color: seleccionado
                                   ? theme.colorScheme.primary
-                                  : theme.colorScheme.surfaceVariant,
+                                  : theme.colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
