@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'seleccion_tenant_screen.dart';
+import 'registro_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -172,6 +173,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(fontSize: 16),
                               ),
                       ),
+                      const SizedBox(height: 16),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const RegistroScreen()),
+                                    );
+                                  },
+                                  child: const Text('¿No tienes cuenta? Regístrate aquí'),
+                                ),
                     ],
                   ),
                 ),
