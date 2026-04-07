@@ -7,9 +7,14 @@ class ApiClient {
   static Future<Map<String, String>> _headers({bool requiresAuth = true}) async {
     final headers = {'Content-Type': 'application/json'};
     if (requiresAuth) {
-      final token = await TokenStorage.leerToken();
+      final sesion = await TokenStorage.leerSesion();
+      final token = sesion['token'];
+      final tenantId = sesion['tenantId'];
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
+      }
+      if (tenantId != null && tenantId.isNotEmpty) {
+        headers['X-Tenant-ID'] = tenantId;
       }
     }
     return headers;
