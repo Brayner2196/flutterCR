@@ -5,7 +5,7 @@ class ApiConstants {
   // Auth
   static const String login = '/auth/login';
   static const String seleccionarTenant = '/auth/login/seleccionar';
-  static const String registro = '/auth/registro';
+  static const String registro = '/auth/login/registro';
 
   // Usuarios
   static const String usuarios = '/api/usuarios';
