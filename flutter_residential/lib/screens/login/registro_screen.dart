@@ -152,7 +152,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                     return null;
                   },
                 ),
-                 const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Código del conjunto
                 TextFormField(
