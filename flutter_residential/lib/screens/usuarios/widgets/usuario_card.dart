@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/usuario_response.dart';
+import '../usuario_editar_dialog.dart';
 
 class UsuarioCard extends StatelessWidget {
   final UsuarioResponse usuario;
@@ -36,15 +37,32 @@ class UsuarioCard extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                _chip(context, _etiquetaRol(usuario.rol), _colorRol(usuario.rol, theme)),
+                _chip(
+                  context,
+                  _etiquetaRol(usuario.rol),
+                  _colorRol(usuario.rol, theme),
+                ),
                 const SizedBox(width: 6),
-                _chip(context, usuario.estado, _colorEstado(usuario.estado, theme)),
+                _chip(
+                  context,
+                  usuario.estado,
+                  _colorEstado(usuario.estado, theme),
+                ),
               ],
             ),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right),
-        isThreeLine: true,
+        trailing: IconButton(
+          icon: const Icon(Icons.edit_outlined),
+          tooltip: 'Editar usuario',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) =>
+                  UsuarioEditarDialog(usuario: usuario),
+            );
+          },
+        ),
       ),
     );
   }
@@ -59,34 +77,59 @@ class UsuarioCard extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
 
   String _etiquetaRol(String rol) {
     switch (rol) {
-      case 'SUPER_ADMIN': return 'Super Admin';
-      case 'TENANT_ADMIN': return 'Admin';
-      case 'RESIDENTE': return 'Residente';
-      default: return rol;
+      case 'TENANT_ADMIN':
+        return 'Admin';
+      case 'RESIDENTE':
+        return 'Residente';
+      case 'PISCINERO':
+        return 'Piscinero';
+      case 'VIGILANTE':
+        return 'Vigilante';
+      case 'PORTERO':
+        return 'Portero';
+      default:
+        return rol;
     }
   }
 
   Color _colorRol(String rol, ThemeData theme) {
     switch (rol) {
-      case 'SUPER_ADMIN': return Colors.deepPurple;
-      case 'TENANT_ADMIN': return Colors.blue;
-      default: return theme.colorScheme.primary;
+      case 'TENANT_ADMIN':
+        return Colors.blue;
+      case 'RESIDENTE':
+        return Colors.green;
+      case 'PISCINERO':
+        return Colors.cyan;
+      case 'VIGILANTE':
+        return Colors.grey;
+      case 'PORTERO':
+        return Colors.purple;
+      default:
+        return theme.colorScheme.primary;
     }
   }
 
   Color _colorEstado(String estado, ThemeData theme) {
     switch (estado.toUpperCase()) {
-      case 'ACTIVO': return Colors.green;
-      case 'PENDIENTE': return Colors.orange;
-      case 'RECHAZADO': return Colors.red;
-      default: return theme.colorScheme.outline;
+      case 'ACTIVO':
+        return Colors.green;
+      case 'PENDIENTE':
+        return Colors.orange;
+      case 'RECHAZADO':
+        return Colors.red;
+      default:
+        return theme.colorScheme.outline;
     }
   }
 }

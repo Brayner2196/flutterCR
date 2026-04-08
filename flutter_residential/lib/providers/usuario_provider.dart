@@ -67,6 +67,13 @@ class UsuarioProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> actualizar(int id, Map<String, dynamic> data) async {
+    final actualizado = await UsuarioService.actualizar(id, data);
+    final index = _usuarios.indexWhere((u) => u.id == id);
+    if (index != -1) _usuarios[index] = actualizado;
+    notifyListeners();
+  }
+
   void limpiar() {
     _usuarios = [];
     _pendientes = [];

@@ -64,4 +64,11 @@ class UsuarioService {
 
     throw Exception(body['message'] ?? 'Error al buscar usuario');
   }
+
+  static Future<UsuarioResponse> actualizar(int id, Map<String, dynamic> data) async {
+    final response = await ApiClient.put('${ApiConstants.usuarios}/$id', data);
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 200) return UsuarioResponse.fromJson(body);
+    throw Exception(body['message'] ?? 'Error al actualizar usuario');
+  }
 }
