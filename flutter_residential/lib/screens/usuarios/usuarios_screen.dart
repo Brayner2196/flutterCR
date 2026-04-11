@@ -139,7 +139,6 @@ class _UsuariosScreenState extends State<UsuariosScreen>
 }
 
 // ── Tab genérico ────────────────────────────────────────────────────────────────
-
 class _TabLista extends StatelessWidget {
   final List<UsuarioResponse> Function(UsuarioProvider) selector;
   final void Function(UsuarioResponse) onTap;
