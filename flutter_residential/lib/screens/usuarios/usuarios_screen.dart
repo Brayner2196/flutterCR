@@ -21,7 +21,7 @@ class _UsuariosScreenState extends State<UsuariosScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       if (_tabController.index != _selectedTab) {
         setState(() => _selectedTab = _tabController.index);
@@ -65,6 +65,12 @@ class _UsuariosScreenState extends State<UsuariosScreen>
                     : null,
               ),
               PillTabItem(
+                label: 'Activos',
+                count: provider.activos.isNotEmpty
+                    ? provider.activos.length
+                    : null,
+              ),
+              PillTabItem(
                 label: 'Pendientes',
                 count: provider.pendientes.isNotEmpty
                     ? provider.pendientes.length
@@ -76,6 +82,13 @@ class _UsuariosScreenState extends State<UsuariosScreen>
                     ? provider.inactivos.length
                     : null,
               ),
+              PillTabItem(
+                label:  'Rechazados',
+                count: provider.rechazados.isNotEmpty 
+                  ? provider.rechazados.length 
+                  : null
+              )
+
             ],
             selectedIndex: _selectedTab,
             onTabSelected: (i) {
@@ -94,6 +107,12 @@ class _UsuariosScreenState extends State<UsuariosScreen>
                 emptyMessage: 'No hay usuarios registrados',
               ),
               _TabLista(
+                selector: (p) => p.activos,
+                onTap: (u) => _abrirDetalle(u),
+                emptyMessage: 'No hay usuarios activos',
+                emptyIcon: Icons.check_circle_outline,
+              ),
+              _TabLista(
                 selector: (p) => p.pendientes,
                 onTap: (u) => _abrirDetalle(u, conAcciones: true),
                 emptyMessage: 'No hay solicitudes pendientes',
@@ -104,6 +123,12 @@ class _UsuariosScreenState extends State<UsuariosScreen>
                 onTap: (u) => _abrirDetalle(u),
                 emptyMessage: 'No hay usuarios inactivos',
                 emptyIcon: Icons.person_off_outlined,
+              ),
+              _TabLista(
+                selector: (p) => p.rechazados,
+                onTap: (u) => _abrirDetalle(u),
+                emptyMessage: 'No hay usuarios rechazados',
+                emptyIcon: Icons.block_outlined,
               ),
             ],
           ),

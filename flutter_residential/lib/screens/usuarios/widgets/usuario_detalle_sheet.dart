@@ -198,7 +198,7 @@ class _BotonesAprobacionState extends State<_BotonesAprobacion> {
       style: ToastificationStyle.flatColored,
       title: Text(titulo),
       description: Text(descripcion),
-      alignment: Alignment.topRight,
+      alignment: Alignment.bottomCenter,
       autoCloseDuration: const Duration(seconds: 4),
       animationDuration: const Duration(milliseconds: 300),
       showProgressBar: true,

@@ -10,6 +10,10 @@ class UsuarioProvider extends ChangeNotifier {
   /// Todos los usuarios sin importar su estado.
   List<UsuarioResponse> get usuarios => _todos;
 
+  /// Filtrado cliente: estado == 'ACTIVO'
+  List<UsuarioResponse> get activos =>
+      _todos.where((u) => u.estado == 'ACTIVO').toList();
+
   /// Filtrado cliente: estado == 'PENDIENTE'
   List<UsuarioResponse> get pendientes =>
       _todos.where((u) => u.estado == 'PENDIENTE').toList();
@@ -17,6 +21,9 @@ class UsuarioProvider extends ChangeNotifier {
   /// Filtrado cliente: estado == 'INACTIVO'
   List<UsuarioResponse> get inactivos =>
       _todos.where((u) => u.estado == 'INACTIVO').toList();
+
+  List<UsuarioResponse> get rechazados =>
+      _todos.where((u) => u.estado == 'RECHAZADO').toList();
 
   bool get loading => _loading;
   String? get error => _error;
