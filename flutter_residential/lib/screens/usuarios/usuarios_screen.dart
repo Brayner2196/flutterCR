@@ -21,7 +21,7 @@ class _UsuariosScreenState extends State<UsuariosScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       if (_tabController.index != _selectedTab) {
         setState(() => _selectedTab = _tabController.index);
@@ -30,11 +30,8 @@ class _UsuariosScreenState extends State<UsuariosScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) => _cargarDatos());
   }
 
-  void _cargarDatos() {
-    final provider = context.read<UsuarioProvider>();
-    provider.cargarTodos();
-    provider.cargarPendientes();
-  }
+  /// Una sola llamada a la API; los filtros se calculan en el provider.
+  void _cargarDatos() => context.read<UsuarioProvider>().cargarTodos();
 
   @override
   void dispose() {
@@ -73,6 +70,12 @@ class _UsuariosScreenState extends State<UsuariosScreen>
                     ? provider.pendientes.length
                     : null,
               ),
+              PillTabItem(
+                label: 'Inactivos',
+                count: provider.inactivos.isNotEmpty
+                    ? provider.inactivos.length
+                    : null,
+              ),
             ],
             selectedIndex: _selectedTab,
             onTabSelected: (i) {
@@ -85,9 +88,23 @@ class _UsuariosScreenState extends State<UsuariosScreen>
           child: TabBarView(
             controller: _tabController,
             children: [
-              _TabTodos(onTap: (u) => _abrirDetalle(u)),
-              _TabPendientes(
-                  onTap: (u) => _abrirDetalle(u, conAcciones: true)),
+              _TabLista(
+                selector: (p) => p.usuarios,
+                onTap: (u) => _abrirDetalle(u),
+                emptyMessage: 'No hay usuarios registrados',
+              ),
+              _TabLista(
+                selector: (p) => p.pendientes,
+                onTap: (u) => _abrirDetalle(u, conAcciones: true),
+                emptyMessage: 'No hay solicitudes pendientes',
+                emptyIcon: Icons.check_circle_outline,
+              ),
+              _TabLista(
+                selector: (p) => p.inactivos,
+                onTap: (u) => _abrirDetalle(u),
+                emptyMessage: 'No hay usuarios inactivos',
+                emptyIcon: Icons.person_off_outlined,
+              ),
             ],
           ),
         ),
@@ -96,11 +113,20 @@ class _UsuariosScreenState extends State<UsuariosScreen>
   }
 }
 
-// ── Tab: Todos ────────────────────────────────────────────────────────────────
+// ── Tab genérico ────────────────────────────────────────────────────────────────
 
-class _TabTodos extends StatelessWidget {
+class _TabLista extends StatelessWidget {
+  final List<UsuarioResponse> Function(UsuarioProvider) selector;
   final void Function(UsuarioResponse) onTap;
-  const _TabTodos({required this.onTap});
+  final String emptyMessage;
+  final IconData emptyIcon;
+
+  const _TabLista({
+    required this.selector,
+    required this.onTap,
+    required this.emptyMessage,
+    this.emptyIcon = Icons.people_outline,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -117,64 +143,20 @@ class _TabTodos extends StatelessWidget {
           );
         }
 
-        if (provider.usuarios.isEmpty) {
-          return const _EmptyView(mensaje: 'No hay usuarios registrados');
+        final lista = selector(provider);
+
+        if (lista.isEmpty) {
+          return _EmptyView(mensaje: emptyMessage, icono: emptyIcon);
         }
 
         return RefreshIndicator(
           onRefresh: () => context.read<UsuarioProvider>().cargarTodos(),
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: provider.usuarios.length,
+            itemCount: lista.length,
             itemBuilder: (_, i) => UsuarioCard(
-              usuario: provider.usuarios[i],
-              onTap: () => onTap(provider.usuarios[i]),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ── Tab: Pendientes ───────────────────────────────────────────────────────────
-
-class _TabPendientes extends StatelessWidget {
-  final void Function(UsuarioResponse) onTap;
-  const _TabPendientes({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<UsuarioProvider>(
-      builder: (_, provider, __) {
-        if (provider.loading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (provider.error != null) {
-          return _ErrorView(
-            mensaje: provider.error!,
-            onReintentar: () =>
-                context.read<UsuarioProvider>().cargarPendientes(),
-          );
-        }
-
-        if (provider.pendientes.isEmpty) {
-          return const _EmptyView(
-            mensaje: 'No hay solicitudes pendientes',
-            icono: Icons.check_circle_outline,
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () =>
-              context.read<UsuarioProvider>().cargarPendientes(),
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: provider.pendientes.length,
-            itemBuilder: (_, i) => UsuarioCard(
-              usuario: provider.pendientes[i],
-              onTap: () => onTap(provider.pendientes[i]),
+              usuario: lista[i],
+              onTap: () => onTap(lista[i]),
             ),
           ),
         );
@@ -207,8 +189,7 @@ class _EmptyView extends StatelessWidget {
           Text(
             mensaje,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
         ],
