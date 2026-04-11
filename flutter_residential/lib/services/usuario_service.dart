@@ -15,15 +15,19 @@ class UsuarioService {
     throw Exception(body['message'] ?? 'Error al cargar usuarios');
   }
 
-  static Future<List<UsuarioResponse>> listarPendientes() async {
-    final response = await ApiClient.get(ApiConstants.usuariosPendientes);
+  static Future<UsuarioResponse> crear(Map<String, dynamic> data) async {
+    final response = await ApiClient.post(
+      ApiConstants.usuarios,
+      data,
+      requiresAuth: true,
+    );
     final body = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      return (body as List).map((e) => UsuarioResponse.fromJson(e)).toList();
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return UsuarioResponse.fromJson(body);
     }
 
-    throw Exception(body['message'] ?? 'Error al cargar pendientes');
+    throw Exception(body['message'] ?? 'Error al crear usuario');
   }
 
   static Future<UsuarioResponse> aprobar(int id) async {
@@ -65,8 +69,10 @@ class UsuarioService {
     throw Exception(body['message'] ?? 'Error al buscar usuario');
   }
 
-  static Future<UsuarioResponse> actualizar(int id, Map<String, dynamic> data) async {
-    final response = await ApiClient.put('${ApiConstants.usuarios}/$id', data);
+  static Future<UsuarioResponse> actualizar(
+      int id, Map<String, dynamic> data) async {
+    final response =
+        await ApiClient.put('${ApiConstants.usuarios}/$id', data);
     final body = jsonDecode(response.body);
     if (response.statusCode == 200) return UsuarioResponse.fromJson(body);
     throw Exception(body['message'] ?? 'Error al actualizar usuario');
