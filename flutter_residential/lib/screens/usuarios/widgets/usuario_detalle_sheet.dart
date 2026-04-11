@@ -81,11 +81,18 @@ class UsuarioDetalleSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
+                    if (mostrarAcciones) ...[
+                      //const SizedBox(height: 24),
+                      _BotonesAprobacion(usuario: usuario),
+                    ],
+
+                    const SizedBox(height: 24),
+
                     // Información
                     _seccion(theme, 'Información general', [
                       _fila(theme, 'Rol', _etiquetaRol(usuario.rol)),
                       _fila(theme, 'Estado', usuario.estado),
-                      _fila(theme, 'ID', '#${usuario.id}'),
+                      //_fila(theme, 'ID', '#${usuario.id}'),
                       _fila(theme, 'Registrado', usuario.creadoEn),
                     ]),
 
@@ -103,12 +110,7 @@ class UsuarioDetalleSheet extends StatelessWidget {
                       ]),
                     ],
 
-                    if (mostrarAcciones) ...[
-                      const SizedBox(height: 24),
-                      _BotonesAprobacion(usuario: usuario),
-                    ],
-
-                    const SizedBox(height: 24),
+                    
                   ],
                 ),
               ),
