@@ -15,7 +15,7 @@ dependencies:
   http: ^1.6.0
   flutter_secure_storage: ^10.0.0
   shared_preferences: ^2.5.4
-  toastification: ^2.1.0
+  toastification: ^3.0.3
 
 dev_dependencies:
   flutter_test:
