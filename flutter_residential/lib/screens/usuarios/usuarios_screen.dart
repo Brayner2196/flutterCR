@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../models/usuario_response.dart';
+import '../../widgets/pill_tab_bar.dart';
 import 'widgets/usuario_card.dart';
 import 'widgets/usuario_detalle_sheet.dart';
 
@@ -15,11 +16,17 @@ class UsuariosScreen extends StatefulWidget {
 class _UsuariosScreenState extends State<UsuariosScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _selectedTab = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.index != _selectedTab) {
+        setState(() => _selectedTab = _tabController.index);
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _cargarDatos());
   }
 
@@ -51,19 +58,36 @@ class _UsuariosScreenState extends State<UsuariosScreen>
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Todos'),
-            Tab(text: 'Pendientes'),
-          ],
+        Consumer<UsuarioProvider>(
+          builder: (_, provider, __) => PillTabBar(
+            tabs: [
+              PillTabItem(
+                label: 'Todos',
+                count: provider.usuarios.isNotEmpty
+                    ? provider.usuarios.length
+                    : null,
+              ),
+              PillTabItem(
+                label: 'Pendientes',
+                count: provider.pendientes.isNotEmpty
+                    ? provider.pendientes.length
+                    : null,
+              ),
+            ],
+            selectedIndex: _selectedTab,
+            onTabSelected: (i) {
+              _tabController.animateTo(i);
+              setState(() => _selectedTab = i);
+            },
+          ),
         ),
         Expanded(
           child: TabBarView(
             controller: _tabController,
             children: [
               _TabTodos(onTap: (u) => _abrirDetalle(u)),
-              _TabPendientes(onTap: (u) => _abrirDetalle(u, conAcciones: true)),
+              _TabPendientes(
+                  onTap: (u) => _abrirDetalle(u, conAcciones: true)),
             ],
           ),
         ),
@@ -130,7 +154,8 @@ class _TabPendientes extends StatelessWidget {
         if (provider.error != null) {
           return _ErrorView(
             mensaje: provider.error!,
-            onReintentar: () => context.read<UsuarioProvider>().cargarPendientes(),
+            onReintentar: () =>
+                context.read<UsuarioProvider>().cargarPendientes(),
           );
         }
 
@@ -142,7 +167,8 @@ class _TabPendientes extends StatelessWidget {
         }
 
         return RefreshIndicator(
-          onRefresh: () => context.read<UsuarioProvider>().cargarPendientes(),
+          onRefresh: () =>
+              context.read<UsuarioProvider>().cargarPendientes(),
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: provider.pendientes.length,
@@ -174,12 +200,15 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icono, size: 64, color: Theme.of(context).colorScheme.outlineVariant),
+          Icon(icono,
+              size: 64,
+              color: Theme.of(context).colorScheme.outlineVariant),
           const SizedBox(height: 12),
           Text(
             mensaje,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color:
+                      Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
         ],
