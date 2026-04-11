@@ -3,38 +3,32 @@ import '../models/usuario_response.dart';
 import '../services/usuario_service.dart';
 
 class UsuarioProvider extends ChangeNotifier {
-  List<UsuarioResponse> _usuarios = [];
-  List<UsuarioResponse> _pendientes = [];
+  List<UsuarioResponse> _todos = [];
   bool _loading = false;
   String? _error;
 
-  List<UsuarioResponse> get usuarios => _usuarios;
-  List<UsuarioResponse> get pendientes => _pendientes;
+  /// Todos los usuarios sin importar su estado.
+  List<UsuarioResponse> get usuarios => _todos;
+
+  /// Filtrado cliente: estado == 'PENDIENTE'
+  List<UsuarioResponse> get pendientes =>
+      _todos.where((u) => u.estado == 'PENDIENTE').toList();
+
+  /// Filtrado cliente: estado == 'INACTIVO'
+  List<UsuarioResponse> get inactivos =>
+      _todos.where((u) => u.estado == 'INACTIVO').toList();
+
   bool get loading => _loading;
   String? get error => _error;
 
+  /// Única llamada a la API: trae todos los usuarios.
   Future<void> cargarTodos() async {
     _loading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _usuarios = await UsuarioService.listarTodos();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> cargarPendientes() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _pendientes = await UsuarioService.listarPendientes();
+      _todos = await UsuarioService.listarTodos();
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
     } finally {
@@ -45,9 +39,8 @@ class UsuarioProvider extends ChangeNotifier {
 
   Future<void> aprobar(int id) async {
     try {
-      await UsuarioService.aprobar(id);
-      _pendientes.removeWhere((u) => u.id == id);
-      notifyListeners();
+      final actualizado = await UsuarioService.aprobar(id);
+      _reemplazar(actualizado);
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -57,9 +50,8 @@ class UsuarioProvider extends ChangeNotifier {
 
   Future<void> rechazar(int id) async {
     try {
-      await UsuarioService.rechazar(id);
-      _pendientes.removeWhere((u) => u.id == id);
-      notifyListeners();
+      final actualizado = await UsuarioService.rechazar(id);
+      _reemplazar(actualizado);
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -69,14 +61,17 @@ class UsuarioProvider extends ChangeNotifier {
 
   Future<void> actualizar(int id, Map<String, dynamic> data) async {
     final actualizado = await UsuarioService.actualizar(id, data);
-    final index = _usuarios.indexWhere((u) => u.id == id);
-    if (index != -1) _usuarios[index] = actualizado;
+    _reemplazar(actualizado);
+  }
+
+  void _reemplazar(UsuarioResponse actualizado) {
+    final index = _todos.indexWhere((u) => u.id == actualizado.id);
+    if (index != -1) _todos[index] = actualizado;
     notifyListeners();
   }
 
   void limpiar() {
-    _usuarios = [];
-    _pendientes = [];
+    _todos = [];
     _error = null;
     _loading = false;
     notifyListeners();
