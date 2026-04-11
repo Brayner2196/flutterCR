@@ -37,6 +37,12 @@ class UsuarioProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> crear(Map<String, dynamic> data) async {
+    final nuevo = await UsuarioService.crear(data);
+    _todos.add(nuevo);
+    notifyListeners();
+  }
+
   Future<void> aprobar(int id) async {
     try {
       final actualizado = await UsuarioService.aprobar(id);

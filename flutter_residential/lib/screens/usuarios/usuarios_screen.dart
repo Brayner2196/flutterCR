@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../models/usuario_response.dart';
 import '../../widgets/pill_tab_bar.dart';
+import 'usuario_crear_dialog.dart';
 import 'widgets/usuario_card.dart';
 import 'widgets/usuario_detalle_sheet.dart';
 
@@ -30,7 +31,6 @@ class _UsuariosScreenState extends State<UsuariosScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) => _cargarDatos());
   }
 
-  /// Una sola llamada a la API; los filtros se calculan en el provider.
   void _cargarDatos() => context.read<UsuarioProvider>().cargarTodos();
 
   @override
@@ -51,61 +51,84 @@ class _UsuariosScreenState extends State<UsuariosScreen>
     );
   }
 
+  void _abrirCrear() {
+    showDialog(
+      context: context,
+      builder: (_) => const UsuarioCrearDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        Consumer<UsuarioProvider>(
-          builder: (_, provider, __) => PillTabBar(
-            tabs: [
-              PillTabItem(
-                label: 'Todos',
-                count: provider.usuarios.isNotEmpty
-                    ? provider.usuarios.length
-                    : null,
+        Column(
+          children: [
+            Consumer<UsuarioProvider>(
+              builder: (_, provider, __) => PillTabBar(
+                tabs: [
+                  PillTabItem(
+                    label: 'Todos',
+                    count: provider.usuarios.isNotEmpty
+                        ? provider.usuarios.length
+                        : null,
+                  ),
+                  PillTabItem(
+                    label: 'Pendientes',
+                    count: provider.pendientes.isNotEmpty
+                        ? provider.pendientes.length
+                        : null,
+                  ),
+                  PillTabItem(
+                    label: 'Inactivos',
+                    count: provider.inactivos.isNotEmpty
+                        ? provider.inactivos.length
+                        : null,
+                  ),
+                ],
+                selectedIndex: _selectedTab,
+                onTabSelected: (i) {
+                  _tabController.animateTo(i);
+                  setState(() => _selectedTab = i);
+                },
               ),
-              PillTabItem(
-                label: 'Pendientes',
-                count: provider.pendientes.isNotEmpty
-                    ? provider.pendientes.length
-                    : null,
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _TabLista(
+                    selector: (p) => p.usuarios,
+                    onTap: (u) => _abrirDetalle(u),
+                    emptyMessage: 'No hay usuarios registrados',
+                  ),
+                  _TabLista(
+                    selector: (p) => p.pendientes,
+                    onTap: (u) => _abrirDetalle(u, conAcciones: true),
+                    emptyMessage: 'No hay solicitudes pendientes',
+                    emptyIcon: Icons.check_circle_outline,
+                  ),
+                  _TabLista(
+                    selector: (p) => p.inactivos,
+                    onTap: (u) => _abrirDetalle(u),
+                    emptyMessage: 'No hay usuarios inactivos',
+                    emptyIcon: Icons.person_off_outlined,
+                  ),
+                ],
               ),
-              PillTabItem(
-                label: 'Inactivos',
-                count: provider.inactivos.isNotEmpty
-                    ? provider.inactivos.length
-                    : null,
-              ),
-            ],
-            selectedIndex: _selectedTab,
-            onTabSelected: (i) {
-              _tabController.animateTo(i);
-              setState(() => _selectedTab = i);
-            },
-          ),
+            ),
+          ],
         ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _TabLista(
-                selector: (p) => p.usuarios,
-                onTap: (u) => _abrirDetalle(u),
-                emptyMessage: 'No hay usuarios registrados',
-              ),
-              _TabLista(
-                selector: (p) => p.pendientes,
-                onTap: (u) => _abrirDetalle(u, conAcciones: true),
-                emptyMessage: 'No hay solicitudes pendientes',
-                emptyIcon: Icons.check_circle_outline,
-              ),
-              _TabLista(
-                selector: (p) => p.inactivos,
-                onTap: (u) => _abrirDetalle(u),
-                emptyMessage: 'No hay usuarios inactivos',
-                emptyIcon: Icons.person_off_outlined,
-              ),
-            ],
+
+        // ── FAB crear usuario
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton.extended(
+            onPressed: _abrirCrear,
+            icon: const Icon(Icons.person_add_outlined),
+            label: const Text('Nuevo usuario'),
+            tooltip: 'Crear usuario',
           ),
         ),
       ],
@@ -139,7 +162,8 @@ class _TabLista extends StatelessWidget {
         if (provider.error != null) {
           return _ErrorView(
             mensaje: provider.error!,
-            onReintentar: () => context.read<UsuarioProvider>().cargarTodos(),
+            onReintentar: () =>
+                context.read<UsuarioProvider>().cargarTodos(),
           );
         }
 
@@ -152,7 +176,8 @@ class _TabLista extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: () => context.read<UsuarioProvider>().cargarTodos(),
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.only(
+                left: 0, right: 0, top: 8, bottom: 88),
             itemCount: lista.length,
             itemBuilder: (_, i) => UsuarioCard(
               usuario: lista[i],
