@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
 import '../../../models/usuario_response.dart';
 import '../../../providers/usuario_provider.dart';
 
@@ -184,18 +185,46 @@ class _BotonesAprobacion extends StatefulWidget {
 class _BotonesAprobacionState extends State<_BotonesAprobacion> {
   bool _cargando = false;
 
-  Future<void> _accion(Future<void> Function() fn) async {
+  void _mostrarToast({
+    required ToastificationType tipo,
+    required String titulo,
+    required String descripcion,
+  }) {
+    toastification.show(
+      context: context,
+      type: tipo,
+      style: ToastificationStyle.flatColored,
+      title: Text(titulo),
+      description: Text(descripcion),
+      alignment: Alignment.topRight,
+      autoCloseDuration: const Duration(seconds: 4),
+      animationDuration: const Duration(milliseconds: 300),
+      showProgressBar: true,
+      closeOnClick: true,
+    );
+  }
+
+  Future<void> _accion({
+    required Future<void> Function() fn,
+    required String successTitulo,
+    required String successDescripcion,
+  }) async {
     setState(() => _cargando = true);
     try {
       await fn();
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      _mostrarToast(
+        tipo: ToastificationType.success,
+        titulo: successTitulo,
+        descripcion: successDescripcion,
+      );
+      Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      _mostrarToast(
+        tipo: ToastificationType.error,
+        titulo: 'Error',
+        descripcion: e.toString().replaceFirst('Exception: ', ''),
       );
     } finally {
       if (mounted) setState(() => _cargando = false);
@@ -211,10 +240,16 @@ class _BotonesAprobacionState extends State<_BotonesAprobacion> {
           child: OutlinedButton.icon(
             onPressed: _cargando
                 ? null
-                : () => _accion(() => provider.rechazar(widget.usuario.id)),
+                : () => _accion(
+                      fn: () => provider.rechazar(widget.usuario.id),
+                      successTitulo: 'Usuario rechazado',
+                      successDescripcion:
+                          '${widget.usuario.nombre} fue rechazado.',
+                    ),
             icon: const Icon(Icons.close, color: Colors.red),
             label: const Text('Rechazar', style: TextStyle(color: Colors.red)),
-            style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red)),
+            style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red)),
           ),
         ),
         const SizedBox(width: 12),
@@ -222,12 +257,18 @@ class _BotonesAprobacionState extends State<_BotonesAprobacion> {
           child: FilledButton.icon(
             onPressed: _cargando
                 ? null
-                : () => _accion(() => provider.aprobar(widget.usuario.id)),
+                : () => _accion(
+                      fn: () => provider.aprobar(widget.usuario.id),
+                      successTitulo: 'Usuario aprobado',
+                      successDescripcion:
+                          '${widget.usuario.nombre} fue aprobado correctamente.',
+                    ),
             icon: _cargando
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
                   )
                 : const Icon(Icons.check),
             label: const Text('Aprobar'),
