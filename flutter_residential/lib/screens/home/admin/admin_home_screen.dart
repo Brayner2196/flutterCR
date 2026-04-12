@@ -1,45 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/tenant_provider.dart';
-import 'dashboard/dashboard_screen.dart';
-import '../usuarios/usuarios_screen.dart';
-import '../tenants/tenants_screen.dart';
+import '../../../providers/auth_provider.dart';
+import 'admin_dashboard_screen.dart';
+import '../../usuarios/usuarios_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class AdminHomeScreen extends StatefulWidget {
+  const AdminHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<AdminHomeScreen> createState() => _AdminHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _tabActual = 0;
 
-  void _cambiarTab(int index) {
-    setState(() => _tabActual = index);
-  }
+  static const _titulos = ['Inicio', 'Usuarios', 'Propietarios', 'Propiedades'];
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final tabs = _buildTabs(auth);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          tabs[_tabActual].label,
+          _titulos[_tabActual],
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          // Botón refresh para la tab de Tenants
-          if (tabs[_tabActual].label == 'Tenants')
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Actualizar',
-              onPressed: () => context.read<TenantProvider>().cargarTodos(),
-            ),
-          // Info del conjunto
           if (auth.nombreConjunto != null)
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -64,9 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
-              if (value == 'logout') {
-                _confirmarLogout(context);
-              }
+              if (value == 'logout') _confirmarLogout(context);
             },
             itemBuilder: (_) => [
               const PopupMenuItem(
@@ -85,70 +70,24 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: IndexedStack(
         index: _tabActual,
-        children: tabs.map((t) => t.screen).toList(),
+        children: [
+          AdminDashboardScreen(onNavegar: (i) => setState(() => _tabActual = i)),
+          const UsuariosScreen(),
+          const _PlaceholderScreen(titulo: 'Propietarios'),
+          const _PlaceholderScreen(titulo: 'Propiedades'),
+        ],
       ),
-      bottomNavigationBar: tabs.length > 1
-          ? NavigationBar(
-              selectedIndex: _tabActual,
-              onDestinationSelected: _cambiarTab,
-              destinations: tabs
-                  .map(
-                    (t) => NavigationDestination(
-                      icon: Icon(t.icono),
-                      label: t.label,
-                    ),
-                  )
-                  .toList(),
-            )
-          : null,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tabActual,
+        onDestinationSelected: (i) => setState(() => _tabActual = i),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Inicio'),
+          NavigationDestination(icon: Icon(Icons.people_outline), label: 'Usuarios'),
+          NavigationDestination(icon: Icon(Icons.person_pin_outlined), label: 'Propietarios'),
+          NavigationDestination(icon: Icon(Icons.home_work_outlined), label: 'Propiedades'),
+        ],
+      ),
     );
-  }
-
-  List<_Tab> _buildTabs(AuthProvider auth) {
-    final tabs = <_Tab>[
-      _Tab(
-        label: 'Inicio',
-        icono: Icons.home_outlined,
-        screen: DashboardScreen(onNavegar: _cambiarTab),
-      ),
-    ];
-
-    if (auth.isSuperAdmin) {
-      tabs.add(
-        _Tab(
-          label: 'Tenants',
-          icono: Icons.apartment_outlined,
-          screen: const TenantsScreen(),
-        ),
-      );
-    }
-
-    if (auth.isAdmin) {
-      tabs.add(
-        _Tab(
-          label: 'Usuarios',
-          icono: Icons.people_outline,
-          screen: const UsuariosScreen(),
-        ),
-      );
-    }
-
-    if (auth.isAdmin) {
-      tabs.addAll([
-        _Tab(
-          label: 'Propietarios',
-          icono: Icons.person_pin_outlined,
-          screen: const _PlaceholderScreen(titulo: 'Propietarios'),
-        ),
-        _Tab(
-          label: 'Propiedades',
-          icono: Icons.home_work_outlined,
-          screen: const _PlaceholderScreen(titulo: 'Propiedades'),
-        ),
-      ]);
-    }
-
-    return tabs;
   }
 
   Future<void> _confirmarLogout(BuildContext context) async {
@@ -169,18 +108,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
-
     if (confirmado == true && context.mounted) {
       await context.read<AuthProvider>().logout();
     }
   }
-}
-
-class _Tab {
-  final String label;
-  final IconData icono;
-  final Widget screen;
-  _Tab({required this.label, required this.icono, required this.screen});
 }
 
 class _PlaceholderScreen extends StatelessWidget {

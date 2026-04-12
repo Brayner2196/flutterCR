@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'login/login_screen.dart';
-import 'home/home_screen.dart';
+import 'home/super_admin/super_admin_home_screen.dart';
+import 'home/admin/admin_home_screen.dart';
+import 'home/residente/residente_home_screen.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -18,7 +20,9 @@ class SplashScreen extends StatelessWidget {
         }
 
         if (auth.isLoggedIn) {
-          return const HomeScreen();
+          if (auth.isSuperAdmin) return const SuperAdminHomeScreen();
+          if (auth.isAdmin) return const AdminHomeScreen();
+          return const ResidenteHomeScreen();
         }
 
         return const LoginScreen();
