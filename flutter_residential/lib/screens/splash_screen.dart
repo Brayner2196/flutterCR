@@ -7,7 +7,7 @@ import 'home/admin/admin_home_screen.dart';
 import 'home/residente/residente_home_screen.dart';
 
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key};
+  const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
