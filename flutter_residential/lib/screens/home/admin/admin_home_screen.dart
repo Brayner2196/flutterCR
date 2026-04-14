@@ -14,14 +14,13 @@ class AdminHomeScreen extends StatefulWidget {
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _tabActual = 0;
 
-  static const _titulos = ['Inicio', 'Usuarios', 'Propietarios', 'Propiedades'];
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      appBar: AppBar(
+      /*appBar: AppBar(
         title: Text(
           _titulos[_tabActual],
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -67,6 +66,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ],
           ),
         ],
+      ),
+      */
+      appBar: AppBar(
+        title: const Text(
+          
+        ),
       ),
       body: IndexedStack(
         index: _tabActual,
