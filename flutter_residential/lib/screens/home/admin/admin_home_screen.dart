@@ -19,20 +19,82 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
+      backgroundColor: Color.fromRGBO(244, 247, 249, 0.95),
       appBar: AppBar(
-        title: Text(
-          auth.nombreConjunto ?? '',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        title: Align(
+          alignment: Alignment.topLeft,
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(25, 53, 89, 1),
+                    borderRadius: BorderRadius.circular(18), // rectangular con esquinas redondeadas
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    _iniciales('Juan Perez'), // → "JP"
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                (auth.nombreConjunto ?? '').toUpperCase(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  letterSpacing: -0.5,
+                  color: Color.fromRGBO(25, 53, 89, 1)
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Cerrar sesión',
-            onPressed: () => _confirmarLogout(context),
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: IconButton(
+              icon: const Icon(
+                Icons.logout,
+                color: Colors.redAccent,
+              ),
+              tooltip: 'Cerrar sesión',
+              onPressed: () => _confirmarLogout(context),
+            ),
           ),
         ],
       ),
-      body: IndexedStack(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            
+          ),
+          Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        child: Container(
+          height: 18,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black54,
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+      ),
+        ],
+        ),
+      /*IndexedStack(
         index: _tabActual,
         children: [
           AdminDashboardScreen(onNavegar: (i) => setState(() => _tabActual = i)),
@@ -40,7 +102,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           const _PlaceholderScreen(titulo: 'Propietarios'),
           const _PlaceholderScreen(titulo: 'Propiedades'),
         ],
-      ),
+      ),*/
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabActual,
         onDestinationSelected: (i) => setState(() => _tabActual = i),
@@ -91,4 +153,12 @@ class _PlaceholderScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+String _iniciales(String nombre) {
+    final partes = nombre.trim().split(' ');
+    if (partes.length >= 2) {
+      return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
+    }
+    return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
 }
