@@ -14,64 +14,23 @@ class AdminHomeScreen extends StatefulWidget {
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _tabActual = 0;
 
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      /*appBar: AppBar(
+      appBar: AppBar(
         title: Text(
-          _titulos[_tabActual],
+          auth.nombreConjunto ?? '',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          if (auth.nombreConjunto != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    auth.nombreConjunto!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'logout') _confirmarLogout(context);
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, size: 20),
-                    SizedBox(width: 8),
-                    Text('Cerrar sesión'),
-                  ],
-                ),
-              ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar sesión',
+            onPressed: () => _confirmarLogout(context),
           ),
         ],
-      ),
-      */
-      appBar: AppBar(
-        title: const Text(
-          
-        ),
       ),
       body: IndexedStack(
         index: _tabActual,
