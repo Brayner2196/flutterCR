@@ -23,36 +23,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       appBar: AppBar(
         title: Align(
           alignment: Alignment.topLeft,
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(25, 53, 89, 1),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    _iniciales(auth.nombre, auth.email),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                (auth.nombreConjunto ?? '').toUpperCase(),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  letterSpacing: -0.5,
-                  color: Color.fromRGBO(25, 53, 89, 1)
-                ),
-              ),
-            ],
+          child: Text(
+            (auth.nombreConjunto ?? '').toUpperCase(),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              letterSpacing: -0.5,
+              color: Color.fromRGBO(25, 53, 89, 1)
+            ),
           ),
         ),
         actions: [
@@ -72,7 +50,24 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: SizedBox(
+                    height: 200,
+                    width: double.infinity,
+                    child: Text(
+                      'Hola, ${auth.nombre}',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Color.fromRGBO(25, 53, 89, 1),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
           ),
           Positioned(
         top: 0,
@@ -85,7 +80,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black54,
+                Colors.black.withValues(alpha: 0.07),
                 Colors.transparent,
               ],
             ),
