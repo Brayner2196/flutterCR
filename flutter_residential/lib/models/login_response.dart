@@ -4,6 +4,7 @@ class LoginResponse {
   final String rol;
   final String tenantId;
   final String? nombreConjunto;
+  final String? nombre;
 
   LoginResponse({
     required this.token,
@@ -11,6 +12,7 @@ class LoginResponse {
     required this.rol,
     required this.tenantId,
     this.nombreConjunto,
+    this.nombre,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class LoginResponse {
       rol: json['rol'],
       tenantId: json['tenantId'],
       nombreConjunto: json['nombreConjunto'],
+      nombre: json['nombre'],
     );
   }
 }

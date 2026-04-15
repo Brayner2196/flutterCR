@@ -30,11 +30,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   height: 48,
                   decoration: BoxDecoration(
                     color: Color.fromRGBO(25, 53, 89, 1),
-                    borderRadius: BorderRadius.circular(18), // rectangular con esquinas redondeadas
+                    borderRadius: BorderRadius.circular(18),
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    _iniciales('Juan Perez'), // → "JP"
+                    _iniciales(auth.nombre, auth.email),
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -155,10 +155,17 @@ class _PlaceholderScreen extends StatelessWidget {
   }
 }
 
-String _iniciales(String nombre) {
+String _iniciales(String? nombre, String? email) {
+  if (nombre != null && nombre.trim().isNotEmpty) {
     final partes = nombre.trim().split(' ');
     if (partes.length >= 2) {
       return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
     }
-    return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
+    return nombre[0].toUpperCase();
+  }
+  // Fallback: usar la parte local del email
+  final localPart = (email ?? '').contains('@')
+      ? email!.split('@')[0]
+      : (email ?? '');
+  return localPart.isNotEmpty ? localPart[0].toUpperCase() : '?';
 }
