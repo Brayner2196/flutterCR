@@ -3,8 +3,15 @@ import 'package:flutter/material.dart';
 class PillTabItem {
   final String label;
   final int? count;
+  final Color? selectBackgroundColor;
+  final Color? backgroundColor;
 
-  const PillTabItem({required this.label, this.count});
+  const PillTabItem({
+    required this.label,
+    this.count,
+    this.selectBackgroundColor,
+    this.backgroundColor,
+  });
 }
 
 class PillTabBar extends StatelessWidget {
@@ -37,12 +44,15 @@ class PillTabBar extends StatelessWidget {
               onTap: () => onTabSelected(i),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? colorScheme.primary
-                      : colorScheme.surfaceContainerHighest,
+                      ? tab.selectBackgroundColor ?? colorScheme.primary
+                      : tab.backgroundColor ??
+                            colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -64,11 +74,15 @@ class PillTabBar extends StatelessWidget {
                       const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? colorScheme.onPrimary.withOpacity(0.25)
-                              : colorScheme.primary.withOpacity(0.15),
+                              ? tab.selectBackgroundColor?.withValues(alpha: 0.9) 
+                                ?? colorScheme.primary.withValues(alpha: 0.9)
+                              : tab.backgroundColor?.withValues(alpha: 0.15) 
+                                ?? colorScheme.surfaceContainerHighest.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -77,8 +91,8 @@ class PillTabBar extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: isSelected
-                                ? colorScheme.onPrimary
-                                : colorScheme.primary,
+                                ? Colors.white
+                                : Colors.black,
                           ),
                         ),
                       ),
