@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
-import 'admin_dashboard_screen.dart';
 import '../../usuarios/usuarios_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -100,7 +99,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       ),*/
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabActual,
-        onDestinationSelected: (i) => setState(() => _tabActual = i),
+        onDestinationSelected: (i){
+          setState(() => _tabActual = i);
+          if (i == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const  UsuariosScreen()),
+          );
+        }
+        },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Inicio'),
           NavigationDestination(icon: Icon(Icons.people_outline), label: 'Usuarios'),
