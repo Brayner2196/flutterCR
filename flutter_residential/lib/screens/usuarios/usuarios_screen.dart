@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/screens/home/admin/admin_home_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../models/usuario_response.dart';
@@ -20,6 +19,8 @@ class _UsuariosScreenState extends State<UsuariosScreen>
   late TabController _tabController;
   int _selectedTab = 0;
   int _tabActual = 1;
+  String _busqueda = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _UsuariosScreenState extends State<UsuariosScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -89,9 +91,9 @@ class _UsuariosScreenState extends State<UsuariosScreen>
                       ),
                       Expanded(
                         child: TextField(
-                          onChanged: (value) {
-                            // Implementar búsqueda en el provider
-                          },
+                          controller: _searchController,
+                          onChanged: (value) =>
+                              setState(() => _busqueda = value.trim().toLowerCase()),
                           decoration: const InputDecoration(
                             hintText: 'Buscar usuarios...',
                             border: OutlineInputBorder(
@@ -100,6 +102,15 @@ class _UsuariosScreenState extends State<UsuariosScreen>
                           ),
                         ),
                       ),
+                      if (_busqueda.isNotEmpty)
+                        IconButton(
+                          icon: Icon(Icons.close, color: Colors.grey.shade600),
+                          tooltip: 'Limpiar búsqueda',
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _busqueda = '');
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -161,28 +172,33 @@ class _UsuariosScreenState extends State<UsuariosScreen>
                   children: [
                     _TabLista(
                       selector: (p) => p.usuarios,
+                      busqueda: _busqueda,
                       onTap: (u) => _abrirDetalle(u),
                       emptyMessage: 'No hay usuarios registrados',
                     ),
                     _TabLista(
                       selector: (p) => p.activos,
+                      busqueda: _busqueda,
                       onTap: (u) => _abrirDetalle(u),
                       emptyMessage: 'No hay usuarios aprobados',
                     ),
                     _TabLista(
                       selector: (p) => p.pendientes,
+                      busqueda: _busqueda,
                       onTap: (u) => _abrirDetalle(u, conAcciones: true),
                       emptyMessage: 'No hay solicitudes pendientes',
                       emptyIcon: Icons.check_circle_outline,
                     ),
                     _TabLista(
                       selector: (p) => p.inactivos,
+                      busqueda: _busqueda,
                       onTap: (u) => _abrirDetalle(u),
                       emptyMessage: 'No hay usuarios inactivos',
                       emptyIcon: Icons.person_off_outlined,
                     ),
                     _TabLista(
                       selector: (p) => p.rechazados,
+                      busqueda: _busqueda,
                       onTap: (u) => _abrirDetalle(u),
                       emptyMessage: 'No hay usuarios rechazados',
                       emptyIcon: Icons.block_outlined,
@@ -207,12 +223,10 @@ class _UsuariosScreenState extends State<UsuariosScreen>
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabActual,
         onDestinationSelected: (i) {
-          setState(() => _tabActual = i);
           if (i == 0) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
-            );
+            Navigator.pop(context);
+          } else {
+            setState(() => _tabActual = i);
           }
         },
         destinations: const [
@@ -245,11 +259,13 @@ class _TabLista extends StatelessWidget {
   final void Function(UsuarioResponse) onTap;
   final String emptyMessage;
   final IconData emptyIcon;
+  final String busqueda;
 
   const _TabLista({
     required this.selector,
     required this.onTap,
     required this.emptyMessage,
+    required this.busqueda,
     this.emptyIcon = Icons.people_outline,
   });
 
@@ -268,7 +284,12 @@ class _TabLista extends StatelessWidget {
           );
         }
 
-        final lista = selector(provider);
+        final base = selector(provider);
+        final lista = busqueda.isEmpty
+            ? base
+            : base
+                .where((u) => u.nombre.toLowerCase().contains(busqueda))
+                .toList();
 
         if (lista.isEmpty) {
           return _EmptyView(mensaje: emptyMessage, icono: emptyIcon);

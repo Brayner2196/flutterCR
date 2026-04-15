@@ -99,14 +99,16 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       ),*/
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabActual,
-        onDestinationSelected: (i){
+        onDestinationSelected: (i) {
           setState(() => _tabActual = i);
           if (i == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const  UsuariosScreen()),
-          );
-        }
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const UsuariosScreen()),
+            ).then((_) {
+              if (mounted) setState(() => _tabActual = 0);
+            });
+          }
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Inicio'),
