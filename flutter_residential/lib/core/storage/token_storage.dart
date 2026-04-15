@@ -7,6 +7,7 @@ class TokenStorage {
   static const _keyRol = 'user_rol';
   static const _keyTenantId = 'tenant_id';
   static const _keyNombreConjunto = 'nombre_conjunto';
+  static const _keyNombre = 'user_nombre';
 
   static Future<void> guardarSesion({
     required String token,
@@ -14,6 +15,7 @@ class TokenStorage {
     required String rol,
     required String tenantId,
     String? nombreConjunto,
+    String? nombre,
   }) async {
     await _storage.write(key: _keyToken, value: token);
     await _storage.write(key: _keyEmail, value: email);
@@ -21,6 +23,9 @@ class TokenStorage {
     await _storage.write(key: _keyTenantId, value: tenantId);
     if (nombreConjunto != null) {
       await _storage.write(key: _keyNombreConjunto, value: nombreConjunto);
+    }
+    if (nombre != null) {
+      await _storage.write(key: _keyNombre, value: nombre);
     }
   }
 
@@ -35,6 +40,7 @@ class TokenStorage {
       'rol': await _storage.read(key: _keyRol),
       'tenantId': await _storage.read(key: _keyTenantId),
       'nombreConjunto': await _storage.read(key: _keyNombreConjunto),
+      'nombre': await _storage.read(key: _keyNombre),
     };
   }
 
