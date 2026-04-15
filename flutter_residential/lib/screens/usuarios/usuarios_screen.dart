@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/screens/home/admin/admin_home_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../models/usuario_response.dart';
@@ -18,6 +19,7 @@ class _UsuariosScreenState extends State<UsuariosScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedTab = 0;
+  int _tabActual = 1;
 
   @override
   void initState() {
@@ -44,115 +46,194 @@ class _UsuariosScreenState extends State<UsuariosScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => UsuarioDetalleSheet(
-        usuario: usuario,
-        mostrarAcciones: conAcciones,
-      ),
+      builder: (_) =>
+          UsuarioDetalleSheet(usuario: usuario, mostrarAcciones: conAcciones),
     );
   }
 
   void _abrirCrear() {
-    showDialog(
-      context: context,
-      builder: (_) => const UsuarioCrearDialog(),
-    );
+    showDialog(context: context, builder: (_) => const UsuarioCrearDialog());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Column(
-          children: [
-            Consumer<UsuarioProvider>(
-              builder: (_, provider, __) => PillTabBar(
-                tabs: [
-                  PillTabItem(
-                    label: 'Todos',
-                    count: provider.usuarios.isNotEmpty
-                        ? provider.usuarios.length
-                        : null,
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(242, 245, 248, 0.91),
+      appBar: AppBar(title: const Text('Gestión de Usuarios')),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  PillTabItem(
-                    label: 'Activos',
-                    count: provider.activos.isNotEmpty
-                        ? provider.activos.length
-                        : null,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(Icons.search, color: Colors.grey.shade600),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          onChanged: (value) {
+                            // Implementar búsqueda en el provider
+                          },
+                          decoration: const InputDecoration(
+                            hintText: 'Buscar usuarios...',
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  PillTabItem(
-                    label: 'Pendientes',
-                    count: provider.pendientes.isNotEmpty
-                        ? provider.pendientes.length
-                        : null,
-                  ),
-                  PillTabItem(
-                    label: 'Inactivos',
-                    count: provider.inactivos.isNotEmpty
-                        ? provider.inactivos.length
-                        : null,
-                  ),
-                  PillTabItem(
-                    label: 'Rechazados',
-                    count: provider.rechazados.isNotEmpty
-                        ? provider.rechazados.length
-                        : null,
-                  ),
-                ],
-                selectedIndex: _selectedTab,
-                onTabSelected: (i) {
-                  _tabController.animateTo(i);
-                  setState(() => _selectedTab = i);
-                },
+                ),
               ),
-            ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _TabLista(
-                    selector: (p) => p.usuarios,
-                    onTap: (u) => _abrirDetalle(u),
-                    emptyMessage: 'No hay usuarios registrados',
-                  ),
-                  _TabLista(
-                    selector: (p) => p.activos, 
-                    onTap: (u) => _abrirDetalle(u), 
-                    emptyMessage: 'No hay usuarios aprobados'
-                  ),
-                  _TabLista(
-                    selector: (p) => p.pendientes,
-                    onTap: (u) => _abrirDetalle(u, conAcciones: true),
-                    emptyMessage: 'No hay solicitudes pendientes',
-                    emptyIcon: Icons.check_circle_outline,
-                  ),
-                  _TabLista(
-                    selector: (p) => p.inactivos,
-                    onTap: (u) => _abrirDetalle(u),
-                    emptyMessage: 'No hay usuarios inactivos',
-                    emptyIcon: Icons.person_off_outlined,
-                  ),
-                  _TabLista(
-                    selector: (p) => p.rechazados,
-                    onTap: (u) => _abrirDetalle(u),
-                    emptyMessage: 'No hay usuarios rechazados',
-                    emptyIcon: Icons.block_outlined,
-                  ),
-                ],
+              Consumer<UsuarioProvider>(
+                builder: (_, provider, __) => PillTabBar(
+                  tabs: [
+                    PillTabItem(
+                      label: 'Todos',
+                      count: provider.usuarios.isNotEmpty
+                          ? provider.usuarios.length
+                          : null,
+                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                      backgroundColor: Colors.grey.shade400,
+                    ),
+                    PillTabItem(
+                      label: 'Activos',
+                      count: provider.activos.isNotEmpty
+                          ? provider.activos.length
+                          : null,
+                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                      backgroundColor: Colors.grey.shade400,
+                    ),
+                    PillTabItem(
+                      label: 'Pendientes',
+                      count: provider.pendientes.isNotEmpty
+                          ? provider.pendientes.length
+                          : null,
+                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                      backgroundColor: Colors.grey.shade400,
+                    ),
+                    PillTabItem(
+                      label: 'Inactivos',
+                      count: provider.inactivos.isNotEmpty
+                          ? provider.inactivos.length
+                          : null,
+                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                      backgroundColor: Colors.grey.shade400,
+                    ),
+                    PillTabItem(
+                      label: 'Rechazados',
+                      count: provider.rechazados.isNotEmpty
+                          ? provider.rechazados.length
+                          : null,
+                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                      backgroundColor: Colors.grey.shade400,
+                    ),
+                  ],
+                  selectedIndex: _selectedTab,
+                  onTabSelected: (i) {
+                    _tabController.animateTo(i);
+                    setState(() => _selectedTab = i);
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
-        // ── FAB crear usuario
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: FloatingActionButton(
-            onPressed: _abrirCrear,
-            tooltip: 'Crear usuario',
-            child: const Icon(Icons.person_add_outlined),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _TabLista(
+                      selector: (p) => p.usuarios,
+                      onTap: (u) => _abrirDetalle(u),
+                      emptyMessage: 'No hay usuarios registrados',
+                    ),
+                    _TabLista(
+                      selector: (p) => p.activos,
+                      onTap: (u) => _abrirDetalle(u),
+                      emptyMessage: 'No hay usuarios aprobados',
+                    ),
+                    _TabLista(
+                      selector: (p) => p.pendientes,
+                      onTap: (u) => _abrirDetalle(u, conAcciones: true),
+                      emptyMessage: 'No hay solicitudes pendientes',
+                      emptyIcon: Icons.check_circle_outline,
+                    ),
+                    _TabLista(
+                      selector: (p) => p.inactivos,
+                      onTap: (u) => _abrirDetalle(u),
+                      emptyMessage: 'No hay usuarios inactivos',
+                      emptyIcon: Icons.person_off_outlined,
+                    ),
+                    _TabLista(
+                      selector: (p) => p.rechazados,
+                      onTap: (u) => _abrirDetalle(u),
+                      emptyMessage: 'No hay usuarios rechazados',
+                      emptyIcon: Icons.block_outlined,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+          // ── FAB crear usuario
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              onPressed: _abrirCrear,
+              tooltip: 'Crear usuario',
+              child: const Icon(Icons.person_add_outlined),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tabActual,
+        onDestinationSelected: (i) {
+          setState(() => _tabActual = i);
+          if (i == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+            );
+          }
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            label: 'Inicio',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.people_outline),
+            label: 'Usuarios',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_pin_outlined),
+            label: 'Propietarios',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.home_work_outlined),
+            label: 'Propiedades',
+          ),
+        ],
+      ),
     );
   }
 }
@@ -183,8 +264,7 @@ class _TabLista extends StatelessWidget {
         if (provider.error != null) {
           return _ErrorView(
             mensaje: provider.error!,
-            onReintentar: () =>
-                context.read<UsuarioProvider>().cargarTodos(),
+            onReintentar: () => context.read<UsuarioProvider>().cargarTodos(),
           );
         }
 
@@ -198,12 +278,14 @@ class _TabLista extends StatelessWidget {
           onRefresh: () => context.read<UsuarioProvider>().cargarTodos(),
           child: ListView.builder(
             padding: const EdgeInsets.only(
-                left: 0, right: 0, top: 8, bottom: 88),
-            itemCount: lista.length,
-            itemBuilder: (_, i) => UsuarioCard(
-              usuario: lista[i],
-              onTap: () => onTap(lista[i]),
+              left: 0,
+              right: 0,
+              top: 8,
+              bottom: 88,
             ),
+            itemCount: lista.length,
+            itemBuilder: (_, i) =>
+                UsuarioCard(usuario: lista[i], onTap: () => onTap(lista[i])),
           ),
         );
       },
@@ -217,10 +299,7 @@ class _EmptyView extends StatelessWidget {
   final String mensaje;
   final IconData icono;
 
-  const _EmptyView({
-    required this.mensaje,
-    this.icono = Icons.people_outline,
-  });
+  const _EmptyView({required this.mensaje, this.icono = Icons.people_outline});
 
   @override
   Widget build(BuildContext context) {
@@ -228,15 +307,17 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icono,
-              size: 64,
-              color: Theme.of(context).colorScheme.outlineVariant),
+          Icon(
+            icono,
+            size: 64,
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
           const SizedBox(height: 12),
           Text(
             mensaje,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -258,8 +339,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline,
-                size: 64, color: Theme.of(context).colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 12),
             Text(
               mensaje,
