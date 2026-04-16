@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../storage/token_storage.dart';
 
 class ApiClient {
+  static const _timeout = Duration(seconds: 15);
+
   static Future<Map<String, String>> _headers({bool requiresAuth = true}) async {
     final headers = {'Content-Type': 'application/json'};
     if (requiresAuth) {
@@ -23,7 +27,13 @@ class ApiClient {
   static Future<http.Response> get(String path) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers();
-    return http.get(uri, headers: headers);
+    try {
+      return await http.get(uri, headers: headers).timeout(_timeout);
+    } on SocketException {
+      throw Exception('Sin conexión a internet. Verifica tu red.');
+    } on TimeoutException {
+      throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    }
   }
 
   static Future<http.Response> post(
@@ -33,24 +43,52 @@ class ApiClient {
   }) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers(requiresAuth: requiresAuth);
-    return http.post(uri, headers: headers, body: jsonEncode(body));
+    try {
+      return await http
+          .post(uri, headers: headers, body: jsonEncode(body))
+          .timeout(_timeout);
+    } on SocketException {
+      throw Exception('Sin conexión a internet. Verifica tu red.');
+    } on TimeoutException {
+      throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    }
   }
 
   static Future<http.Response> put(String path, Map<String, dynamic> body) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers();
-    return http.put(uri, headers: headers, body: jsonEncode(body));
+    try {
+      return await http
+          .put(uri, headers: headers, body: jsonEncode(body))
+          .timeout(_timeout);
+    } on SocketException {
+      throw Exception('Sin conexión a internet. Verifica tu red.');
+    } on TimeoutException {
+      throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    }
   }
 
   static Future<http.Response> delete(String path) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers();
-    return http.delete(uri, headers: headers);
+    try {
+      return await http.delete(uri, headers: headers).timeout(_timeout);
+    } on SocketException {
+      throw Exception('Sin conexión a internet. Verifica tu red.');
+    } on TimeoutException {
+      throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    }
   }
 
   static Future<http.Response> patch(String path) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers();
-    return http.patch(uri, headers: headers);
+    try {
+      return await http.patch(uri, headers: headers).timeout(_timeout);
+    } on SocketException {
+      throw Exception('Sin conexión a internet. Verifica tu red.');
+    } on TimeoutException {
+      throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    }
   }
 }
