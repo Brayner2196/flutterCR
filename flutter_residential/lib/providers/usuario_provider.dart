@@ -7,18 +7,14 @@ class UsuarioProvider extends ChangeNotifier {
   bool _loading = false;
   String? _error;
 
-  /// Todos los usuarios sin importar su estado.
   List<UsuarioResponse> get usuarios => _todos;
 
-  /// Filtrado cliente: estado == 'ACTIVO'
   List<UsuarioResponse> get activos =>
       _todos.where((u) => u.estado == 'ACTIVO').toList();
 
-  /// Filtrado cliente: estado == 'PENDIENTE'
   List<UsuarioResponse> get pendientes =>
       _todos.where((u) => u.estado == 'PENDIENTE').toList();
 
-  /// Filtrado cliente: estado == 'INACTIVO'
   List<UsuarioResponse> get inactivos =>
       _todos.where((u) => u.estado == 'INACTIVO').toList();
 
@@ -28,7 +24,6 @@ class UsuarioProvider extends ChangeNotifier {
   bool get loading => _loading;
   String? get error => _error;
 
-  /// Única llamada a la API: trae todos los usuarios.
   Future<void> cargarTodos() async {
     _loading = true;
     _error = null;
@@ -45,9 +40,15 @@ class UsuarioProvider extends ChangeNotifier {
   }
 
   Future<void> crear(Map<String, dynamic> data) async {
-    final nuevo = await UsuarioService.crear(data);
-    _todos.add(nuevo);
-    notifyListeners();
+    try {
+      final nuevo = await UsuarioService.crear(data);
+      _todos.add(nuevo);
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> aprobar(int id) async {

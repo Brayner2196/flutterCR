@@ -62,7 +62,7 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
     try {
       await context.read<UsuarioProvider>().crear({
         'nombre': _nombreCtrl.text.trim(),
-        'email': _emailCtrl.text.trim(),
+        'email': _emailCtrl.text.trim().toLowerCase(),
         'password': _passwordCtrl.text,
         'rol': _rol,
         if (_torreCtrl.text.trim().isNotEmpty) 'torre': _torreCtrl.text.trim(),
@@ -152,9 +152,11 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
                 controller: _nombreCtrl,
                 decoration: _decor('Nombre completo', Icons.person_outline),
                 textCapitalization: TextCapitalization.words,
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Campo requerido'
-                    : null,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Campo requerido';
+                  if (v.trim().length < 3) return 'Mínimo 3 caracteres';
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
 
@@ -165,7 +167,7 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Campo requerido';
-                  if (!RegExp(r'^[\w.+\-]+@[\w\-]+\.[a-z]{2,}$')
+                  if (!RegExp(r'^[\w.+\-]+@[\w\-]+(\.[\w\-]+)+$')
                       .hasMatch(v.trim())) {
                     return 'Correo no válido';
                   }
@@ -186,8 +188,11 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
                         setState(() => _verPassword = !_verPassword),
                   ),
                 ),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Campo requerido' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Campo requerido';
+                  if (v.length < 8) return 'Mínimo 8 caracteres';
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
 
@@ -236,6 +241,13 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
                 controller: _telefonoCtrl,
                 decoration: _decor('Teléfono', Icons.phone_outlined),
                 keyboardType: TextInputType.phone,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null;
+                  if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(v.trim())) {
+                    return 'Teléfono no válido (solo números, 7-15 dígitos)';
+                  }
+                  return null;
+                },
               ),
 
               const SizedBox(height: 24),
