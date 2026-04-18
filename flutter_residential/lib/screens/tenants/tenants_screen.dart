@@ -231,7 +231,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                     SliverToBoxAdapter(
                       child: _TableView(
                         tenants: lista,
-                        usuarios: _usuariosMock,
+                        usuarios: 9,
                         onTapTenant: (t) => _abrirFormulario(tenant: t),
                       ),
                     )
@@ -251,7 +251,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                             final t = lista[i];
                             return TenantCard(
                               tenant: t,
-                              usuariosCount: _usuariosMock(t),
+                              usuariosCount: t.cantidadUsuarios,
                               onEditar: () => _abrirFormulario(tenant: t),
                               onDesactivar: () => _confirmarDesactivar(t),
                               onActivar: () => _confirmarActivar(t),
@@ -270,7 +270,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                           final t = lista[i];
                           return TenantCard(
                             tenant: t,
-                            usuariosCount: _usuariosMock(t),
+                            usuariosCount: t.cantidadUsuarios,
                             onEditar: () => _abrirFormulario(tenant: t),
                             onDesactivar: () => _confirmarDesactivar(t),
                             onActivar: () => _confirmarActivar(t),
@@ -422,7 +422,7 @@ class _FilterChip extends StatelessWidget {
 
 class _TableView extends StatelessWidget {
   final List<TenantResponse> tenants;
-  final int Function(TenantResponse) usuarios;
+  final int  usuarios;
   final void Function(TenantResponse) onTapTenant;
   const _TableView({
     required this.tenants,
@@ -521,7 +521,7 @@ class _TableView extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Text(
-                usuarios(t).toString(),
+                t.cantidadUsuarios.toString(),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

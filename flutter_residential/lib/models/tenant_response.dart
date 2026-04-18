@@ -5,6 +5,7 @@ class TenantResponse {
   final String codigo;
   final bool activo;
   final String? direccion;
+  final int? cantidadUsuarios;
 
   TenantResponse({
     required this.id,
@@ -13,6 +14,7 @@ class TenantResponse {
     required this.codigo,
     required this.activo,
     this.direccion,
+    this.cantidadUsuarios,
   });
 
   factory TenantResponse.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class TenantResponse {
       codigo: json['codigo'],
       activo: json['activo'],
       direccion: json['direccion'],
+      cantidadUsuarios: json['cantidadUsuarios'],
     );
   }
 }
