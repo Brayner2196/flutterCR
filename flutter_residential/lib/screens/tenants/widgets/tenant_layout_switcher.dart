@@ -6,7 +6,7 @@ class TenantLayoutSwitcher extends StatelessWidget {
 
   final ModosLayouts mode;
   final ValueChanged<ModosLayouts> onChanged;
-  const TenantLayoutSwitcher({ required this.mode, required this.onChanged});
+  const TenantLayoutSwitcher({super.key,  required this.mode, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
