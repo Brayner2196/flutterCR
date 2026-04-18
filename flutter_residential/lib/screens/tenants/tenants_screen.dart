@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/core/enums/enum_mod_layouts_screen_tenants.dart';
-import 'package:flutter_residential/screens/tenants/widgets/tenant_form_dialog.dart';
+import 'package:flutter_residential/screens/tenants/widgets/tenant_form_insert_edit_dialog.dart';
 import 'package:flutter_residential/screens/tenants/widgets/tenant_layout_switcher.dart';
 import 'package:provider/provider.dart';
 import '../../providers/tenant_provider.dart';
