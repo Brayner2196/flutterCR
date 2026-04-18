@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/core/enums/enum_mod_layouts_screen_tenants.dart';
 import 'package:flutter_residential/screens/tenants/widgets/tenant_form_dialog.dart';
+import 'package:flutter_residential/screens/tenants/widgets/tenant_layout_switcher.dart';
 import 'package:provider/provider.dart';
 import '../../providers/tenant_provider.dart';
 import '../../models/tenant_response.dart';
 import 'widgets/tenant_card.dart';
 import 'widgets/tenant_header_widget.dart';
 
-enum _LayoutMode { list, grid, table }
+enum _ModosLayouts { list, grid, table }
 
 class TenantsScreen extends StatefulWidget {
   const TenantsScreen({super.key});
@@ -19,7 +21,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
   final _searchCtrl = TextEditingController();
   String _query = '';
   String _filter = 'todos'; // todos | activos | inactivos
-  _LayoutMode _layout = _LayoutMode.list;
+  ModosLayouts _layout = ModosLayouts.list;
 
   @override
   void initState() {
@@ -111,9 +113,6 @@ class _TenantsScreenState extends State<TenantsScreen> {
     }).toList();
   }
 
-  // Mock de usuarios por tenant — determinístico por id
-  int _usuariosMock(TenantResponse t) => 3 + (t.id * 7) % 42;
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -181,7 +180,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          _LayoutSwitcher(
+                          TenantLayoutSwitcher(
                             mode: _layout,
                             onChanged: (m) => setState(() => _layout = m),
                           ),
@@ -227,7 +226,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                       hasScrollBody: false,
                       child: _EmptyView(),
                     )
-                  else if (_layout == _LayoutMode.table)
+                  else if (_layout == ModosLayouts.table)
                     SliverToBoxAdapter(
                       child: _TableView(
                         tenants: lista,
@@ -235,7 +234,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                         onTapTenant: (t) => _abrirFormulario(tenant: t),
                       ),
                     )
-                  else if (_layout == _LayoutMode.grid)
+                  else if (_layout == ModosLayouts.grid)
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(12, 4, 12, 90),
                       sliver: SliverGrid(
@@ -293,63 +292,6 @@ class _TenantsScreenState extends State<TenantsScreen> {
           ],
         );
       },
-    );
-  }
-}
-
-class _LayoutSwitcher extends StatelessWidget {
-  final _LayoutMode mode;
-  final ValueChanged<_LayoutMode> onChanged;
-  const _LayoutSwitcher({required this.mode, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    Widget iconBtn(IconData icon, _LayoutMode m) {
-      final selected = mode == m;
-      return GestureDetector(
-        onTap: () => onChanged(m),
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: selected ? cs.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 17,
-            color: selected ? cs.onSurface : cs.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      height: 42,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Row(
-        children: [
-          iconBtn(Icons.view_agenda_outlined, _LayoutMode.list),
-          iconBtn(Icons.grid_view_outlined, _LayoutMode.grid),
-          iconBtn(Icons.table_rows_outlined, _LayoutMode.table),
-        ],
-      ),
     );
   }
 }

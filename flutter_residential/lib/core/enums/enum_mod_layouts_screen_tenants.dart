@@ -1,0 +1,1 @@
+enum ModosLayouts { list, grid, table }
