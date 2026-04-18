@@ -8,8 +8,6 @@ import '../../models/tenant_response.dart';
 import 'widgets/tenant_card.dart';
 import 'widgets/tenant_header_widget.dart';
 
-enum _ModosLayouts { list, grid, table }
-
 class TenantsScreen extends StatefulWidget {
   const TenantsScreen({super.key});
 
