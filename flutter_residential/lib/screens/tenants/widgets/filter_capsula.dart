@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class _FilterCapsula extends StatelessWidget {
+class FilterCapsula extends StatelessWidget {
 
   final String label;
   final int count;
   final bool selected;
   final VoidCallback onTap;
 
-  const _FilterCapsula({ required this.label,
+  const FilterCapsula({ required this.label,
     required this.count,
     required this.selected,
     required this.onTap,

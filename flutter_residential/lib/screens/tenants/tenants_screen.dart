@@ -196,19 +196,19 @@ class _TenantsScreenState extends State<TenantsScreen> {
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         children: [
-                          _FilterCapsula(
+                          FilterCapsula(
                             label: 'Todos',
                             count: all.length,
                             selected: _filter == 'todos',
                             onTap: () => setState(() => _filter = 'todos'),
                           ),
-                          _FilterChip(
+                          FilterCapsula(
                             label: 'Activos',
                             count: activos,
                             selected: _filter == 'activos',
                             onTap: () => setState(() => _filter = 'activos'),
                           ),
-                          _FilterChip(
+                          FilterCapsula(
                             label: 'Inactivos',
                             count: inactivos,
                             selected: _filter == 'inactivos',
