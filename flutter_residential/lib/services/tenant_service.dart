@@ -48,8 +48,7 @@ class TenantService {
     throw Exception(body['message'] ?? 'Error al crear tenant');
   }
 
-  static Future<TenantResponse> actualizar(
-      int id, Map<String, dynamic> datos) async {
+  static Future<TenantResponse> actualizar( int id, Map<String, dynamic> datos ) async {
     final response = await ApiClient.put('${ApiConstants.tenants}/$id', datos);
     final body = jsonDecode(response.body);
 
@@ -77,4 +76,5 @@ class TenantService {
       throw Exception(body['message'] ?? 'Error al activar tenant');
     }
   }
+
 }

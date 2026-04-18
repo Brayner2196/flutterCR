@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_residential/core/enums/enum_mod_layouts_screen_tenants.dart';
 import 'package:flutter_residential/screens/tenants/widgets/tenant_form_insert_edit_dialog.dart';
 import 'package:flutter_residential/screens/tenants/widgets/tenant_layout_switcher.dart';
+import 'package:flutter_residential/screens/tenants/widgets/filter_capsula.dart';
 import 'package:provider/provider.dart';
 import '../../providers/tenant_provider.dart';
 import '../../models/tenant_response.dart';
@@ -195,7 +196,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         children: [
-                          _FilterChip(
+                          _FilterCapsula(
                             label: 'Todos',
                             count: all.length,
                             selected: _filter == 'todos',
@@ -294,71 +295,6 @@ class _TenantsScreenState extends State<TenantsScreen> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final int count;
-  final bool selected;
-  final VoidCallback onTap;
-  const _FilterChip({
-    required this.label,
-    required this.count,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: selected ? cs.onSurface : cs.surface,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: selected ? cs.onSurface : cs.outline,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: selected ? cs.surface : cs.onSurface,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 6, vertical: 1),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? cs.surface.withValues(alpha: 0.2)
-                      : cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  count.toString(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? cs.surface : cs.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _TableView extends StatelessWidget {
   final List<TenantResponse> tenants;
