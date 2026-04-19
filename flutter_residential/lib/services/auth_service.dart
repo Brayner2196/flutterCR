@@ -51,9 +51,8 @@ class AuthService {
     required String email,
     required String password,
     required String codigoConjunto,
-    String? apto,
-    String? torre,
     String? telefono,
+    List<Map<String, dynamic>>? propiedadPath,
   }) async {
     final response = await ApiClient.post(
       ApiConstants.registro,
@@ -62,9 +61,9 @@ class AuthService {
         'email': email,
         'password': password,
         'codigoConjunto': codigoConjunto,
-        if (apto != null) 'apto': apto,
-        if (torre != null) 'torre': torre,
         if (telefono != null) 'telefono': telefono,
+        if (propiedadPath != null && propiedadPath.isNotEmpty)
+          'propiedadPath': propiedadPath,
       },
     );
 

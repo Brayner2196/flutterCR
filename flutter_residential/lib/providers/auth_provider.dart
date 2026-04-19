@@ -113,9 +113,8 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
     required String codigoConjunto,
-    String? apto,
-    String? torre,
     String? telefono,
+    List<Map<String, dynamic>>? propiedadPath,
   }) async {
     try {
       return await AuthService.registro(
@@ -123,9 +122,8 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
         codigoConjunto: codigoConjunto,
-        apto: apto,
-        torre: torre,
         telefono: telefono,
+        propiedadPath: propiedadPath,
       );
     } catch (e) {
       rethrow;
