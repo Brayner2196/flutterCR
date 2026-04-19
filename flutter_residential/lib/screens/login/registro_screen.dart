@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:toastification/toastification.dart';
 import '../../models/tipo_propiedad_nodo.dart';
 import '../../services/propiedad_service.dart';
 import '../../services/auth_service.dart';
@@ -59,7 +60,19 @@ class _RegistroScreenState extends State<RegistroScreen> {
       final tipos = await PropiedadService.getTiposArbol(codigo);
       setState(() => _tiposRaiz = tipos);
     } catch (_) {
-      // código inválido o sin tipos — el campo queda oculto
+      
+      toastification.show(
+        type: ToastificationType.error,
+        style: ToastificationStyle.fillColored,
+        title: const Text('No se obtuvieron los tipos de propiedad'),
+        description:
+            Text('No se pudo cargar la información del conjunto. Verifica el código e intenta de nuevo.'),
+        alignment: Alignment.bottomCenter,
+        autoCloseDuration: const Duration(seconds: 3),
+        showProgressBar: true,
+        closeOnClick: true,
+      );
+
     } finally {
       if (mounted) setState(() => _cargandoTipos = false);
     }
