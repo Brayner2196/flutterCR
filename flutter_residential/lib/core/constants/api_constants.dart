@@ -6,7 +6,7 @@ class ApiConstants {
   // Auth
   static const String login = '/auth/login';
   static const String seleccionarTenant = '/auth/login/seleccionar';
-  static const String registro = '/auth/login/registro';
+  static const String registro = '/auth/registro';
 
   // Usuarios
   static const String usuarios = '/api/usuarios';
@@ -16,7 +16,7 @@ class ApiConstants {
   static const String tenants = '/api/tenants';
 
   // Propiedades — público (registro)
-  static const String authTiposPropiedad = '/auth/tipos-propiedad';
+  static const String authTiposPropiedad = '/auth/tiposPropiedad';
 
   // Propiedades — admin
   static const String tiposPropiedad = '/api/tipos-propiedad';
