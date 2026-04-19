@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import '../../models/tipo_propiedad_nodo.dart';
+import '../../providers/propiedad_provider.dart';
 import '../../providers/usuario_provider.dart';
 
 class UsuarioCrearDialog extends StatefulWidget {
@@ -17,12 +19,14 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
-  final _aptoCtrl = TextEditingController();
-  final _torreCtrl = TextEditingController();
 
   String _rol = 'RESIDENTE';
   bool _verPassword = false;
   bool _guardando = false;
+
+  TipoPropiedadNodo? _tipoRaizSeleccionado;
+  final List<TipoPropiedadNodo> _nivelesActivos = [];
+  final List<TextEditingController> _pathCtrlList = [];
 
   static const _roles = [
     'RESIDENTE',
@@ -45,14 +49,66 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PropiedadProvider>().cargarTiposAdmin();
+    });
+  }
+
+  @override
   void dispose() {
     _nombreCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _telefonoCtrl.dispose();
-    _aptoCtrl.dispose();
-    _torreCtrl.dispose();
+    for (final c in _pathCtrlList) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  void _onTipoRaizChanged(TipoPropiedadNodo? tipo) {
+    for (final c in _pathCtrlList) {
+      c.dispose();
+    }
+    _pathCtrlList.clear();
+    _nivelesActivos.clear();
+
+    if (tipo != null) {
+      _nivelesActivos.add(tipo);
+      _pathCtrlList.add(TextEditingController());
+    }
+
+    setState(() => _tipoRaizSeleccionado = tipo);
+  }
+
+  void _onNivelLlenado(int index) {
+    final texto = _pathCtrlList[index].text.trim();
+    if (texto.isEmpty) return;
+
+    while (_nivelesActivos.length > index + 1) {
+      _nivelesActivos.removeLast();
+      _pathCtrlList.removeLast().dispose();
+    }
+
+    final nodoActual = _nivelesActivos[index];
+    if (nodoActual.hijos.isNotEmpty) {
+      _nivelesActivos.add(nodoActual.hijos.first);
+      _pathCtrlList.add(TextEditingController());
+    }
+
+    setState(() {});
+  }
+
+  List<Map<String, dynamic>> _construirPropiedadPath() {
+    final path = <Map<String, dynamic>>[];
+    for (int i = 0; i < _nivelesActivos.length; i++) {
+      final valor = _pathCtrlList[i].text.trim();
+      if (valor.isEmpty) break;
+      path.add({'tipoId': _nivelesActivos[i].id, 'valor': valor});
+    }
+    return path;
   }
 
   Future<void> _crear() async {
@@ -60,15 +116,15 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
 
     setState(() => _guardando = true);
     try {
+      final propiedadPath = _construirPropiedadPath();
       await context.read<UsuarioProvider>().crear({
         'nombre': _nombreCtrl.text.trim(),
         'email': _emailCtrl.text.trim().toLowerCase(),
         'password': _passwordCtrl.text,
         'rol': _rol,
-        if (_torreCtrl.text.trim().isNotEmpty) 'torre': _torreCtrl.text.trim(),
-        if (_aptoCtrl.text.trim().isNotEmpty) 'apto': _aptoCtrl.text.trim(),
         if (_telefonoCtrl.text.trim().isNotEmpty)
           'telefono': _telefonoCtrl.text.trim(),
+        if (propiedadPath.isNotEmpty) 'propiedadPath': propiedadPath,
       });
       if (!mounted) return;
       toastification.show(
@@ -105,6 +161,7 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tiposArbol = context.watch<PropiedadProvider>().tiposArbol;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -117,7 +174,6 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Encabezado
               Row(
                 children: [
                   CircleAvatar(
@@ -144,7 +200,6 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
 
               const SizedBox(height: 20),
 
-              // ── Información de acceso
               _label(theme, 'Información de acceso'),
               const SizedBox(height: 8),
 
@@ -167,7 +222,7 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Campo requerido';
-                  if (!RegExp(r'^[\w.+\-]+@[\w\-]+(\.[\w\-]+)+$')
+                  if (!RegExp(r'^[\w.+\-]+@[\w\-]+(\.[ \w\-]+)+$')
                       .hasMatch(v.trim())) {
                     return 'Correo no válido';
                   }
@@ -206,35 +261,51 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
                         ))
                     .toList(),
                 onChanged: (v) => setState(() => _rol = v!),
-                validator: (v) =>
-                    v == null ? 'Selecciona un rol' : null,
+                validator: (v) => v == null ? 'Selecciona un rol' : null,
               ),
 
               const SizedBox(height: 20),
 
-              // ── Residencia (opcional)
-              _label(theme, 'Residencia (opcional)'),
+              _label(theme, 'Propiedad (opcional)'),
               const SizedBox(height: 8),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _torreCtrl,
-                      decoration:
-                          _decor('Torre', Icons.apartment_outlined),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _aptoCtrl,
-                      decoration: _decor(
-                          'Apartamento', Icons.door_front_door_outlined),
-                    ),
+              if (tiposArbol.isEmpty)
+                Text(
+                  'No hay tipos de propiedad configurados.',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.outline),
+                )
+              else ...[
+                DropdownButtonFormField<TipoPropiedadNodo>(
+                  value: _tipoRaizSeleccionado,
+                  decoration: _decor('Tipo de propiedad', Icons.home_work_outlined),
+                  items: tiposArbol
+                      .map((t) => DropdownMenuItem(
+                            value: t,
+                            child: Text(t.nombre),
+                          ))
+                      .toList(),
+                  onChanged: _onTipoRaizChanged,
+                ),
+                for (int i = 0; i < _nivelesActivos.length; i++) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _pathCtrlList[i],
+                    decoration: _decor(
+                      _nivelesActivos[i].nombre,
+                      Icons.label_outline,
+                    ).copyWith(hintText: _nivelesActivos[i].descripcion),
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) => _onNivelLlenado(i),
+                    onChanged: (_) {
+                      if (_pathCtrlList[i].text.trim().isNotEmpty) {
+                        _onNivelLlenado(i);
+                      }
+                    },
                   ),
                 ],
-              ),
+              ],
+
               const SizedBox(height: 12),
 
               TextFormField(
@@ -252,7 +323,6 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
 
               const SizedBox(height: 24),
 
-              // ── Botones
               Row(
                 children: [
                   Expanded(
