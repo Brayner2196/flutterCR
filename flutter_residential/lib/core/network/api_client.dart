@@ -24,9 +24,9 @@ class ApiClient {
     return headers;
   }
 
-  static Future<http.Response> get(String path) async {
+  static Future<http.Response> get(String path, {bool requiresAuth = true}) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
-    final headers = await _headers();
+    final headers = await _headers(requiresAuth: requiresAuth);
     try {
       return await http.get(uri, headers: headers).timeout(_timeout);
     } on SocketException {
