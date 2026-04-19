@@ -9,6 +9,7 @@ class PropiedadService {
   static Future<List<TipoPropiedadNodo>> getTiposArbol(String codigo) async {
     final response = await ApiClient.get(
       '${ApiConstants.authTiposPropiedad}?codigo=$codigo',
+      requiresAuth: false,
     );
     final body = jsonDecode(response.body);
     if (response.statusCode == 200) {
