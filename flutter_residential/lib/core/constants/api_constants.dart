@@ -14,4 +14,14 @@ class ApiConstants {
 
   // Tenants
   static const String tenants = '/api/tenants';
+
+  // Propiedades — público (registro)
+  static const String authTiposPropiedad = '/auth/tipos-propiedad';
+
+  // Propiedades — admin
+  static const String tiposPropiedad = '/api/tipos-propiedad';
+  static const String propiedades = '/api/propiedades';
+
+  // Propiedades — residente autenticado
+  static const String misPropiedades = '/api/propiedades/mis-propiedades';
 }
