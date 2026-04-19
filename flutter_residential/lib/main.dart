@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'providers/auth_provider.dart';
+import 'providers/propiedad_provider.dart';
 import 'providers/usuario_provider.dart';
 import 'providers/tenant_provider.dart';
 import 'screens/splash_screen.dart';
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()..cargarSesionGuardada(),),
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
         ChangeNotifierProvider(create: (_) => TenantProvider()),
+        ChangeNotifierProvider(create: (_) => PropiedadProvider()),
       ],
       child: ToastificationWrapper(
         child: MaterialApp(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../residente/mi_propiedad_screen.dart';
 import 'residente_dashboard_screen.dart';
 
 class ResidenteHomeScreen extends StatefulWidget {
@@ -71,7 +72,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
         index: _tabActual,
         children: [
           ResidenteDashboardScreen(onNavegar: (i) => setState(() => _tabActual = i)),
-          const _PlaceholderScreen(titulo: 'Mi Propiedad'),
+          const MiPropiedadScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -106,20 +107,5 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     if (confirmado == true && context.mounted) {
       await context.read<AuthProvider>().logout();
     }
-  }
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  final String titulo;
-  const _PlaceholderScreen({required this.titulo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        '$titulo — próximo paso',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-    );
   }
 }
