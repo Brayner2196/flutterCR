@@ -4,7 +4,7 @@ import '../../../models/tenant_response.dart';
 import '../../../providers/tenant_provider.dart';
 
 class TenantFormDialog extends StatefulWidget {
-  final TenantResponse? tenant; // null = crear, != null = editar
+  final TenantResponse? tenant;
 
   const TenantFormDialog({super.key, this.tenant});
 
@@ -23,6 +23,8 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
   late final TextEditingController _direccionCtrl;
 
   bool _guardando = false;
+
+  final List<_TipoNodoEditable> _tiposRaiz = [];
 
   bool get _esEdicion => widget.tenant != null;
 
@@ -49,6 +51,18 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
     super.dispose();
   }
 
+  List<Map<String, dynamic>> _buildTiposJson(List<_TipoNodoEditable> nodos) {
+    return nodos
+        .where((n) => n.nombreCtrl.text.trim().isNotEmpty)
+        .map((n) => {
+              'nombre': n.nombreCtrl.text.trim(),
+              if (n.descCtrl.text.trim().isNotEmpty)
+                'descripcion': n.descCtrl.text.trim(),
+              'hijos': _buildTiposJson(n.hijos),
+            })
+        .toList();
+  }
+
   Future<void> _guardar() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -65,6 +79,7 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
           'activo': widget.tenant!.activo,
         });
       } else {
+        final tiposJson = _buildTiposJson(_tiposRaiz);
         await provider.crear({
           'schemaName': _schemaCtrl.text.trim(),
           'nombre': _nombreCtrl.text.trim(),
@@ -73,6 +88,7 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
           'passwordAdmin': _passwordAdminCtrl.text,
           if (_direccionCtrl.text.trim().isNotEmpty)
             'direccion': _direccionCtrl.text.trim(),
+          if (tiposJson.isNotEmpty) 'tiposPropiedad': tiposJson,
         });
       }
 
@@ -93,6 +109,7 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AlertDialog(
       title: Text(_esEdicion ? 'Editar Tenant' : 'Nuevo Tenant'),
       content: SizedBox(
@@ -102,6 +119,7 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextFormField(
                   controller: _nombreCtrl,
@@ -133,9 +151,7 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
                       hintText: 'ej: el_prado_01',
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Campo requerido';
-                      }
+                      if (v == null || v.trim().isEmpty) return 'Campo requerido';
                       if (!RegExp(r'^[a-z0-9_]+$').hasMatch(v.trim())) {
                         return 'Solo minúsculas, números y guiones bajos';
                       }
@@ -170,6 +186,45 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  Divider(color: theme.colorScheme.outlineVariant),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Tipos de Propiedad del Conjunto',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        tooltip: 'Agregar tipo raíz',
+                        onPressed: () => setState(() =>
+                            _tiposRaiz.add(_TipoNodoEditable())),
+                      ),
+                    ],
+                  ),
+                  if (_tiposRaiz.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        'Ej: Torre → Apto, Parqueadero',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                    ),
+                  for (int i = 0; i < _tiposRaiz.length; i++)
+                    _TipoNodoWidget(
+                      nodo: _tiposRaiz[i],
+                      indent: 0,
+                      onEliminar: () => setState(() => _tiposRaiz.removeAt(i)),
+                      onCambio: () => setState(() {}),
+                    ),
                 ],
                 const SizedBox(height: 12),
                 TextFormField(
@@ -199,6 +254,102 @@ class _TenantFormDialogState extends State<TenantFormDialog> {
                 )
               : Text(_esEdicion ? 'Guardar' : 'Crear'),
         ),
+      ],
+    );
+  }
+}
+
+class _TipoNodoEditable {
+  final TextEditingController nombreCtrl = TextEditingController();
+  final TextEditingController descCtrl = TextEditingController();
+  final List<_TipoNodoEditable> hijos = [];
+}
+
+class _TipoNodoWidget extends StatelessWidget {
+  final _TipoNodoEditable nodo;
+  final int indent;
+  final VoidCallback onEliminar;
+  final VoidCallback onCambio;
+
+  const _TipoNodoWidget({
+    required this.nodo,
+    required this.indent,
+    required this.onEliminar,
+    required this.onCambio,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: indent * 16.0, top: 8),
+          child: Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      if (indent > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: Icon(Icons.subdirectory_arrow_right,
+                              size: 16, color: theme.colorScheme.outline),
+                        ),
+                      Expanded(
+                        child: TextField(
+                          controller: nodo.nombreCtrl,
+                          decoration: InputDecoration(
+                            labelText: indent == 0 ? 'Tipo raíz' : 'Subtipo',
+                            isDense: true,
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.add, size: 18),
+                        tooltip: 'Agregar hijo',
+                        onPressed: () {
+                          nodo.hijos.add(_TipoNodoEditable());
+                          onCambio();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete_outline,
+                            size: 18, color: theme.colorScheme.error),
+                        onPressed: onEliminar,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: nodo.descCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Descripción (hint en el registro)',
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        for (int j = 0; j < nodo.hijos.length; j++)
+          _TipoNodoWidget(
+            nodo: nodo.hijos[j],
+            indent: indent + 1,
+            onEliminar: () {
+              nodo.hijos.removeAt(j);
+              onCambio();
+            },
+            onCambio: onCambio,
+          ),
       ],
     );
   }
