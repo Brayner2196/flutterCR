@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../models/tipo_propiedad_nodo.dart';
+import '../../services/propiedad_service.dart';
 import '../../services/auth_service.dart';
 
 class RegistroScreen extends StatefulWidget {
@@ -9,17 +11,21 @@ class RegistroScreen extends StatefulWidget {
 }
 
 class _RegistroScreenState extends State<RegistroScreen> {
-  
   final _formKey = GlobalKey<FormState>();
   final _nombreCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _codigoCtrl = TextEditingController();
-  final _aptoCtrl = TextEditingController();
-  final _torreCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
+
   bool _obscurePassword = true;
   bool _cargando = false;
+  bool _cargandoTipos = false;
+
+  List<TipoPropiedadNodo> _tiposRaiz = [];
+  TipoPropiedadNodo? _tipoRaizSeleccionado;
+  final List<TextEditingController> _pathCtrlList = [];
+  final List<TipoPropiedadNodo> _nivelesActivos = [];
 
   @override
   void dispose() {
@@ -27,10 +33,79 @@ class _RegistroScreenState extends State<RegistroScreen> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _codigoCtrl.dispose();
-    _aptoCtrl.dispose();
-    _torreCtrl.dispose();
     _telefonoCtrl.dispose();
+    for (final c in _pathCtrlList) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  Future<void> _cargarTipos() async {
+    final codigo = _codigoCtrl.text.trim();
+    if (codigo.isEmpty) return;
+
+    setState(() {
+      _cargandoTipos = true;
+      _tiposRaiz = [];
+      _tipoRaizSeleccionado = null;
+      _nivelesActivos.clear();
+      for (final c in _pathCtrlList) {
+        c.dispose();
+      }
+      _pathCtrlList.clear();
+    });
+
+    try {
+      final tipos = await PropiedadService.getTiposArbol(codigo);
+      setState(() => _tiposRaiz = tipos);
+    } catch (_) {
+      // código inválido o sin tipos — el campo queda oculto
+    } finally {
+      if (mounted) setState(() => _cargandoTipos = false);
+    }
+  }
+
+  void _onTipoRaizChanged(TipoPropiedadNodo? tipo) {
+    for (final c in _pathCtrlList) {
+      c.dispose();
+    }
+    _pathCtrlList.clear();
+    _nivelesActivos.clear();
+
+    if (tipo != null) {
+      _nivelesActivos.add(tipo);
+      _pathCtrlList.add(TextEditingController());
+    }
+
+    setState(() => _tipoRaizSeleccionado = tipo);
+  }
+
+  void _onNivelLlenado(int index) {
+    final texto = _pathCtrlList[index].text.trim();
+    if (texto.isEmpty) return;
+
+    while (_nivelesActivos.length > index + 1) {
+      _nivelesActivos.removeLast();
+      _pathCtrlList.removeLast().dispose();
+    }
+
+    final nodoActual = _nivelesActivos[index];
+    if (nodoActual.hijos.isNotEmpty) {
+      _nivelesActivos.add(nodoActual.hijos.first);
+      _pathCtrlList.add(TextEditingController());
+    }
+
+    setState(() {});
+  }
+
+  List<Map<String, dynamic>> _construirPropiedadPath() {
+    final path = <Map<String, dynamic>>[];
+    for (int i = 0; i < _nivelesActivos.length; i++) {
+      final valor = _pathCtrlList[i].text.trim();
+      if (valor.isEmpty) break;
+      path.add({'tipoId': _nivelesActivos[i].id, 'valor': valor});
+    }
+    return path;
   }
 
   Future<void> _registrar() async {
@@ -38,14 +113,16 @@ class _RegistroScreenState extends State<RegistroScreen> {
     setState(() => _cargando = true);
 
     try {
+      final propiedadPath = _construirPropiedadPath();
       final mensaje = await AuthService.registro(
         nombre: _nombreCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
         codigoConjunto: _codigoCtrl.text.trim(),
-        apto: _aptoCtrl.text.trim().isEmpty ? null : _aptoCtrl.text.trim(),
-        torre: _torreCtrl.text.trim().isEmpty ? null : _torreCtrl.text.trim(),
-        telefono: _telefonoCtrl.text.trim().isEmpty ? null : _telefonoCtrl.text.trim(),
+        telefono: _telefonoCtrl.text.trim().isEmpty
+            ? null
+            : _telefonoCtrl.text.trim(),
+        propiedadPath: propiedadPath.isEmpty ? null : propiedadPath,
       );
 
       if (!mounted) return;
@@ -58,8 +135,8 @@ class _RegistroScreenState extends State<RegistroScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // cierra diálogo
-                Navigator.of(context).pop(); // vuelve al login
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
               },
               child: const Text('Aceptar'),
             ),
@@ -101,7 +178,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Nombre
                 TextFormField(
                   controller: _nombreCtrl,
                   textInputAction: TextInputAction.next,
@@ -113,7 +189,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                       (v == null || v.trim().isEmpty) ? 'Ingresa tu nombre' : null,
                 ),
                 const SizedBox(height: 16),
-                // Email
+
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
@@ -130,7 +206,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Contraseña
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: _obscurePassword,
@@ -154,42 +229,89 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Código del conjunto
                 TextFormField(
                   controller: _codigoCtrl,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
                     labelText: 'Código del conjunto *',
-                    prefixIcon: Icon(Icons.vpn_key_outlined),
+                    prefixIcon: const Icon(Icons.vpn_key_outlined),
                     hintText: 'Ej: EL-PRADO-01',
+                    suffixIcon: _cargandoTipos
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : null,
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Ingresa el código del conjunto' : null,
+                  onFieldSubmitted: (_) => _cargarTipos(),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Ingresa el código del conjunto'
+                      : null,
                 ),
+                const SizedBox(height: 8),
+
+                if (_tiposRaiz.isEmpty && !_cargandoTipos)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _cargarTipos,
+                      icon: const Icon(Icons.search, size: 16),
+                      label: const Text('Buscar conjunto'),
+                    ),
+                  ),
+
+                if (_tiposRaiz.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Tu propiedad (opcional)',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  DropdownButtonFormField<TipoPropiedadNodo>(
+                    value: _tipoRaizSeleccionado,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo de propiedad',
+                      prefixIcon: Icon(Icons.home_work_outlined),
+                    ),
+                    items: _tiposRaiz
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(t.nombre),
+                            ))
+                        .toList(),
+                    onChanged: _onTipoRaizChanged,
+                  ),
+
+                  for (int i = 0; i < _nivelesActivos.length; i++) ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _pathCtrlList[i],
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: _nivelesActivos[i].nombre,
+                        hintText: _nivelesActivos[i].descripcion,
+                        prefixIcon: const Icon(Icons.label_outline),
+                      ),
+                      onFieldSubmitted: (_) => _onNivelLlenado(i),
+                      onChanged: (_) {
+                        if (_pathCtrlList[i].text.trim().isNotEmpty) {
+                          _onNivelLlenado(i);
+                        }
+                      },
+                    ),
+                  ],
+                ],
+
                 const SizedBox(height: 16),
 
-                // Torre (opcional)
-                TextFormField(
-                  controller: _torreCtrl,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Torre (opcional)',
-                    prefixIcon: Icon(Icons.apartment_outlined),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Apartamento (opcional)
-                TextFormField(
-                  controller: _aptoCtrl,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Apartamento (opcional)',
-                    prefixIcon: Icon(Icons.door_front_door_outlined),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Teléfono (opcional)
                 TextFormField(
                   controller: _telefonoCtrl,
                   keyboardType: TextInputType.phone,
@@ -214,7 +336,8 @@ class _RegistroScreenState extends State<RegistroScreen> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Enviar solicitud', style: TextStyle(fontSize: 16)),
+                      : const Text('Enviar solicitud',
+                          style: TextStyle(fontSize: 16)),
                 ),
               ],
             ),
