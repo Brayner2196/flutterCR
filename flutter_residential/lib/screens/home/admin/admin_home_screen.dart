@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../propiedades/propiedades_screen.dart';
 import '../../usuarios/usuarios_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -69,34 +70,25 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ),
           ),
           Positioned(
-        top: 0,
-        left: 0,
-        right: 0,
-        child: Container(
-          height: 18,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha: 0.07),
-                Colors.transparent,
-              ],
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 18,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.07),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
-        ],
-        ),
-      /*IndexedStack(
-        index: _tabActual,
-        children: [
-          AdminDashboardScreen(onNavegar: (i) => setState(() => _tabActual = i)),
-          const UsuariosScreen(),
-          const _PlaceholderScreen(titulo: 'Propietarios'),
-          const _PlaceholderScreen(titulo: 'Propiedades'),
-        ],
-      ),*/
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabActual,
         onDestinationSelected: (i) {
@@ -105,6 +97,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const UsuariosScreen()),
+            ).then((_) {
+              if (mounted) setState(() => _tabActual = 0);
+            });
+          } else if (i == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PropiedadesScreen()),
             ).then((_) {
               if (mounted) setState(() => _tabActual = 0);
             });
@@ -167,7 +166,6 @@ String _iniciales(String? nombre, String? email) {
     }
     return nombre[0].toUpperCase();
   }
-  // Fallback: usar la parte local del email
   final localPart = (email ?? '').contains('@')
       ? email!.split('@')[0]
       : (email ?? '');
