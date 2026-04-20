@@ -13,7 +13,7 @@ class TenantHeaderWidget extends StatelessWidget {
     required this.total,
     required this.activos,
     required this.inactivos,
-    this.userName = 'Super Admin',
+    this.userName = 'Super Admin Bray',
   });
 
   @override
@@ -32,18 +32,7 @@ class TenantHeaderWidget extends StatelessWidget {
               letterSpacing: -0.1,
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            'Tenants',
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w600,
-              color: cs.onSurface,
-              letterSpacing: -0.8,
-              height: 1.1,
-            ),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
           Container(
             decoration: BoxDecoration(
               color: cs.surface,

@@ -289,7 +289,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   const SizedBox(height: 8),
 
                   DropdownButtonFormField<TipoPropiedadNodo>(
-                    value: _tipoRaizSeleccionado,
+                    initialValue: _tipoRaizSeleccionado,
                     decoration: const InputDecoration(
                       labelText: 'Tipo de propiedad',
                       prefixIcon: Icon(Icons.home_work_outlined),
