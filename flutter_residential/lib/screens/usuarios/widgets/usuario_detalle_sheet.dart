@@ -75,14 +75,6 @@ class UsuarioDetalleSheet extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    Center(
-                      child: Text(
-                        usuario.email,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 20),
 
                     if (mostrarAcciones) ...[_BotonesAprobacion(usuario: usuario)],
@@ -95,19 +87,13 @@ class UsuarioDetalleSheet extends StatelessWidget {
                       _fila(theme, 'Registrado', usuario.creadoEn),
                     ]),
 
-                    if (usuario.apto != null ||
-                        usuario.torre != null ||
-                        usuario.telefono != null) ...[
                       const SizedBox(height: 16),
-                      _seccion(theme, 'Residencia', [
-                        if (usuario.torre != null)
-                          _fila(theme, 'Torre', usuario.torre!),
-                        if (usuario.apto != null)
-                          _fila(theme, 'Apartamento', usuario.apto!),
+                      _seccion(theme, 'Datos de contacto', [
+                          _fila(theme, 'Correo Electrónico', usuario.email),
                         if (usuario.telefono != null)
                           _fila(theme, 'Teléfono', usuario.telefono!),
                       ]),
-                    ],
+                    
 
                     if (usuario.rol == 'RESIDENTE') ...[  
                       const SizedBox(height: 16),
@@ -436,18 +422,25 @@ class _PropiedadTile extends StatelessWidget {
                 Row(
                   children: [
                     if (prop.esPrincipal) ...[  
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'Principal',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.primary),
-                        ),
+                      Row(
+                        children: [
+                          const Icon(Icons.verified,
+                                  size: 16, color: Colors.amber),
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Principal',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.primary),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(width: 6),
                     ],
@@ -460,7 +453,7 @@ class _PropiedadTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          prop.estadoPropiedad,
+                          'Ocupado',
                           style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.error),
                         ),
@@ -474,7 +467,7 @@ class _PropiedadTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          prop.estadoPropiedad,
+                          'Disponible',
                           style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.primary),
                         ),
@@ -488,7 +481,7 @@ class _PropiedadTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          prop.estadoPropiedad,
+                          'En mantenimiento',
                           style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.secondary),
                         ),

@@ -17,8 +17,7 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
 
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _telefonoCtrl;
-  late final TextEditingController _aptoCtrl;
-  late final TextEditingController _torreCtrl;
+  late final TextEditingController _correoCtrl;
 
   late String _rol;
   late String _estado;
@@ -34,7 +33,6 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
   };
 
   static const _etiquetasEstado = {
-    'PENDIENTE': 'Pendiente',
     'ACTIVO': 'Activo',
     'INACTIVO': 'Inactivo',
   };
@@ -45,8 +43,7 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
     final u = widget.usuario;
     _nombreCtrl = TextEditingController(text: u.nombre);
     _telefonoCtrl = TextEditingController(text: u.telefono ?? '');
-    _aptoCtrl = TextEditingController(text: u.apto ?? '');
-    _torreCtrl = TextEditingController(text: u.torre ?? '');
+    _correoCtrl = TextEditingController(text: u.email);
     _rol = _roles.contains(u.rol) ? u.rol : _roles.first;
     _estado = _estados.contains(u.estado) ? u.estado : _estados.first;
   }
@@ -55,8 +52,7 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
   void dispose() {
     _nombreCtrl.dispose();
     _telefonoCtrl.dispose();
-    _aptoCtrl.dispose();
-    _torreCtrl.dispose();
+    _correoCtrl.dispose();
     super.dispose();
   }
 
@@ -71,8 +67,7 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
         'estado': _estado,
         if (_telefonoCtrl.text.trim().isNotEmpty)
           'telefono': _telefonoCtrl.text.trim(),
-        if (_aptoCtrl.text.trim().isNotEmpty) 'apto': _aptoCtrl.text.trim(),
-        if (_torreCtrl.text.trim().isNotEmpty) 'torre': _torreCtrl.text.trim(),
+        if (_correoCtrl.text.trim().isNotEmpty) 'email': _correoCtrl.text.trim(),
       });
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
@@ -130,12 +125,6 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                        Text(
-                          widget.usuario.email,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -184,26 +173,13 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
               const SizedBox(height: 20),
 
               // Sección: Residencia
-              _seccionLabel(theme, 'Residencia'),
+              _seccionLabel(theme, 'Datos de contacto'),
               const SizedBox(height: 8),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _torreCtrl,
-                      decoration: _inputDecoration('Torre', Icons.apartment_outlined),
+              TextFormField(
+                      controller: _correoCtrl,
+                      decoration: _inputDecoration('Correo electrónico', Icons.email_outlined),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _aptoCtrl,
-                      decoration: _inputDecoration('Apartamento', Icons.door_front_door_outlined),
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 12),
 
               TextFormField(
