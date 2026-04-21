@@ -7,8 +7,8 @@ class BannerBienvenidaResidente extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    String nom = nombreUser.split(" ").first;
+    final cs = Theme.of(context).colorScheme;
+    final String nom = nombreUser.split(" ").first;
 
     return Container(
       decoration: BoxDecoration(
@@ -27,7 +27,7 @@ class BannerBienvenidaResidente extends StatelessWidget {
             Text(
               'Bienvenido a casa, $nom! 👋',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.black,
+                color: cs.onSurface,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -35,7 +35,7 @@ class BannerBienvenidaResidente extends StatelessWidget {
               '🏠  Vivir bien es también estar informado.',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.black54,
+                color: cs.onSurfaceVariant,
               ),
             ),
           ],

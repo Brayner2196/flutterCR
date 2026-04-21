@@ -18,18 +18,19 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
 
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Color.fromRGBO(244, 247, 249, 0.95),
       appBar: AppBar(
         title: Align(
           alignment: Alignment.topLeft,
           child: Text(
             (auth.nombreConjunto ?? '').toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
               letterSpacing: -0.5,
-              color: Color.fromRGBO(25, 53, 89, 1)
+              color: cs.onSurface,
             ),
           ),
         ),
@@ -37,9 +38,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.logout,
-                color: Colors.redAccent,
+                color: cs.error,
               ),
               tooltip: 'Cerrar sesión',
               onPressed: () => _confirmarLogout(context),
@@ -60,7 +61,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     child: Text(
                       'Hola, ${auth.nombre}',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Color.fromRGBO(25, 53, 89, 1),
+                        color: cs.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -80,7 +81,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.07),
+                    cs.onSurface.withValues(alpha: 0.07),
                     Colors.transparent,
                   ],
                 ),

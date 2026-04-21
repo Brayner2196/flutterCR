@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Paleta y tokens de diseño — versión Flutter del rediseño V1.
@@ -103,5 +104,38 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
         ),
       ),
     ),
+    extensions: [
+      AppStatusColors(
+        ok: AppColors.ok,
+        okSoft: AppColors.okSoft,
+        neutralSoft: AppColors.neutralSoft,
+      ),
+    ],
   );
+}
+
+/// Colores de estado semánticos no cubiertos por ColorScheme.
+/// Uso: Theme.of(context).extension<AppStatusColors>()!
+@immutable
+class AppStatusColors extends ThemeExtension<AppStatusColors> {
+  const AppStatusColors({
+    required this.ok,
+    required this.okSoft,
+    required this.neutralSoft,
+  });
+
+  final Color ok;
+  final Color okSoft;
+  final Color neutralSoft;
+
+  @override
+  AppStatusColors copyWith({Color? ok, Color? okSoft, Color? neutralSoft}) =>
+      AppStatusColors(
+        ok: ok ?? this.ok,
+        okSoft: okSoft ?? this.okSoft,
+        neutralSoft: neutralSoft ?? this.neutralSoft,
+      );
+
+  @override
+  AppStatusColors lerp(AppStatusColors? other, double t) => this;
 }
