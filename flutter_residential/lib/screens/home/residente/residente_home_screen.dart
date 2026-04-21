@@ -182,7 +182,4 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
   }
 
-  String? _propiedadText(UsuarioPropiedadResponse? propiedadActual) {
-    return propiedadActual?.pathTexto;
-  }
 }
