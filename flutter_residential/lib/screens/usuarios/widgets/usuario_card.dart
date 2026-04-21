@@ -36,7 +36,7 @@ class UsuarioCard extends StatelessWidget {
                     width: 52,
                     height: 58,
                     decoration: BoxDecoration(
-                      color: rolColor.withOpacity(0.12),
+                      color: rolColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
