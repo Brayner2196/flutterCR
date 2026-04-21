@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/models/usuario_propiedad_response.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/propiedad_provider.dart';
 import 'residente_dashboard_screen.dart';
@@ -16,11 +17,17 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
   int _tabActual = 0;
   AuthProvider get auth => context.watch<AuthProvider>();
   PropiedadProvider get propiedades => context.watch<PropiedadProvider>();
-    
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PropiedadProvider>().cargarMisPropiedades();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    propiedades.cargarMisPropiedades(); // Carga las propiedades al construir el widget
 
     return Scaffold(
       appBar: AppBar(
@@ -60,13 +67,16 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
                           color: Color.fromRGBO(84,121,224, 1)
                         ),
                       ),
-                      Text(
-                        _propiedadText(propiedades.propiedadActual),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black45,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Skeletonizer(
+                        enabled: propiedades.misPropiedades == null,
+                         child: Text(
+                           propiedades.propiedadActual?.pathTexto ?? '',
+                           style: TextStyle(
+                             fontSize: 12,
+                             color: Colors.black45,
+                             fontWeight: FontWeight.w600,
+                           ),
+                         ),
                       ),
                     ],
                   )
@@ -163,7 +173,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
   }
 
-  String _propiedadText(UsuarioPropiedadResponse? propiedadActual){
-    return propiedadActual?.pathTexto ?? 'N/A';
+  String? _propiedadText(UsuarioPropiedadResponse? propiedadActual){
+    return propiedadActual?.pathTexto;
   }
 }
