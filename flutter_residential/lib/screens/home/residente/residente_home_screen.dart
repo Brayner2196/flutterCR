@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/models/usuario_propiedad_response.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../../providers/auth_provider.dart';
