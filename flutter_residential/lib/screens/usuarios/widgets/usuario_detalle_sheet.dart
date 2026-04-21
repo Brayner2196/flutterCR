@@ -479,6 +479,20 @@ class _PropiedadTile extends StatelessWidget {
                               color: theme.colorScheme.primary),
                         ),
                       ),
+                      if(prop.estadoPropiedad.isNotEmpty && prop.estadoPropiedad == 'EN_MANTENIMIENTO')
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          prop.estadoPropiedad,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.secondary),
+                        ),
+                      ),
                       const SizedBox(width: 6),
                   ],
                 ),
