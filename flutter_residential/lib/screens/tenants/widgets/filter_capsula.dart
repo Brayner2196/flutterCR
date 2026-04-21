@@ -7,7 +7,8 @@ class FilterCapsula extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const FilterCapsula({ required this.label,
+  const FilterCapsula({super.key,  
+    required this.label,
     required this.count,
     required this.selected,
     required this.onTap,

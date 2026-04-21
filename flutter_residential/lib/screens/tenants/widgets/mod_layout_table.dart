@@ -6,7 +6,7 @@ class ModLayoutTable extends StatelessWidget {
   final int usuarios;
   final void Function(TenantResponse) onTapTenant;
 
-  const ModLayoutTable({
+  const ModLayoutTable({super.key, 
     required this.tenants,
     required this.usuarios,
     required this.onTapTenant,
