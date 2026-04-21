@@ -252,7 +252,7 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
               const SizedBox(height: 12),
 
               DropdownButtonFormField<String>(
-                value: _rol,
+                initialValue: _rol,
                 decoration: _decor('Rol', Icons.badge_outlined),
                 items: _roles
                     .map((r) => DropdownMenuItem(
@@ -277,7 +277,7 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
                 )
               else ...[
                 DropdownButtonFormField<TipoPropiedadNodo>(
-                  value: _tipoRaizSeleccionado,
+                  initialValue: _tipoRaizSeleccionado,
                   decoration: _decor('Tipo de propiedad', Icons.home_work_outlined),
                   items: tiposArbol
                       .map((t) => DropdownMenuItem(
