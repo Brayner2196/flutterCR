@@ -3,6 +3,7 @@ class UsuarioPropiedadResponse {
   final int propiedadId;
   final String pathTexto;
   final String nombreTipoRaiz;
+  final String estadoPropiedad;
   final bool esPrincipal;
 
   const UsuarioPropiedadResponse({
@@ -10,6 +11,7 @@ class UsuarioPropiedadResponse {
     required this.propiedadId,
     required this.pathTexto,
     required this.nombreTipoRaiz,
+    required this.estadoPropiedad,
     required this.esPrincipal,
   });
 
@@ -19,6 +21,7 @@ class UsuarioPropiedadResponse {
       propiedadId: json['propiedadId'],
       pathTexto: json['pathTexto'] ?? '',
       nombreTipoRaiz: json['nombreTipoRaiz'] ?? '',
+      estadoPropiedad: json['estadoPropiedad'] ?? 'desconocido',
       esPrincipal: json['esPrincipal'] ?? false,
     );
   }

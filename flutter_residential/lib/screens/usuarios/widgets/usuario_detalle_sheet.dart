@@ -216,9 +216,10 @@ class _PropiedadesSectionState extends State<_PropiedadesSection> {
           await PropiedadService.getPropiedadesDeUsuario(widget.usuario.id);
       if (mounted) setState(() => _propiedades = lista);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(
             () => _error = e.toString().replaceFirst('Exception: ', ''));
+      }
     } finally {
       if (mounted) setState(() => _cargando = false);
     }
@@ -349,7 +350,7 @@ class _PropiedadesSectionState extends State<_PropiedadesSection> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
@@ -412,8 +413,15 @@ class _PropiedadTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          Icon(Icons.home_outlined,
-              color: theme.colorScheme.primary, size: 22),
+          if(prop.pathTexto.contains('Parqueadero')) 
+          Icon(
+            Icons.emoji_transportation_outlined,
+            color: theme.colorScheme.primary, size: 22
+          )else
+          Icon(
+            Icons.home_outlined,
+            color: theme.colorScheme.primary, size: 22
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -443,11 +451,35 @@ class _PropiedadTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                     ],
-                    Text(
-                      prop.nombreTipoRaiz,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
-                    ),
+                    if(prop.estadoPropiedad.isNotEmpty && prop.estadoPropiedad == 'OCUPADO')
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.apro,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          prop.estadoPropiedad,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.error),
+                        ),
+                      ),
+                    if(prop.estadoPropiedad.isNotEmpty && prop.estadoPropiedad == 'DISPONIBLE')
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          prop.estadoPropiedad,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.primary),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
                   ],
                 ),
               ],
@@ -736,7 +768,7 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           DropdownButtonFormField<TipoPropiedadNodo>(
-                            value: _tipoRaizSeleccionado,
+                            initialValue: _tipoRaizSeleccionado,
                             decoration: const InputDecoration(
                                 labelText: 'Tipo de propiedad *'),
                             items: _tiposRaiz
