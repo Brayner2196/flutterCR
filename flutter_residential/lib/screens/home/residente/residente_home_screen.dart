@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/models/usuario_propiedad_response.dart';
+import 'package:flutter_residential/screens/home/residente/widgets/bannerBienvenida.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/propiedad_provider.dart';
 import '../../residente/mi_propiedad_screen.dart';
 import 'residente_dashboard_screen.dart';
 
@@ -13,67 +16,112 @@ class ResidenteHomeScreen extends StatefulWidget {
 
 class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
   int _tabActual = 0;
-
-  static const _titulos = ['Inicio', 'Mi Propiedad'];
+  AuthProvider get auth => context.watch<AuthProvider>();
+  PropiedadProvider get propiedades => context.watch<PropiedadProvider>();
+    
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    propiedades.cargarMisPropiedades(); // Carga las propiedades al construir el widget
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _titulos[_tabActual],
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          if (auth.nombreConjunto != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    auth.nombreConjunto!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
+        title: Align(
+          alignment: Alignment.topLeft,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container( // Avatar circular con iniciales
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _iniciales(auth.nombre ?? 'Usuario'),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromRGBO(84,121,224, 1),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'logout') _confirmarLogout(context);
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, size: 20),
-                    SizedBox(width: 8),
-                    Text('Cerrar sesión'),
-                  ],
-                ),
-              ),
+                  SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        auth.nombreConjunto ?? 'Conjunto Residencial',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          letterSpacing: -0.5,
+                          color: Color.fromRGBO(84,121,224, 1)
+                        ),
+                      ),
+                      Text(
+                        _propiedadText(propiedades.propiedadActual),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black45,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  )
             ],
+          )
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          )
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: IconButton(
+              icon: const Icon(
+                Icons.logout,
+                color: Colors.redAccent,
+              ),
+              tooltip: 'Cerrar sesión',
+              onPressed: () => _confirmarLogout(context),
+            ),
           ),
         ],
+        bottom:  PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.grey.withValues(alpha: 0.2),
+          ),
+        ),
       ),
-      body: IndexedStack(
+      /*body: IndexedStack(
         index: _tabActual,
         children: [
           ResidenteDashboardScreen(onNavegar: (i) => setState(() => _tabActual = i)),
           const MiPropiedadScreen(),
         ],
+      ),*/
+      body: SingleChildScrollView(
+        child: Container(
+          height: MediaQuery.of(context).size.height - kToolbarHeight - 1, // Ajusta por AppBar y borde
+          decoration: BoxDecoration(
+            color: Colors.grey.withValues(alpha: 0.05),
+          ),
+          child: Column(
+            children: [
+              ResidenteDashboardScreen(onNavegar: (i) => setState(() => _tabActual = i)),
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabActual,
@@ -107,5 +155,17 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     if (confirmado == true && context.mounted) {
       await context.read<AuthProvider>().logout();
     }
+  }
+
+  String _iniciales(String nombre) {
+    final partes = nombre.trim().split(' ');
+    if (partes.length >= 2) {
+      return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
+    }
+    return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
+  }
+
+  String _propiedadText(UsuarioPropiedadResponse? propiedadActual){
+    return propiedadActual?.pathTexto ?? 'N/A';
   }
 }
