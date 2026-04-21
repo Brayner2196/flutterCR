@@ -607,8 +607,10 @@ class _AgregarPropiedadDialog extends StatefulWidget {
 }
 
 class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
-  List<TipoPropiedadNodo> _camino = [];
-  List<TextEditingController> _controllers = [];
+  List<TipoPropiedadNodo> _tiposRaiz = [];
+  TipoPropiedadNodo? _tipoRaizSeleccionado;
+  final List<TipoPropiedadNodo> _nivelesActivos = [];
+  final List<TextEditingController> _pathCtrlList = [];
   bool _cargando = true;
   bool _guardando = false;
   String? _error;
@@ -621,7 +623,7 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
 
   @override
   void dispose() {
-    for (final c in _controllers) {
+    for (final c in _pathCtrlList) {
       c.dispose();
     }
     super.dispose();
@@ -630,12 +632,9 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
   Future<void> _cargarTipos() async {
     try {
       final tipos = await PropiedadService.getTiposArbolAdmin();
-      final camino = _aplanarCamino(tipos);
       if (mounted) {
         setState(() {
-          _camino = camino;
-          _controllers =
-              List.generate(camino.length, (_) => TextEditingController());
+          _tiposRaiz = tipos;
           _cargando = false;
         });
       }
@@ -649,19 +648,41 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
     }
   }
 
-  /// Recorre el árbol tomando siempre el primer hijo hasta llegar a la hoja.
-  List<TipoPropiedadNodo> _aplanarCamino(List<TipoPropiedadNodo> raices) {
-    final resultado = <TipoPropiedadNodo>[];
-    TipoPropiedadNodo? actual = raices.isNotEmpty ? raices.first : null;
-    while (actual != null) {
-      resultado.add(actual);
-      actual = actual.hijos.isNotEmpty ? actual.hijos.first : null;
+  void _onTipoRaizChanged(TipoPropiedadNodo? tipo) {
+    for (final c in _pathCtrlList) {
+      c.dispose();
     }
-    return resultado;
+    _pathCtrlList.clear();
+    _nivelesActivos.clear();
+    if (tipo != null) {
+      _nivelesActivos.add(tipo);
+      _pathCtrlList.add(TextEditingController());
+    }
+    setState(() => _tipoRaizSeleccionado = tipo);
+  }
+
+  void _onNivelLlenado(int index) {
+    final texto = _pathCtrlList[index].text.trim();
+    if (texto.isEmpty) return;
+    while (_nivelesActivos.length > index + 1) {
+      _nivelesActivos.removeLast();
+      _pathCtrlList.removeLast().dispose();
+    }
+    final nodoActual = _nivelesActivos[index];
+    if (nodoActual.hijos.isNotEmpty) {
+      _nivelesActivos.add(nodoActual.hijos.first);
+      _pathCtrlList.add(TextEditingController());
+    }
+    setState(() {});
   }
 
   Future<void> _guardar() async {
-    for (final c in _controllers) {
+    if (_tipoRaizSeleccionado == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selecciona un tipo de propiedad')));
+      return;
+    }
+    for (final c in _pathCtrlList) {
       if (c.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Completa todos los campos')));
@@ -671,10 +692,10 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
     setState(() => _guardando = true);
     try {
       final path = List.generate(
-        _camino.length,
+        _nivelesActivos.length,
         (i) => {
-          'tipoId': _camino[i].id,
-          'valor': _controllers[i].text.trim(),
+          'tipoId': _nivelesActivos[i].id,
+          'valor': _pathCtrlList[i].text.trim(),
         },
       );
       final propiedadId = await PropiedadService.crearPropiedad(path);
@@ -708,31 +729,51 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
               ? Text(_error!,
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.error))
-              : _camino.isEmpty
+              : _tiposRaiz.isEmpty
                   ? const Text('No hay tipos de propiedad configurados.')
                   : SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: List.generate(
-                          _camino.length,
-                          (i) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: TextFormField(
-                              controller: _controllers[i],
+                        children: [
+                          DropdownButtonFormField<TipoPropiedadNodo>(
+                            value: _tipoRaizSeleccionado,
+                            decoration: const InputDecoration(
+                                labelText: 'Tipo de propiedad *'),
+                            items: _tiposRaiz
+                                .map((t) => DropdownMenuItem(
+                                      value: t,
+                                      child: Text(t.nombre),
+                                    ))
+                                .toList(),
+                            onChanged: _onTipoRaizChanged,
+                          ),
+                          for (int i = 0;
+                              i < _nivelesActivos.length;
+                              i++) ...[
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _pathCtrlList[i],
                               textCapitalization:
                                   TextCapitalization.characters,
                               decoration: InputDecoration(
-                                  labelText: '${_camino[i].nombre} *'),
+                                  labelText:
+                                      '${_nivelesActivos[i].nombre} *'),
+                              onFieldSubmitted: (_) => _onNivelLlenado(i),
+                              onChanged: (_) {
+                                if (_pathCtrlList[i].text.trim().isNotEmpty) {
+                                  _onNivelLlenado(i);
+                                }
+                              },
                             ),
-                          ),
-                        ),
+                          ],
+                        ],
                       ),
                     ),
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancelar')),
-        if (!_cargando && _error == null && _camino.isNotEmpty)
+        if (!_cargando && _error == null && _tiposRaiz.isNotEmpty)
           FilledButton(
             onPressed: _guardando ? null : _guardar,
             child: _guardando
