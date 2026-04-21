@@ -24,4 +24,10 @@ class ApiConstants {
 
   // Propiedades — residente autenticado
   static const String misPropiedades = '/api/propiedades/mis-propiedades';
+
+  // Propiedades — admin por residente
+  static String propiedadesDeUsuario(int id) => '/api/usuarios/$id/propiedades';
+  static String propiedadEstado(int id) => '/api/propiedades/$id/estado';
+  static String marcarPropiedadPrincipal(int propId, int userId) =>
+      '/api/propiedades/$propId/usuarios/$userId/principal';
 }

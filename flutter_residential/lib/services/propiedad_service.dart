@@ -45,6 +45,64 @@ class PropiedadService {
     throw Exception(body['message'] ?? 'Error al obtener propiedades');
   }
 
+  /// Propiedades de un residente específico (admin)
+  static Future<List<UsuarioPropiedadResponse>> getPropiedadesDeUsuario(
+      int usuarioId) async {
+    final response =
+        await ApiClient.get(ApiConstants.propiedadesDeUsuario(usuarioId));
+    final body = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return (body as List)
+          .map((e) =>
+              UsuarioPropiedadResponse.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    throw Exception(
+        body['message'] ?? 'Error al obtener propiedades del usuario');
+  }
+
+  /// Actualizar estado de una propiedad (admin)
+  static Future<void> actualizarEstadoPropiedad(
+      int propiedadId, String estado) async {
+    final response = await ApiClient.patch(
+      '${ApiConstants.propiedadEstado(propiedadId)}?estado=$estado',
+      {},
+    );
+    if (response.statusCode != 200) {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Error al actualizar estado');
+    }
+  }
+
+  /// Marcar propiedad como principal del residente (admin)
+  static Future<void> marcarComoPrincipal(
+      int propiedadId, int usuarioId) async {
+    final response = await ApiClient.patch(
+      ApiConstants.marcarPropiedadPrincipal(propiedadId, usuarioId),
+      {},
+    );
+    if (response.statusCode != 204 && response.statusCode != 200) {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Error al marcar como principal');
+    }
+  }
+
+  /// Crear propiedad por path (admin) — retorna el ID de la propiedad hoja
+  static Future<int> crearPropiedad(
+      List<Map<String, dynamic>> path) async {
+    final response = await ApiClient.post(
+      ApiConstants.propiedades,
+      {'propiedadPath': path},
+      requiresAuth: true,
+    );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      return body['id'] as int;
+    }
+    final body = jsonDecode(response.body);
+    throw Exception(body['message'] ?? 'Error al crear propiedad');
+  }
+
   /// Crear tipo de propiedad (admin)
   static Future<void> crearTipo({
     required String nombre,
