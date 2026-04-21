@@ -49,6 +49,8 @@ class PropiedadProvider extends ChangeNotifier {
   }
 
   Future<void> cargarMisPropiedades() async {
+    _cargando = true;
+    notifyListeners();
     try {
       _misPropiedades = await PropiedadService.getMisPropiedades();
       _propiedadActual = _misPropiedades.firstWhere(
@@ -57,8 +59,10 @@ class PropiedadProvider extends ChangeNotifier {
       );
     } catch (_) {
       // silently fail — no propiedades asignadas aún
+    } finally {
+      _cargando = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void seleccionarPropiedad(UsuarioPropiedadResponse propiedad) {

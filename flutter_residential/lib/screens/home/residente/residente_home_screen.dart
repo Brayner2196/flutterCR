@@ -28,7 +28,6 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Align(
@@ -36,73 +35,74 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container( // Avatar circular con iniciales
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+              Container(
+                // Avatar circular con iniciales
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    _iniciales(auth.nombre ?? 'Usuario'),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromRGBO(84, 121, 224, 1),
                     ),
-                    child: Center(
-                      child: Text(
-                        _iniciales(auth.nombre ?? 'Usuario'),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromRGBO(84,121,224, 1),
-                        ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    auth.nombreConjunto ?? 'Conjunto Residencial',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      letterSpacing: -0.5,
+                      color: Color.fromRGBO(84, 121, 224, 1),
+                    ),
+                  ),
+                  Skeletonizer(
+                    enabled: propiedades.cargando,
+                    child: Text(
+                      propiedades.propiedadActual?.pathTexto ??
+                          'Vivienda no seleccionada',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black45,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        auth.nombreConjunto ?? 'Conjunto Residencial',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          letterSpacing: -0.5,
-                          color: Color.fromRGBO(84,121,224, 1)
-                        ),
-                      ),
-                      Skeletonizer(
-                        enabled: propiedades.misPropiedades == null,
-                         child: Text(
-                           propiedades.propiedadActual?.pathTexto ?? '',
-                           style: TextStyle(
-                             fontSize: 12,
-                             color: Colors.black45,
-                             fontWeight: FontWeight.w600,
-                           ),
-                         ),
-                      ),
-                    ],
-                  )
+                ],
+              ),
             ],
-          )
+          ),
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(20),
             bottomRight: Radius.circular(20),
-          )
+          ),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
             child: IconButton(
-              icon: const Icon(
-                Icons.logout,
-                color: Colors.redAccent,
-              ),
+              icon: const Icon(Icons.logout, color: Colors.redAccent),
               tooltip: 'Cerrar sesión',
               onPressed: () => _confirmarLogout(context),
             ),
           ),
         ],
-        bottom:  PreferredSize(
+        bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
@@ -119,13 +119,16 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
       ),*/
       body: SingleChildScrollView(
         child: Container(
-          height: MediaQuery.of(context).size.height - kToolbarHeight - 1, // Ajusta por AppBar y borde
-          decoration: BoxDecoration(
-            color: Colors.grey.withValues(alpha: 0.05),
-          ),
+          height:
+              MediaQuery.of(context).size.height -
+              kToolbarHeight -
+              1, // Ajusta por AppBar y borde
+          decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.05)),
           child: Column(
             children: [
-              ResidenteDashboardScreen(onNavegar: (i) => setState(() => _tabActual = i)),
+              ResidenteDashboardScreen(
+                onNavegar: (i) => setState(() => _tabActual = i),
+              ),
               const SizedBox(height: 100),
             ],
           ),
@@ -135,8 +138,14 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
         selectedIndex: _tabActual,
         onDestinationSelected: (i) => setState(() => _tabActual = i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Inicio'),
-          NavigationDestination(icon: Icon(Icons.home_work_outlined), label: 'Mi Propiedad'),
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            label: 'Inicio',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.home_work_outlined),
+            label: 'Mi Propiedad',
+          ),
         ],
       ),
     );
@@ -173,7 +182,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
   }
 
-  String? _propiedadText(UsuarioPropiedadResponse? propiedadActual){
+  String? _propiedadText(UsuarioPropiedadResponse? propiedadActual) {
     return propiedadActual?.pathTexto;
   }
 }
