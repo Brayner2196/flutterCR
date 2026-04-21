@@ -66,7 +66,6 @@ class PropiedadService {
       int propiedadId, String estado) async {
     final response = await ApiClient.patch(
       '${ApiConstants.propiedadEstado(propiedadId)}?estado=$estado',
-      {},
     );
     if (response.statusCode != 200) {
       final body = jsonDecode(response.body);
@@ -79,7 +78,6 @@ class PropiedadService {
       int propiedadId, int usuarioId) async {
     final response = await ApiClient.patch(
       ApiConstants.marcarPropiedadPrincipal(propiedadId, usuarioId),
-      {},
     );
     if (response.statusCode != 204 && response.statusCode != 200) {
       final body = jsonDecode(response.body);
