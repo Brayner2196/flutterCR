@@ -158,16 +158,3 @@ class _PlaceholderScreen extends StatelessWidget {
   }
 }
 
-String _iniciales(String? nombre, String? email) {
-  if (nombre != null && nombre.trim().isNotEmpty) {
-    final partes = nombre.trim().split(' ');
-    if (partes.length >= 2) {
-      return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
-    }
-    return nombre[0].toUpperCase();
-  }
-  final localPart = (email ?? '').contains('@')
-      ? email!.split('@')[0]
-      : (email ?? '');
-  return localPart.isNotEmpty ? localPart[0].toUpperCase() : '?';
-}
