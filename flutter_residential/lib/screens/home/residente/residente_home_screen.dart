@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/models/usuario_propiedad_response.dart';
-import 'package:flutter_residential/screens/home/residente/widgets/bannerBienvenida.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/propiedad_provider.dart';
-import '../../residente/mi_propiedad_screen.dart';
 import 'residente_dashboard_screen.dart';
 
 class ResidenteHomeScreen extends StatefulWidget {
