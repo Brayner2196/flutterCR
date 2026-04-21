@@ -50,7 +50,7 @@ class AdminDashboardScreen extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             theme.colorScheme.primary,
-            theme.colorScheme.primary.withOpacity(0.7),
+            theme.colorScheme.primary.withValues(alpha: 0.7),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -63,7 +63,7 @@ class AdminDashboardScreen extends StatelessWidget {
           Text(
             'Bienvenido',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onPrimary.withOpacity(0.8),
+              color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 4),
@@ -78,7 +78,7 @@ class AdminDashboardScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: theme.colorScheme.onPrimary.withOpacity(0.2),
+              color: theme.colorScheme.onPrimary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -105,9 +105,9 @@ class AdminDashboardScreen extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

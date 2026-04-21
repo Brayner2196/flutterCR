@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/screens/home/residente/widgets/bannerBienvenida.dart';
+import 'package:flutter_residential/screens/home/residente/widgets/banner_bienvenida.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 
@@ -59,9 +59,9 @@ class ResidenteDashboardScreen extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
