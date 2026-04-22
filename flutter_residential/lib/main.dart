@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/providers/app_provider.dart';
+import 'package:flutter_residential/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'providers/auth_provider.dart';
@@ -20,40 +22,23 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..cargarSesionGuardada(),),
+        ChangeNotifierProvider(create: (_) => AppProvider()),
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
         ChangeNotifierProvider(create: (_) => TenantProvider()),
         ChangeNotifierProvider(create: (_) => PropiedadProvider()),
       ],
       child: ToastificationWrapper(
-        child: MaterialApp(
-          title: 'Conjunto Residencial',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1565C0),
-              brightness: Brightness.light,
-            ),
-            useMaterial3: true,
-            appBarTheme: const AppBarTheme(
-              centerTitle: true,
-              elevation: 0,
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-            ),
-            elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          home: const SplashScreen(),
+        child: Consumer<AppProvider>(
+          builder: (_, AppProvider appProvider, _) {  
+            return MaterialApp(
+              title: 'Conjunto Residencial',
+              debugShowCheckedModeBanner: false,
+              themeMode: appProvider.themeMode,
+              theme: buildAppTheme(brightness: Brightness.light),
+              darkTheme: buildAppTheme(brightness: Brightness.dark),
+              home: const SplashScreen(),
+            );
+          },
         ),
       ),
     );
