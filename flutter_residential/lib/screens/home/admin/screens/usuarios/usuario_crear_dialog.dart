@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
-import '../../models/tipo_propiedad_nodo.dart';
-import '../../providers/propiedad_provider.dart';
-import '../../providers/usuario_provider.dart';
+import '../../../../../models/tipo_propiedad_nodo.dart';
+import '../../../../../providers/propiedad_provider.dart';
+import '../../../../../providers/usuario_provider.dart';
 
 class UsuarioCrearDialog extends StatefulWidget {
   const UsuarioCrearDialog({super.key});

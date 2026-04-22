@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
-import '../../../models/usuario_response.dart';
-import '../../../models/usuario_propiedad_response.dart';
-import '../../../models/tipo_propiedad_nodo.dart';
-import '../../../providers/usuario_provider.dart';
-import '../../../services/propiedad_service.dart';
+import '../../../../../../models/usuario_response.dart';
+import '../../../../../../models/usuario_propiedad_response.dart';
+import '../../../../../../models/tipo_propiedad_nodo.dart';
+import '../../../../../../providers/usuario_provider.dart';
+import '../../../../../../services/propiedad_service.dart';
 
 class UsuarioDetalleSheet extends StatelessWidget {
   final UsuarioResponse usuario;

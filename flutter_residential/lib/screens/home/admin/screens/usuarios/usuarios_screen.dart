@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/providers/auth_provider.dart';
+import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart';
+import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/bottom_navigation_bar_admin.dart';
 import 'package:provider/provider.dart';
-import '../../providers/usuario_provider.dart';
-import '../../models/usuario_response.dart';
-import '../../widgets/pill_tab_bar.dart';
+import '../../../../../providers/usuario_provider.dart';
+import '../../../../../models/usuario_response.dart';
+import '../../../../../widgets/pill_tab_bar.dart';
 import 'usuario_crear_dialog.dart';
 import 'widgets/usuario_card.dart';
 import 'widgets/usuario_detalle_sheet.dart';
@@ -59,9 +62,12 @@ class _UsuariosScreenState extends State<UsuariosScreen>
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final cs = Theme.of(context).colorScheme;
+    
     return Scaffold(
       backgroundColor: const Color.fromRGBO(242, 245, 248, 0.91),
-      appBar: AppBar(title: const Text('Gestión de Usuarios')),
+      appBar: AppBarAdmin(auth: auth, cs: cs),
       body: Stack(
         children: [
           Column(
@@ -220,33 +226,10 @@ class _UsuariosScreenState extends State<UsuariosScreen>
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tabActual,
-        onDestinationSelected: (i) {
-          if (i == 0) {
-            Navigator.pop(context);
-          } else {
-            setState(() => _tabActual = i);
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            label: 'Inicio',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            label: 'Usuarios',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_pin_outlined),
-            label: 'Propietarios',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.home_work_outlined),
-            label: 'Propiedades',
-          ),
-        ],
+      bottomNavigationBar: BottomNavigationBarAdmin(
+        tabActual: _tabActual,
+        onTabChanged: (i) => setState(() => _tabActual = i),
+        colorScheme: Theme.of(context).colorScheme,
       ),
     );
   }

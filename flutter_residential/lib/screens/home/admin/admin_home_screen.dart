@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart';
+import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/bottom_navigation_bar_admin.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
-import '../../propiedades/propiedades_screen.dart';
-import '../../usuarios/usuarios_screen.dart';
+import 'screens/usuarios/usuarios_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -36,7 +36,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     child: Text(
                       'Hola, ${auth.nombre}',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: cs.surface,
+                        color: cs.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -65,32 +65,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tabActual,
-        onDestinationSelected: (i) {
-          setState(() => _tabActual = i);
-          if (i == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const UsuariosScreen()),
-            ).then((_) {
-              if (mounted) setState(() => _tabActual = 0);
-            });
-          } else if (i == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PropiedadesScreen()),
-            ).then((_) {
-              if (mounted) setState(() => _tabActual = 0);
-            });
-          }
-        },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Inicio'),
-          NavigationDestination(icon: Icon(Icons.people_outline), label: 'Usuarios'),
-          NavigationDestination(icon: Icon(Icons.person_pin_outlined), label: 'Propietarios'),
-          NavigationDestination(icon: Icon(Icons.home_work_outlined), label: 'Propiedades'),
-        ],
+      bottomNavigationBar: BottomNavigationBarAdmin(
+        tabActual: _tabActual,
+        onTabChanged: (i) => setState(() => _tabActual = i),
+        colorScheme: cs,
       ),
     );
   }

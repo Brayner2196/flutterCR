@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../models/usuario_response.dart';
+import '../../../../../../models/usuario_response.dart';
 import '../usuario_editar_dialog.dart';
 
 class UsuarioCard extends StatelessWidget {
