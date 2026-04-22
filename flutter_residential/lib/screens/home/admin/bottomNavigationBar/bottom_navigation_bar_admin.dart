@@ -37,19 +37,12 @@ class BottomNavigationBarAdmin extends StatelessWidget {
           onDestinationSelected: (i) {
             onTabChanged(i);
             if (tabActual!=i && i == 0) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
-              ).then((_) => onTabChanged(0));
+              Navigator.pop(
+                context);
             }else if (tabActual!=i && i == 1) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const UsuariosScreen()),
-              ).then((_) => onTabChanged(0));
-            } else if (tabActual!=i && i == 3) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PropiedadesScreen()),
               ).then((_) => onTabChanged(0));
             }
           },
