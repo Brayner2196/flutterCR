@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../propiedades/propiedades_screen.dart';
@@ -17,36 +18,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: Color.fromRGBO(244, 247, 249, 0.95),
-      appBar: AppBar(
-        title: Align(
-          alignment: Alignment.topLeft,
-          child: Text(
-            (auth.nombreConjunto ?? '').toUpperCase(),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              letterSpacing: -0.5,
-              color: Color.fromRGBO(25, 53, 89, 1)
-            ),
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: IconButton(
-              icon: const Icon(
-                Icons.logout,
-                color: Colors.redAccent,
-              ),
-              tooltip: 'Cerrar sesión',
-              onPressed: () => _confirmarLogout(context),
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBarAdmin(auth: auth, cs: cs),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -60,7 +36,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     child: Text(
                       'Hola, ${auth.nombre}',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Color.fromRGBO(25, 53, 89, 1),
+                        color: cs.surface,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -80,7 +56,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.07),
+                    cs.surface.withValues(alpha: 0.07),
                     Colors.transparent,
                   ],
                 ),
@@ -119,42 +95,4 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Future<void> _confirmarLogout(BuildContext context) async {
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Estás seguro de que deseas salir?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Salir'),
-          ),
-        ],
-      ),
-    );
-    if (confirmado == true && context.mounted) {
-      await context.read<AuthProvider>().logout();
-    }
-  }
 }
-
-class _PlaceholderScreen extends StatelessWidget {
-  final String titulo;
-  const _PlaceholderScreen({required this.titulo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        '$titulo — próximo paso',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-    );
-  }
-}
-
