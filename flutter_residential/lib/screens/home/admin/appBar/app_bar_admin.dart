@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/providers/app_provider.dart';
+import 'package:flutter_residential/widgets/theme_toggle_switch.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_residential/providers/auth_provider.dart';
 
@@ -11,6 +12,7 @@ class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
 
   @override
   Widget build(BuildContext context) {
+    final appProvider = context.watch<AppProvider>();
     return AppBar(
       title: Align(
           alignment: Alignment.topLeft,
@@ -29,16 +31,9 @@ class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
             padding: const EdgeInsets.only(right: 12.0),
             child: Row(
               children: [
-                IconButton(
-                  icon: Icon(
-                    context.read<AppProvider>().themeMode == ThemeMode.dark
-                        ? Icons.light_mode
-                        : Icons.dark_mode_outlined,
-                    color: cs.primary
-                  ),
-                  onPressed: () {
-                    context.read<AppProvider>().toggleTheme();
-                  },
+                ThemeToggleSwitch(
+                  isDark: appProvider.themeMode == ThemeMode.dark,
+                  onToggle: appProvider.toggleTheme,
                 ),
                 IconButton(
                   icon: Icon(
