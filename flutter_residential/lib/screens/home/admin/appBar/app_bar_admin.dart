@@ -32,9 +32,10 @@ class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
             child: Row(
               children: [
                 ThemeToggleSwitch(
-                  isDark: appProvider.themeMode == ThemeMode.dark,
+                  isDark: appProvider.themeMode == ThemeMode.light,
                   onToggle: appProvider.toggleTheme,
                 ),
+                const SizedBox(width: 8),
                 IconButton(
                   icon: Icon(
                     Icons.logout,
