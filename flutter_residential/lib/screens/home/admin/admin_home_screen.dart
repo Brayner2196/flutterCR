@@ -3,7 +3,6 @@ import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart
 import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/bottom_navigation_bar_admin.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
-import 'screens/usuarios/usuarios_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
