@@ -214,17 +214,15 @@ class _UsuariosScreenState extends State<UsuariosScreen>
               ),
             ],
           ),
-          // ── FAB crear usuario
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: FloatingActionButton(
-              onPressed: _abrirCrear,
-              tooltip: 'Crear usuario',
-              child: const Icon(Icons.person_add_outlined),
-            ),
-          ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _abrirCrear,
+        tooltip: 'Crear usuario',
+        child: const Icon(
+          Icons.person_add_outlined,
+          color: Colors.white,
+        ),
       ),
       bottomNavigationBar: BottomNavigationBarAdmin(
         tabActual: _tabActual,

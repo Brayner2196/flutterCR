@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'seleccion_tenant_screen.dart';
@@ -41,9 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!esDirecto && auth.multiTenantPendiente != null) {
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const SeleccionTenantScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const SeleccionTenantScreen()),
         );
       }
       // Si esDirecto == true, SplashScreen reacciona automáticamente al status
@@ -80,18 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(
-                    Icons.apartment,
-                    size: 48,
-                    color: theme.colorScheme.onPrimary,
-                  ),
+                  child: Icon(Icons.apartment, size: 48, color: AppColors.blue),
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Conjunto Residencial',
+                  'My Conjunto Residencial',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -147,7 +142,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
+                          if (v == null || v.isEmpty){
+                            return 'Ingresa tu contraseña';
+                          }
                           if (v.length < 6) return 'Mínimo 6 caracteres';
                           return null;
                         },
@@ -156,8 +153,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ElevatedButton(
                         onPressed: _cargando ? null : _login,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
+                          backgroundColor: theme.colorScheme.surface,
+                          foregroundColor: theme.colorScheme.onSurface,
                         ),
                         child: _cargando
                             ? const SizedBox(
@@ -174,14 +171,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                       ),
                       const SizedBox(height: 16),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (_) => const RegistroScreen()),
-                                    );
-                                  },
-                                  child: const Text('¿No tienes cuenta? Regístrate aquí'),
-                                ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const RegistroScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('¿No tienes cuenta? Regístrate aquí',style: TextStyle(color: AppColors.blue),),
+                      ),
                     ],
                   ),
                 ),

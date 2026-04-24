@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart';
 import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/bottom_navigation_bar_admin.dart';
+import 'package:flutter_residential/screens/home/admin/widgets/quick_access_cards.dart';
+import 'package:flutter_residential/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 
@@ -20,7 +22,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Color.fromRGBO(244, 247, 249, 0.95),
+      backgroundColor: cs.onPrimary,
       appBar: AppBarAdmin(auth: auth, cs: cs),
       body: Stack(
         children: [
@@ -40,26 +42,21 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       ),
                     ),
                   ),
-                )
-              ],
-            ),
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 18,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    cs.surface.withValues(alpha: 0.07),
-                    Colors.transparent,
+                ),
+                QuickAccessGrid(
+                  cards: [
+                    QuickAccessCardData(
+                      title: 'Gestionar Usuarios',
+                      icon: Icons.person_add_outlined,
+                      backgroundColor: AppColors.bgBlue,
+                      iconBackgroundColor: Colors.white,
+                      iconColor: AppColors.blue,
+                      colorText: AppColors.blue,
+                      onTap: () => setState(() => _tabActual = 1),
+                    ),
                   ],
                 ),
-              ),
+              ],
             ),
           ),
         ],

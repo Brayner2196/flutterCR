@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 /// Neutral cálido + acento violeta low-chroma (inspirado en oklch).
 class AppColors {
   // Light
-  static const bgLight         = Color.fromRGBO(248, 250, 251, 1);
-  static const surfaceLight    = Color.fromRGBO(255, 255, 255, 1);
-  static const surfaceAltLight = Color.fromRGBO(243, 246, 248, 1);
+  static const bgLight         = Color.fromRGBO(255, 255, 255, 1);
+  static const surfaceLight    = Color.fromRGBO(249, 249, 249,1);
+  static const surfaceAltLight = Color.fromRGBO(180, 197, 255, 1);
   static const borderLight     = Color.fromRGBO(224, 227, 229, 1);
   static const hairlineLight   = Color.fromRGBO(238, 240, 242, 1);
   static const textHiLight     = Color.fromRGBO(25, 28, 30, 1);
@@ -24,12 +24,17 @@ class AppColors {
   static const textLoDark     = Color.fromRGBO(111, 108, 101, 1);
 
   // Estados
-  static const blue        = Color.fromRGBO(0, 74, 198, 1);
-  static const blueSoft    = Color.fromRGBO(213, 227, 252, 1);
+
   static const ok          = Color.fromRGBO(63, 122, 79, 1);
   static const okSoft      = Color.fromRGBO(228, 237, 227, 1);
   static const danger      = Color.fromRGBO(163, 74, 74, 1);
   static const neutralSoft = Color.fromRGBO(236, 236, 234, 1);
+
+  // colors quick access cards
+  static const bgBlue = Color.fromRGBO(230, 247, 255, 1);
+  static const blue = Color.fromRGBO(0, 95, 143, 1);
+  static const bgGreen = Color.fromRGBO(200, 230, 201, 1);
+
 }
 
 /// Tema Material 3 actualizado con paleta neutral.
@@ -38,8 +43,9 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
   final isDark = brightness == Brightness.dark;
   final cs = ColorScheme(
     brightness: brightness,
-    primary: const Color.fromRGBO(36, 20, 155, 1),
-    onPrimary: Colors.white,
+    primary: isDark ?  AppColors.bgDark : AppColors.bgLight,
+    onPrimary: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+
     primaryContainer: AppColors.ok,
     onPrimaryContainer: AppColors.danger,
     secondary: AppColors.okSoft,

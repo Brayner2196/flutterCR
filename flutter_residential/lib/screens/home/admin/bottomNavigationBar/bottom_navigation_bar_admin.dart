@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/screens/home/admin/admin_home_screen.dart';
-import 'package:flutter_residential/screens/propiedades/propiedades_screen.dart';
 import 'package:flutter_residential/screens/home/admin/screens/usuarios/usuarios_screen.dart';
 import 'package:flutter_residential/theme/app_theme.dart';
 
@@ -21,18 +19,20 @@ class BottomNavigationBarAdmin extends StatelessWidget {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(
         top: Radius.circular(28),
+        
       ),
       child: NavigationBarTheme(
         data: NavigationBarThemeData(
-          indicatorColor: AppColors.blueSoft,
+          indicatorColor: AppColors.bgBlue,
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
-      if (states.contains(WidgetState.selected)) {
-        return const TextStyle(color: AppColors.blue, fontWeight: FontWeight.bold);
-      }
-      return null; // usa el estilo del tema por defecto
-    }),
+            if (states.contains(WidgetState.selected)) {
+              return const TextStyle(color: AppColors.blue, fontWeight: FontWeight.bold);
+            }
+            return null; // usa el estilo del tema por defecto
+          }),
         ),
         child: NavigationBar(
+          surfaceTintColor: colorScheme.primary,
           selectedIndex: tabActual,
           onDestinationSelected: (i) {
             onTabChanged(i);
