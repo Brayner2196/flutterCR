@@ -30,13 +30,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: SizedBox(
-                height: 200,
                 width: double.infinity,
                 child: Text(
                   'Hola, ${auth.nombre}',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: cs.onSurface,
                     fontWeight: FontWeight.bold,
+                    fontFamily: 'Montserrat'
                   ),
                 ),
               ),

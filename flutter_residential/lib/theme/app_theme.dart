@@ -66,7 +66,7 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
     useMaterial3: true,
     colorScheme: cs,
     scaffoldBackgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-    fontFamily: 'Poppins',
+    fontFamily: 'GoogleSans',
     appBarTheme: AppBarTheme(
       centerTitle: false,
       elevation: 0,
