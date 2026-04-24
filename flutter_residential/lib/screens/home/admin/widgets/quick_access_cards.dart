@@ -39,7 +39,7 @@ class QuickAccessCard extends StatelessWidget {
             BoxShadow(
               color: cs.onSurface.withValues(alpha: 0.08),
               blurRadius: 12,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -48,7 +48,7 @@ class QuickAccessCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: iconBackgroundColor ?? cs.primaryContainer,
                 shape: BoxShape.circle,
@@ -87,7 +87,7 @@ class QuickAccessGrid extends StatelessWidget {
     required this.cards,
     this.crossAxisCount = 2,
     this.spacing = 16,
-    this.padding = const EdgeInsets.all(24),
+    this.padding = const EdgeInsets.only(left: 24,right: 24,top:0),
   });
 
   @override

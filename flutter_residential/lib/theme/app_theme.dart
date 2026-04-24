@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   // Light
   static const bgLight         = Color.fromRGBO(255, 255, 255, 1);
-  static const surfaceLight    = Color.fromRGBO(249, 249, 249,1);
+  static const surfaceLight    = Color.fromRGBO(249, 249, 249, 1.2);
   static const surfaceAltLight = Color.fromRGBO(180, 197, 255, 1);
   static const borderLight     = Color.fromRGBO(224, 227, 229, 1);
   static const hairlineLight   = Color.fromRGBO(238, 240, 242, 1);
@@ -33,7 +33,9 @@ class AppColors {
   // colors quick access cards
   static const bgBlue = Color.fromRGBO(230, 247, 255, 1);
   static const blue = Color.fromRGBO(0, 95, 143, 1);
-  static const bgGreen = Color.fromRGBO(200, 230, 201, 1);
+
+  static const bgYellow = Color.fromRGBO(255, 251, 230, 1);
+  static const yellow = Color.fromRGBO(140,109,0, 1);
 
 }
 

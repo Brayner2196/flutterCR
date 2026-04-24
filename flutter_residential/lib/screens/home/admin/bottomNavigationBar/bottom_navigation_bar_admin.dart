@@ -32,8 +32,7 @@ class BottomNavigationBarAdmin extends StatelessWidget {
           }),
         ),
         child: NavigationBar(
-          backgroundColor: AppColors.surfaceLight,
-          surfaceTintColor: colorScheme.primary,
+          backgroundColor: colorScheme.primary,
           selectedIndex: tabActual,
           onDestinationSelected: (i) {
             onTabChanged(i);

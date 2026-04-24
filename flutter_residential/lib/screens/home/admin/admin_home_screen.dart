@@ -22,44 +22,49 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: AppColors.bgLight,
+      backgroundColor: cs.surface,
       appBar: AppBarAdmin(auth: auth, cs: cs),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: SizedBox(
-                    height: 200,
-                    width: double.infinity,
-                    child: Text(
-                      'Hola, ${auth.nombre}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: SizedBox(
+                height: 200,
+                width: double.infinity,
+                child: Text(
+                  'Hola, ${auth.nombre}',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                QuickAccessGrid(
-                  cards: [
-                    QuickAccessCardData(
-                      title: 'Gestionar Usuarios',
-                      icon: Icons.person_add_outlined,
-                      backgroundColor: AppColors.bgBlue,
-                      iconBackgroundColor: Colors.white,
-                      iconColor: AppColors.blue,
-                      colorText: AppColors.blue,
-                      onTap: () => setState(() => _tabActual = 1),
-                    ),
-                  ],
+              ),
+            ),
+            QuickAccessGrid(
+              cards: [
+                QuickAccessCardData(
+                  title: 'Gestionar Usuarios',
+                  icon: Icons.groups,
+                  backgroundColor: AppColors.bgBlue,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.blue,
+                  colorText: AppColors.blue,
+                  onTap: () => setState(() => _tabActual = 1),
                 ),
+                QuickAccessCardData(
+                  title: 'Crear Anuncio',
+                  icon: Icons.campaign_outlined,
+                  backgroundColor: AppColors.bgYellow,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.yellow,
+                  colorText: AppColors.yellow,
+                  onTap: () => setState(() => _tabActual = 1)
+                )
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBarAdmin(
         tabActual: _tabActual,
