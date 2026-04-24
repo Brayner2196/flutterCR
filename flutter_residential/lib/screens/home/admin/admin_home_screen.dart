@@ -22,7 +22,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.onPrimary,
+      backgroundColor: AppColors.bgLight,
       appBar: AppBarAdmin(auth: auth, cs: cs),
       body: Stack(
         children: [
