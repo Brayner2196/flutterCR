@@ -35,11 +35,13 @@ class ApiConstants {
   static const String adminPeriodos = '/api/admin/cobros/periodos';
   static const String adminCobros = '/api/admin/cobros';
   static const String adminPagos = '/api/admin/pagos';
+  static const String adminCuotas = '/api/admin/cuotas';
   static String cerrarPeriodo(int id) => '/api/admin/cobros/periodos/$id/cerrar';
   static String generarCobros(int anio, int mes) => '/api/admin/cobros/generar/$anio/$mes';
   static String exonerarCobro(int id) => '/api/admin/cobros/$id/exonerar';
   static String verificarPago(int id) => '/api/admin/pagos/$id/verificar';
   static String rechazarPago(int id) => '/api/admin/pagos/$id/rechazar';
+  static String desactivarCuota(int id) => '/api/admin/cuotas/$id/desactivar';
 
   // Pagos — residente
   static const String estadoCuenta = '/api/residente/estado-cuenta';
