@@ -26,7 +26,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBarAdmin(auth: auth, cs: cs),
+      appBar: AppBarAdmin(auth: auth, cs: cs, habilitarlogout: true,),
       body: SingleChildScrollView(
         child: Column(
           children: [

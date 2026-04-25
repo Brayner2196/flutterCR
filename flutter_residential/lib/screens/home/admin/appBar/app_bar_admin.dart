@@ -7,8 +7,9 @@ import 'package:flutter_residential/providers/auth_provider.dart';
 class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
   final AuthProvider auth;
   final ColorScheme cs;
+  final bool habilitarlogout;
 
-  const AppBarAdmin({super.key, required this.auth, required this.cs});
+  const AppBarAdmin({super.key, required this.auth, required this.cs, required this.habilitarlogout});
 
   @override
   Widget build(BuildContext context) {
@@ -16,14 +17,27 @@ class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
     return AppBar(
       title: Align(
           alignment: Alignment.topLeft,
-          child: Text(
-            domadorDeGritosGraficos(auth.nombreConjunto ?? ''),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              letterSpacing: -0.5,
-              color: cs.onSurface
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                domadorDeGritosGraficos(auth.nombreConjunto ?? ''),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  letterSpacing: -0.5,
+                  color: cs.onSurface
+                ),
+              ),
+              if(!habilitarlogout)
+              Text(
+                domadorDeGritosGraficos(auth.nombre??''),
+                style: TextStyle(
+                  fontSize: 10,
+
+                ),
+              ),
+            ],
           ),
         ),
         actions: [
@@ -36,6 +50,7 @@ class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
                   onToggle: appProvider.toggleTheme,
                 ),
                 const SizedBox(width: 8),
+                if(habilitarlogout)
                 IconButton(
                   icon: Icon(
                     Icons.logout,

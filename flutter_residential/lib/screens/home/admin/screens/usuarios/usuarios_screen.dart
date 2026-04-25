@@ -67,7 +67,7 @@ class _UsuariosScreenState extends State<UsuariosScreen>
     
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBarAdmin(auth: auth, cs: cs),
+      appBar: AppBarAdmin(auth: auth, cs: cs, habilitarlogout: false,),
       body: Stack(
         children: [
           Column(
