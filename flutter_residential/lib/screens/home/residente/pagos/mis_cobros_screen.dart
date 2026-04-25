@@ -99,21 +99,20 @@ class _CobroTile extends StatelessWidget {
         ),
         title: Text(cobro.propiedadIdentificador,
             style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text('${cobro.mes}/${cobro.anio} · Vence: ${cobro.fechaLimitePago}',
+        subtitle: Text(
+            '${cobro.mes}/${cobro.anio} · Vence: ${cobro.fechaLimitePago}',
             style: const TextStyle(fontSize: 12)),
-        trailing: Text(
-          _fmt(cobro.montoTotal),
-          style: TextStyle(fontWeight: FontWeight.bold, color: color),
-        ),
+        trailing: Text(_fmt(cobro.montoTotal),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: color)),
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => DetalleCobro Screen(cobro: cobro)),
+              builder: (_) => DetalleCobroScreen(cobro: cobro)),
         ),
       ),
     );
   }
 
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }

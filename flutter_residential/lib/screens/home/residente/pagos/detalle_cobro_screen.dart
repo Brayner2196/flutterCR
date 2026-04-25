@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../../models/cobro_model.dart';
-import '../../../../providers/pagos_provider.dart';
 import 'registrar_pago_screen.dart';
 
-class DetalleCobro Screen extends StatelessWidget {
+class DetalleCobroScreen extends StatelessWidget {
   final CobroModel cobro;
-  const DetalleCobro Screen({super.key, required this.cobro});
+  const DetalleCobroScreen({super.key, required this.cobro});
 
   @override
   Widget build(BuildContext context) {
@@ -27,18 +25,17 @@ class DetalleCobro Screen extends StatelessWidget {
             _fila('Propiedad', cobro.propiedadIdentificador),
             _fila('Período', '${cobro.mes}/${cobro.anio}'),
             _fila('Concepto', cobro.concepto),
-            if (cobro.descripcion != null) _fila('Descripción', cobro.descripcion!),
-            _fila('Fecha generación', cobro.fechaGeneracion),
-            _fila('Fecha límite pago', cobro.fechaLimitePago),
+            if (cobro.descripcion != null)
+              _fila('Descripción', cobro.descripcion!),
+            _fila('Generado', cobro.fechaGeneracion),
+            _fila('Límite de pago', cobro.fechaLimitePago),
           ]),
           const SizedBox(height: 12),
           _seccion('Montos', [
             _fila('Monto base', _fmt(cobro.montoBase)),
             if (cobro.montoMora > 0)
-              _fila('Mora', _fmt(cobro.montoMora),
-                  color: Colors.red),
-            _fila('Total a pagar', _fmt(cobro.montoTotal),
-                bold: true),
+              _fila('Mora', _fmt(cobro.montoMora), color: Colors.red),
+            _fila('Total a pagar', _fmt(cobro.montoTotal), bold: true),
           ]),
         ],
       ),
@@ -50,7 +47,8 @@ class DetalleCobro Screen extends StatelessWidget {
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => RegistrarPagoScreen(cobro: cobro)),
+                        builder: (_) =>
+                            RegistrarPagoScreen(cobro: cobro)),
                   ),
                   icon: const Icon(Icons.payment),
                   label: const Text('Registrar Pago'),
@@ -74,10 +72,14 @@ class DetalleCobro Screen extends StatelessWidget {
           children: [
             Text('Estado: ${cobro.estado}',
                 style: TextStyle(
-                    fontWeight: FontWeight.bold, color: color, fontSize: 16)),
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontSize: 16)),
             Text(_fmt(cobro.montoTotal),
                 style: TextStyle(
-                    fontWeight: FontWeight.bold, color: color, fontSize: 20)),
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontSize: 20)),
           ],
         ),
       );
@@ -90,12 +92,14 @@ class DetalleCobro Screen extends StatelessWidget {
                   fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 8),
           Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 8, horizontal: 16),
-                  child: Column(children: hijos))),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 8, horizontal: 16),
+              child: Column(children: hijos),
+            ),
+          ),
         ],
       );
 
@@ -106,15 +110,16 @@ class DetalleCobro Screen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(color: Colors.grey)),
+            Text(label,
+                style: const TextStyle(color: Colors.grey)),
             Text(valor,
                 style: TextStyle(
-                    fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        bold ? FontWeight.bold : FontWeight.normal,
                     color: color)),
           ],
         ),
       );
 
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }

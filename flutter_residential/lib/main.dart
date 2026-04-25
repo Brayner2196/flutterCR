@@ -4,6 +4,8 @@ import 'package:flutter_residential/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'providers/auth_provider.dart';
+import 'providers/cobros_provider.dart';
+import 'providers/pagos_provider.dart';
 import 'providers/propiedad_provider.dart';
 import 'providers/usuario_provider.dart';
 import 'providers/tenant_provider.dart';
@@ -21,15 +23,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()..cargarSesionGuardada(),),
+        ChangeNotifierProvider(create: (_) => AuthProvider()..cargarSesionGuardada()),
         ChangeNotifierProvider(create: (_) => AppProvider()),
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
         ChangeNotifierProvider(create: (_) => TenantProvider()),
         ChangeNotifierProvider(create: (_) => PropiedadProvider()),
+        ChangeNotifierProvider(create: (_) => CobrosProvider()),
+        ChangeNotifierProvider(create: (_) => PagosProvider()),
       ],
       child: ToastificationWrapper(
         child: Consumer<AppProvider>(
-          builder: (_, AppProvider appProvider, _) {  
+          builder: (_, AppProvider appProvider, __) {
             return MaterialApp(
               title: 'Conjunto Residencial',
               debugShowCheckedModeBanner: false,

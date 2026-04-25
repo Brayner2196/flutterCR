@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/screens/home/residente/pagos/estado_cuenta_screen.dart';
 import 'package:flutter_residential/screens/home/residente/widgets/banner_bienvenida.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
@@ -39,6 +40,17 @@ class ResidenteDashboardScreen extends StatelessWidget {
                 icono: Icons.home_work_outlined,
                 color: Colors.green,
                 onTap: () => onNavegar(1),
+              ),
+              _tarjeta(
+                theme: theme,
+                label: 'Mis Pagos',
+                icono: Icons.receipt_long_outlined,
+                color: Colors.blue,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const EstadoCuentaScreen()),
+                ),
               ),
             ],
           ),

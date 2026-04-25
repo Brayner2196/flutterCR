@@ -30,4 +30,20 @@ class ApiConstants {
   static String propiedadEstado(int id) => '/api/propiedades/$id/estado';
   static String marcarPropiedadPrincipal(int propId, int userId) =>
       '/api/propiedades/$propId/usuarios/$userId/principal';
+
+  // Pagos — admin
+  static const String adminPeriodos = '/api/admin/cobros/periodos';
+  static const String adminCobros = '/api/admin/cobros';
+  static const String adminPagos = '/api/admin/pagos';
+  static String cerrarPeriodo(int id) => '/api/admin/cobros/periodos/$id/cerrar';
+  static String generarCobros(int anio, int mes) => '/api/admin/cobros/generar/$anio/$mes';
+  static String exonerarCobro(int id) => '/api/admin/cobros/$id/exonerar';
+  static String verificarPago(int id) => '/api/admin/pagos/$id/verificar';
+  static String rechazarPago(int id) => '/api/admin/pagos/$id/rechazar';
+
+  // Pagos — residente
+  static const String estadoCuenta = '/api/residente/estado-cuenta';
+  static const String misCobros = '/api/residente/cobros';
+  static const String historialCobros = '/api/residente/cobros/historial';
+  static const String misPagos = '/api/residente/pagos';
 }

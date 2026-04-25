@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart';
 import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/bottom_navigation_bar_admin.dart';
+import 'package:flutter_residential/screens/home/admin/screens/pagos/admin_cobros_screen.dart';
+import 'package:flutter_residential/screens/home/admin/screens/pagos/admin_verificar_pagos_screen.dart';
 import 'package:flutter_residential/screens/home/admin/screens/usuarios/usuarios_screen.dart';
 import 'package:flutter_residential/screens/home/admin/widgets/quick_access_cards.dart';
 import 'package:flutter_residential/theme/app_theme.dart';
@@ -37,7 +39,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: cs.onSurface,
                     fontWeight: FontWeight.bold,
-                    
                   ),
                 ),
               ),
@@ -52,30 +53,36 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   iconColor: AppColors.blue,
                   colorText: AppColors.blue,
                   onTap: () {
-                    setState(() => _tabActual = 1);
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const UsuariosScreen()),
-                    ).then((_) => setState(() => _tabActual = 0));
+                    );
                   },
                 ),
                 QuickAccessCardData(
-                  title: 'Pagos', 
+                  title: 'Pagos',
                   icon: Icons.credit_card,
                   backgroundColor: AppColors.bgGreen,
                   iconBackgroundColor: Colors.white,
                   iconColor: AppColors.green,
                   colorText: AppColors.green,
-                  onTap: () => setState(() => _tabActual = 1),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminCobrosScreen()),
+                  ),
                 ),
                 QuickAccessCardData(
-                  title: 'Gestionar Reservas',
-                  icon: Icons.calendar_month, 
+                  title: 'Verificar Pagos',
+                  icon: Icons.task_alt,
                   backgroundColor: AppColors.bgPurple,
                   iconBackgroundColor: Colors.white,
                   iconColor: AppColors.purple,
                   colorText: AppColors.purple,
-                  onTap:  () => setState(() => _tabActual = 1),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AdminVerificarPagosScreen()),
+                  ),
                 ),
                 QuickAccessCardData(
                   title: 'Crear Anuncio',
@@ -98,5 +105,4 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       ),
     );
   }
-
 }

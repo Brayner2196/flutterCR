@@ -24,15 +24,13 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CobrosProvider>();
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Estado de Cuenta')),
       body: provider.loading
           ? const Center(child: CircularProgressIndicator())
           : provider.error != null
               ? _error(provider.error!)
-              : _body(provider.estadoCuenta, cs),
+              : _body(provider.estadoCuenta),
     );
   }
 
@@ -44,14 +42,15 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
             const SizedBox(height: 12),
             Text(msg, textAlign: TextAlign.center),
             TextButton(
-              onPressed: () => context.read<CobrosProvider>().cargarEstadoCuenta(),
+              onPressed: () =>
+                  context.read<CobrosProvider>().cargarEstadoCuenta(),
               child: const Text('Reintentar'),
             ),
           ],
         ),
       );
 
-  Widget _body(EstadoCuentaModel? ec, ColorScheme cs) {
+  Widget _body(EstadoCuentaModel? ec) {
     if (ec == null) return const SizedBox.shrink();
     return RefreshIndicator(
       onRefresh: () => context.read<CobrosProvider>().cargarEstadoCuenta(),
@@ -64,11 +63,15 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Cobros activos',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold)),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
                 TextButton(
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const MisCobrosScreen())),
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const MisCobrosScreen())),
                   child: const Text('Ver historial'),
                 ),
               ],
@@ -96,29 +99,40 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Icon(deuda > 0 ? Icons.warning_amber_rounded : Icons.check_circle,
+              Icon(
+                  deuda > 0
+                      ? Icons.warning_amber_rounded
+                      : Icons.check_circle,
                   color: color),
               const SizedBox(width: 8),
-              Text(deuda > 0 ? 'Tienes deuda pendiente' : 'Estás al día',
+              Text(
+                  deuda > 0
+                      ? 'Tienes deuda pendiente'
+                      : 'Estás al día',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16, color: color)),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: color)),
             ]),
             const SizedBox(height: 16),
-            Text(_fmtMonto(deuda),
+            Text(_fmt(deuda),
                 style: TextStyle(
-                    fontSize: 34, fontWeight: FontWeight.bold, color: color)),
+                    fontSize: 34,
+                    fontWeight: FontWeight.bold,
+                    color: color)),
             if (ec.totalVencido > 0)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                    'Incluye ${_fmtMonto(ec.totalVencido)} en mora',
+                    'Incluye ${_fmt(ec.totalVencido)} en mora',
                     style: TextStyle(
                         color: Colors.red.shade700, fontSize: 12)),
               ),
             const SizedBox(height: 8),
             Text(
                 '${ec.cobrosPendientes} pendientes · ${ec.cobrosVencidos} vencidos',
-                style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                style: const TextStyle(
+                    color: Colors.grey, fontSize: 12)),
           ],
         ),
       ),
@@ -127,8 +141,8 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
 
   Widget _tarjetaAlDia() => Card(
         color: Colors.green.shade50,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         child: const Padding(
           padding: EdgeInsets.all(32),
           child: Column(
@@ -146,8 +160,7 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         ),
       );
 
-  String _fmtMonto(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }
 
 class _CobroCard extends StatelessWidget {
@@ -177,16 +190,17 @@ class _CobroCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              _fmt(cobro.montoTotal),
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, color: color, fontSize: 15),
-            ),
+            Text(_fmt(cobro.montoTotal),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontSize: 15)),
             Container(
               padding:
                   const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                  color: color, borderRadius: BorderRadius.circular(4)),
+                  color: color,
+                  borderRadius: BorderRadius.circular(4)),
               child: Text(cobro.estado,
                   style: const TextStyle(
                       color: Colors.white, fontSize: 10)),
@@ -196,12 +210,11 @@ class _CobroCard extends StatelessWidget {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (_) => DetalleCobro Screen(cobro: cobro)),
+              builder: (_) => DetalleCobroScreen(cobro: cobro)),
         ),
       ),
     );
   }
 
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }
