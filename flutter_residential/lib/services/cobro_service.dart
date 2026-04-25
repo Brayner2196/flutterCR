@@ -9,7 +9,7 @@ class CobroService {
   // ─── Admin ────────────────────────────────────────────
 
   static Future<PeriodoCobroModel> abrirPeriodo(Map<String, dynamic> data) async {
-    final res = await ApiClient.post(ApiConstants.adminPeriodos, data);
+    final res = await ApiClient.post(ApiConstants.adminPeriodos, data,requiresAuth: true,);
     final body = jsonDecode(res.body);
     if (res.statusCode == 201) return PeriodoCobroModel.fromJson(body);
     throw Exception(body['message'] ?? 'Error al abrir período');
