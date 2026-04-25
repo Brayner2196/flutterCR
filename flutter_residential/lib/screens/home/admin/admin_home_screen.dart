@@ -36,7 +36,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: cs.onSurface,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Montserrat'
+                    
                   ),
                 ),
               ),

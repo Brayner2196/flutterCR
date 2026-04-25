@@ -17,7 +17,7 @@ class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
       title: Align(
           alignment: Alignment.topLeft,
           child: Text(
-            (auth.nombreConjunto ?? '').toUpperCase(),
+            domadorDeGritosGraficos(auth.nombreConjunto ?? ''),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -73,6 +73,20 @@ class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
       await context.read<AuthProvider>().logout();
     }
   }
+
+  String domadorDeGritosGraficos(String text) {
+  const lowerWords = ['de', 'la', 'el', 'los', 'las', 'y', 'en'];
+
+  return text
+      .trim()
+      .toLowerCase()
+      .split(RegExp(r'\s+'))
+      .map((word) {
+        if (lowerWords.contains(word)) return word;
+        return word[0].toUpperCase() + word.substring(1);
+      })
+      .join(' ');
+}
   
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
