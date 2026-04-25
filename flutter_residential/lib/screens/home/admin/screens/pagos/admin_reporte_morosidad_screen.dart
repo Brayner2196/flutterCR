@@ -111,6 +111,9 @@ class _AdminReporteMorosidadScreenState
       );
 }
 
+String _fmt(double v) =>
+      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+
 class _MorosoTile extends StatelessWidget {
   final CobroModel cobro;
   const _MorosoTile({required this.cobro});
@@ -125,7 +128,7 @@ class _MorosoTile extends StatelessWidget {
               color: Colors.red.withValues(alpha: 0.3))),
       child: ListTile(
         leading: const CircleAvatar(
-          backgroundColor: Color(0x1FFF0000),
+          backgroundColor: Color.fromRGBO(255, 0, 0, 0.925),
           child: Icon(Icons.warning_amber, color: Colors.red, size: 20),
         ),
         title: Text(cobro.propiedadIdentificador,
@@ -151,6 +154,5 @@ class _MorosoTile extends StatelessWidget {
     );
   }
 
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  
 }
