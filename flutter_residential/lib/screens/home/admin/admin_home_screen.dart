@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart';
 import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/bottom_navigation_bar_admin.dart';
+import 'package:flutter_residential/screens/home/admin/screens/usuarios/usuarios_screen.dart';
 import 'package:flutter_residential/screens/home/admin/widgets/quick_access_cards.dart';
 import 'package:flutter_residential/theme/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +51,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   iconBackgroundColor: Colors.white,
                   iconColor: AppColors.blue,
                   colorText: AppColors.blue,
-                  onTap: () => setState(() => _tabActual = 1),
+                  onTap: () {
+                    setState(() => _tabActual = 1);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const UsuariosScreen()),
+                    ).then((_) => setState(() => _tabActual = 0));
+                  },
                 ),
                 QuickAccessCardData(
                   title: 'Pagos', 

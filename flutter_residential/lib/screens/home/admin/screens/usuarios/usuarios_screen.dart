@@ -66,7 +66,7 @@ class _UsuariosScreenState extends State<UsuariosScreen>
     final cs = Theme.of(context).colorScheme;
     
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(242, 245, 248, 0.91),
+      backgroundColor: cs.surface,
       appBar: AppBarAdmin(auth: auth, cs: cs),
       body: Stack(
         children: [
