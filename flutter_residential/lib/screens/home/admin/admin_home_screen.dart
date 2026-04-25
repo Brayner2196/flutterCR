@@ -59,8 +59,26 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   iconBackgroundColor: Colors.white,
                   iconColor: AppColors.yellow,
                   colorText: AppColors.yellow,
-                  onTap: () => setState(() => _tabActual = 1)
-                )
+                  onTap: () => setState(() => _tabActual = 1),
+                ),
+                QuickAccessCardData(
+                  title: 'Pagos', 
+                  icon: Icons.credit_card,
+                  backgroundColor: AppColors.bgGreen,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.green,
+                  colorText: AppColors.green,
+                  onTap: () => setState(() => _tabActual = 1),
+                ),
+                QuickAccessCardData(
+                  title: 'Gestionar Reservas',
+                  icon: Icons.calendar_month, 
+                  backgroundColor: AppColors.bgPurple,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.purple,
+                  colorText: AppColors.purple,
+                  onTap:  () => setState(() => _tabActual = 1),
+                ),
               ],
             ),
           ],

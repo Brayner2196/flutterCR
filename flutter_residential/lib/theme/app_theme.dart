@@ -37,6 +37,13 @@ class AppColors {
   static const bgYellow = Color.fromRGBO(255, 251, 230, 1);
   static const yellow = Color.fromRGBO(140,109,0, 1);
 
+  static const bgGreen = Color.fromRGBO(230, 255, 243, 1);
+  static const green = Color.fromRGBO(0, 105, 74, 1);
+
+  static const bgPurple = Color.fromRGBO(249, 230, 255, 1);
+  static const purple = Color.fromRGBO(110, 40, 145, 1);
+
+
 }
 
 /// Tema Material 3 actualizado con paleta neutral.
