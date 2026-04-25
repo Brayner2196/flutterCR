@@ -54,7 +54,11 @@ class _AdminGenerarCobrosScreenState
                   : const Icon(Icons.auto_awesome),
               label: Text(widget.periodo != null
                   ? 'Generar cobros para ${widget.periodo!.nombreMes}'
-                  : 'Crear período y generar cobros'),
+                  : 'Crear período y generar cobros',
+                  style: TextStyle(
+                    color: Colors.red
+                  ),
+              ),
             ),
           ],
         ),
@@ -86,7 +90,7 @@ class _AdminGenerarCobrosScreenState
             children: [
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: _anio,
+                  initialValue: _anio,
                   decoration: const InputDecoration(
                       labelText: 'Año',
                       border: OutlineInputBorder()),
@@ -102,7 +106,7 @@ class _AdminGenerarCobrosScreenState
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: _mes,
+                  initialValue: _mes,
                   decoration: const InputDecoration(
                       labelText: 'Mes',
                       border: OutlineInputBorder()),
