@@ -32,7 +32,7 @@ class CobroService {
   }
 
   static Future<List<CobroModel>> generarCobros(int anio, int mes) async {
-    final res = await ApiClient.post(ApiConstants.generarCobros(anio, mes), {});
+    final res = await ApiClient.post(ApiConstants.generarCobros(anio, mes), {},requiresAuth: true);
     final body = jsonDecode(res.body);
     if (res.statusCode == 201) {
       return (body as List).map((e) => CobroModel.fromJson(e)).toList();
