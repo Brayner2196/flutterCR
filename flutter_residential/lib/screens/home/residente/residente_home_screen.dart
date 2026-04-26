@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/propiedad_provider.dart';
+import '../../residente/mi_propiedad_screen.dart';
 import 'residente_dashboard_screen.dart';
 
 class ResidenteHomeScreen extends StatefulWidget {
@@ -35,7 +36,6 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                // Avatar circular con iniciales
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
@@ -47,7 +47,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
                 child: Center(
                   child: Text(
                     _iniciales(auth.nombre ?? 'Usuario'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Color.fromRGBO(84, 121, 224, 1),
@@ -55,7 +55,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
                   ),
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -73,7 +73,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
                     child: Text(
                       propiedades.propiedadActual?.pathTexto ??
                           'Vivienda no seleccionada',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: Colors.black45,
                         fontWeight: FontWeight.w600,
@@ -85,7 +85,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
             ],
           ),
         ),
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(20),
             bottomRight: Radius.circular(20),
@@ -109,29 +109,13 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
           ),
         ),
       ),
-      /*body: IndexedStack(
+      body: IndexedStack(
         index: _tabActual,
         children: [
-          ResidenteDashboardScreen(onNavegar: (i) => setState(() => _tabActual = i)),
+          ResidenteDashboardScreen(
+              onNavegar: (i) => setState(() => _tabActual = i)),
           const MiPropiedadScreen(),
         ],
-      ),*/
-      body: SingleChildScrollView(
-        child: Container(
-          height:
-              MediaQuery.of(context).size.height -
-              kToolbarHeight -
-              1, // Ajusta por AppBar y borde
-          decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.05)),
-          child: Column(
-            children: [
-              ResidenteDashboardScreen(
-                onNavegar: (i) => setState(() => _tabActual = i),
-              ),
-              const SizedBox(height: 100),
-            ],
-          ),
-        ),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabActual,
@@ -180,5 +164,4 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     }
     return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
   }
-
 }
