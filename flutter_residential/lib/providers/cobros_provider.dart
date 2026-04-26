@@ -33,6 +33,17 @@ class CobrosProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> cargarMisCobros() async {
+    _setLoading(true);
+    try {
+      _cobros = await CobroService.getMisCobros();
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> cargarHistorial() async {
     _setLoading(true);
     try {
@@ -86,6 +97,14 @@ class CobrosProvider extends ChangeNotifier {
     _cobros = nuevos;
     notifyListeners();
     return nuevos;
+  }
+
+  Future<CobroModel> exonerar(int id, String nota) async {
+    final actualizado = await CobroService.exonerar(id, nota);
+    final idx = _cobros.indexWhere((c) => c.id == actualizado.id);
+    if (idx != -1) _cobros[idx] = actualizado;
+    notifyListeners();
+    return actualizado;
   }
 
   void limpiar() {

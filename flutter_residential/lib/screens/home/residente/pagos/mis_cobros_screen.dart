@@ -20,8 +20,7 @@ class _MisCobrosScreenState extends State<MisCobrosScreen>
     super.initState();
     _tabs = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CobrosProvider>().cargarEstadoCuenta();
-      context.read<CobrosProvider>().cargarHistorial();
+      context.read<CobrosProvider>().cargarMisCobros();
     });
   }
 
@@ -37,6 +36,12 @@ class _MisCobrosScreenState extends State<MisCobrosScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Cobros'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<CobrosProvider>().cargarMisCobros(),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabs,
           tabs: const [
