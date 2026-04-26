@@ -38,4 +38,11 @@ class PeriodoCobroModel {
 
   String get nombreMes => '${_meses[mes]} $anio';
   bool get estaAbierto => estado == 'ABIERTO';
+
+  @override
+  bool operator ==(Object other) =>
+      other is PeriodoCobroModel && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

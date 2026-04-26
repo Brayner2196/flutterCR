@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../../providers/cobros_provider.dart';
 import '../../../../../models/cobro_model.dart';
 import '../../../../../models/periodo_cobro_model.dart';
+import '../../../../../theme/app_theme.dart';
 import 'admin_configurar_cuotas_screen.dart';
 import 'admin_generar_cobros_screen.dart';
 
@@ -49,7 +50,11 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
     try {
       await context.read<CobrosProvider>().cerrarPeriodo(p.id);
       if (!mounted) return;
-      setState(() => _periodoSeleccionado = null);
+      // Re-sincronizar con el objeto actualizado en la lista del provider
+      final periodos = context.read<CobrosProvider>().periodos;
+      setState(() {
+        _periodoSeleccionado = periodos.where((x) => x.id == p.id).firstOrNull;
+      });
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Período cerrado correctamente'),
         backgroundColor: Colors.green,
@@ -138,7 +143,11 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
               context,
               MaterialPageRoute(
                   builder: (_) => const AdminConfigurarCuotasScreen()),
-            ),
+            ).then((_) {
+              if (mounted) {
+                context.read<CobrosProvider>().cargarPeriodos();
+              }
+            }),
           ),
           if (periodoAbierto)
             IconButton(
@@ -168,52 +177,58 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
     );
   }
 
-  Widget _selectorPeriodo(CobrosProvider provider) => Container(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: DropdownButton<PeriodoCobroModel>(
-          isExpanded: true,
-          underline: const SizedBox.shrink(),
-          hint: const Text('Seleccionar período'),
-          value: _periodoSeleccionado,
-          items: provider.periodos
-              .map((p) => DropdownMenuItem(
-                  value: p,
-                  child: Text(
-                      '${p.nombreMes} — ${p.estado}',
-                      style: TextStyle(
-                          color: p.estaAbierto
-                              ? Colors.green
-                              : null))))
-              .toList(),
-          onChanged: (p) {
-            setState(() => _periodoSeleccionado = p);
-            if (p != null) {
-              context
-                  .read<CobrosProvider>()
-                  .cargarCobrosAdmin(periodoId: p.id);
-            }
-          },
-        ),
-      );
+  Widget _selectorPeriodo(CobrosProvider provider) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      color: cs.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: DropdownButton<PeriodoCobroModel>(
+        isExpanded: true,
+        underline: const SizedBox.shrink(),
+        dropdownColor: cs.surface,
+        style: TextStyle(color: cs.onSurface, fontSize: 14),
+        hint: Text('Seleccionar período',
+            style: TextStyle(color: cs.onSurfaceVariant)),
+        value: _periodoSeleccionado,
+        items: provider.periodos
+            .map((p) => DropdownMenuItem(
+                value: p,
+                child: Text(
+                    '${p.nombreMes} — ${p.estado}',
+                    style: TextStyle(
+                        color: p.estaAbierto
+                            ? AppColors.ok
+                            : cs.onSurface))))
+            .toList(),
+        onChanged: (p) {
+          setState(() => _periodoSeleccionado = p);
+          if (p != null) {
+            context
+                .read<CobrosProvider>()
+                .cargarCobrosAdmin(periodoId: p.id);
+          }
+        },
+      ),
+    );
+  }
 
   Widget _listaCobros(CobrosProvider provider) {
+    final cs = Theme.of(context).colorScheme;
     if (_periodoSeleccionado == null) {
-      return const Center(
+      return Center(
           child: Text('Selecciona un período para ver los cobros',
-              style: TextStyle(color: Colors.grey)));
+              style: TextStyle(color: cs.onSurfaceVariant)));
     }
     if (provider.cobros.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.receipt_long_outlined,
-                size: 48, color: Colors.grey),
+            Icon(Icons.receipt_long_outlined,
+                size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 12),
-            const Text('Sin cobros para este período',
-                style: TextStyle(color: Colors.grey)),
+            Text('Sin cobros para este período',
+                style: TextStyle(color: cs.onSurfaceVariant)),
             const SizedBox(height: 12),
             if (_periodoSeleccionado!.estaAbierto)
               FilledButton.icon(
@@ -252,13 +267,14 @@ class _CobroAdminTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final colorEstado = cobro.esPagado
-        ? Colors.green
+        ? AppColors.ok
         : cobro.esVencido
-            ? Colors.red
+            ? AppColors.danger
             : cobro.esExonerado
-                ? Colors.purple
-                : Colors.orange;
+                ? AppColors.purple
+                : AppColors.yellow;
     final puedeExonerar = cobro.esPendiente || cobro.esVencido;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -270,16 +286,18 @@ class _CobroAdminTile extends StatelessWidget {
               child: Icon(Icons.home_work, color: colorEstado, size: 20),
             ),
             title: Text(cobro.propiedadIdentificador,
-                style: const TextStyle(fontWeight: FontWeight.w600)),
+                style: TextStyle(
+                    fontWeight: FontWeight.w600, color: cs.onSurface)),
             subtitle: Text(
                 '${cobro.usuarioNombre} · ${cobro.concepto}',
-                style: const TextStyle(fontSize: 12)),
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(_fmt(cobro.montoTotal),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: cs.onSurface)),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -301,7 +319,7 @@ class _CobroAdminTile extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
                   style: TextButton.styleFrom(
-                      foregroundColor: Colors.purple,
+                      foregroundColor: AppColors.purple,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 4),
                       minimumSize: Size.zero,
