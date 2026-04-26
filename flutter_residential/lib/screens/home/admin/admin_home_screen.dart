@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart';
 import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/bottom_navigation_bar_admin.dart';
 import 'package:flutter_residential/screens/home/admin/screens/pagos/admin_cobros_screen.dart';
+import 'package:flutter_residential/screens/home/admin/screens/pagos/admin_configurar_cuotas_screen.dart';
+import 'package:flutter_residential/screens/home/admin/screens/pagos/admin_reporte_morosidad_screen.dart';
 import 'package:flutter_residential/screens/home/admin/screens/pagos/admin_verificar_pagos_screen.dart';
 import 'package:flutter_residential/screens/home/admin/screens/usuarios/usuarios_screen.dart';
 import 'package:flutter_residential/screens/home/admin/widgets/quick_access_cards.dart';
@@ -18,6 +20,11 @@ class AdminHomeScreen extends StatefulWidget {
 
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _tabActual = 0;
+
+  static const _bgTeal = Color.fromRGBO(224, 247, 244, 1);
+  static const _teal = Color.fromRGBO(0, 105, 92, 1);
+  static const _bgOrange = Color.fromRGBO(255, 237, 224, 1);
+  static const _orange = Color.fromRGBO(180, 80, 0, 1);
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +67,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   },
                 ),
                 QuickAccessCardData(
-                  title: 'Pagos',
+                  title: 'Cobros',
                   icon: Icons.credit_card,
                   backgroundColor: AppColors.bgGreen,
                   iconBackgroundColor: Colors.white,
@@ -82,6 +89,32 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     context,
                     MaterialPageRoute(
                         builder: (_) => const AdminVerificarPagosScreen()),
+                  ),
+                ),
+                QuickAccessCardData(
+                  title: 'Configurar Cuotas',
+                  icon: Icons.tune,
+                  backgroundColor: _bgTeal,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: _teal,
+                  colorText: _teal,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AdminConfigurarCuotasScreen()),
+                  ),
+                ),
+                QuickAccessCardData(
+                  title: 'Reporte Morosidad',
+                  icon: Icons.warning_amber_rounded,
+                  backgroundColor: _bgOrange,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: _orange,
+                  colorText: _orange,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const AdminReporteMorosidadScreen()),
                   ),
                 ),
                 QuickAccessCardData(
