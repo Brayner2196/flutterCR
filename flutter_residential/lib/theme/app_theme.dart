@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 /// Paleta y tokens de diseño — versión Flutter del rediseño V1.
-/// Neutral cálido + acento violeta low-chroma (inspirado en oklch).
+/// Neutral cálido + acento azul profundo (oklch-inspired).
 class AppColors {
   // Light
   static const bgLight         = Color.fromRGBO(255, 255, 255, 1);
-  static const surfaceLight    = Color.fromRGBO(249, 249, 249, 1.2);
-  static const surfaceAltLight = Color.fromRGBO(180, 197, 255, 1);
+  static const surfaceLight    = Color.fromRGBO(249, 249, 249, 1);
+  static const surfaceAltLight = Color.fromRGBO(235, 241, 255, 1);
   static const borderLight     = Color.fromRGBO(224, 227, 229, 1);
   static const hairlineLight   = Color.fromRGBO(238, 240, 242, 1);
   static const textHiLight     = Color.fromRGBO(25, 28, 30, 1);
@@ -24,49 +24,54 @@ class AppColors {
   static const textLoDark     = Color.fromRGBO(111, 108, 101, 1);
 
   // Estados
-
   static const ok          = Color.fromRGBO(63, 122, 79, 1);
   static const okSoft      = Color.fromRGBO(228, 237, 227, 1);
   static const danger      = Color.fromRGBO(163, 74, 74, 1);
+  static const dangerSoft  = Color.fromRGBO(251, 234, 234, 1);
   static const neutralSoft = Color.fromRGBO(236, 236, 234, 1);
 
-  // colors quick access cards
-  static const bgBlue = Color.fromRGBO(230, 247, 255, 1);
-  static const blue = Color.fromRGBO(0, 95, 143, 1);
+  // Quick access cards
+  static const bgBlue  = Color.fromRGBO(230, 247, 255, 1);
+  static const blue    = Color.fromRGBO(0,   95,  143, 1);
 
   static const bgYellow = Color.fromRGBO(255, 251, 230, 1);
-  static const yellow = Color.fromRGBO(140,109,0, 1);
+  static const yellow   = Color.fromRGBO(140, 109, 0,   1);
 
   static const bgGreen = Color.fromRGBO(230, 255, 243, 1);
-  static const green = Color.fromRGBO(0, 105, 74, 1);
+  static const green   = Color.fromRGBO(0,   105, 74,  1);
 
   static const bgPurple = Color.fromRGBO(249, 230, 255, 1);
-  static const purple = Color.fromRGBO(110, 40, 145, 1);
-
-
+  static const purple   = Color.fromRGBO(110, 40,  145, 1);
 }
 
-/// Tema Material 3 actualizado con paleta neutral.
-/// Reemplaza el ThemeData en main.dart.
+/// Tema Material 3 con paleta neutral + acento azul profundo.
 ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
   final isDark = brightness == Brightness.dark;
+
+  // Acento principal: azul en light, casi-blanco en dark
+  final primaryColor = isDark ? AppColors.textHiDark : AppColors.blue;
+
   final cs = ColorScheme(
     brightness: brightness,
-    primary: isDark ?  AppColors.bgDark : AppColors.bgLight,
-    onPrimary: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+    primary:            primaryColor,
+    onPrimary:          Colors.white,
+    primaryContainer:   isDark ? AppColors.surfaceAltDark : AppColors.bgBlue,
+    onPrimaryContainer: isDark ? AppColors.textHiDark    : AppColors.blue,
+    secondary:          isDark ? AppColors.surfaceAltDark : AppColors.okSoft,
+    onSecondary:        isDark ? AppColors.textMidDark   : AppColors.ok,
+    error:              AppColors.danger,
+    onError:            Colors.white,
+    surface:            isDark ? AppColors.surfaceDark   : AppColors.surfaceLight,
+    onSurface:          isDark ? AppColors.textHiDark    : AppColors.textHiLight,
+    surfaceContainerHighest:
+                        isDark ? AppColors.surfaceAltDark : AppColors.surfaceAltLight,
+    outline:            isDark ? AppColors.borderDark    : AppColors.borderLight,
+    outlineVariant:     isDark ? AppColors.hairlineDark  : AppColors.hairlineLight,
+    onSurfaceVariant:   isDark ? AppColors.textMidDark   : AppColors.textMidLight,
+  );
 
-    primaryContainer: AppColors.ok,
-    onPrimaryContainer: AppColors.danger,
-    secondary: AppColors.okSoft,
-    onSecondary: Colors.white,
-    error: AppColors.danger,
-    onError: Colors.white,
-    surface: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-    onSurface: isDark ? AppColors.textHiDark : AppColors.textHiLight,
-    surfaceContainerHighest: isDark ? AppColors.surfaceAltDark : AppColors.surfaceAltLight,
-    outline: isDark ? AppColors.borderDark : AppColors.borderLight,
-    outlineVariant: isDark ? AppColors.hairlineDark : AppColors.hairlineLight,
-    onSurfaceVariant: isDark ? AppColors.textMidDark : AppColors.textMidLight,
+  final buttonShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(14),
   );
 
   return ThemeData(
@@ -105,13 +110,36 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         minimumSize: const Size.fromHeight(48),
-        backgroundColor: cs.onSurface,
-        foregroundColor: cs.surface,
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: buttonShape,
       ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        shape: buttonShape,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryColor,
+        side: BorderSide(color: primaryColor),
+        minimumSize: const Size(0, 44),
+        shape: buttonShape,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: primaryColor,
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: cs.surfaceContainerHighest,
+      labelStyle: TextStyle(color: cs.onSurfaceVariant),
     ),
   );
 }
