@@ -20,8 +20,7 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
   void initState() {
     super.initState();
     _tabs = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _cargar());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _cargar());
   }
 
   @override
@@ -32,9 +31,7 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
 
   void _cargar() {
     if (!mounted) return;
-    // Carga todos los estados para que los tabs funcionen
-    context.read<PagosProvider>().cargarPagosAdmin(
-        estado: 'PENDIENTE_VERIFICACION');
+    context.read<PagosProvider>().cargarTodosPagosAdmin();
   }
 
   @override
@@ -59,13 +56,34 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
                 const Text('Pendientes'),
                 if (provider.pendientes.isNotEmpty) ...[
                   const SizedBox(width: 6),
-                  _Badge(count: provider.pendientes.length,
+                  _Badge(
+                      count: provider.pendientes.length,
                       color: AppColors.yellow),
                 ],
               ]),
             ),
-            const Tab(text: 'Verificados'),
-            const Tab(text: 'Rechazados'),
+            Tab(
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Text('Verificados'),
+                if (provider.verificados.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  _Badge(
+                      count: provider.verificados.length,
+                      color: AppColors.ok),
+                ],
+              ]),
+            ),
+            Tab(
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Text('Rechazados'),
+                if (provider.rechazados.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  _Badge(
+                      count: provider.rechazados.length,
+                      color: AppColors.danger),
+                ],
+              ]),
+            ),
           ],
         ),
       ),
@@ -81,7 +99,8 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
                   children: [
                     _ListaPagos(
                       pagos: provider.pendientes,
-                      emptyMessage: 'No hay pagos pendientes de verificación',
+                      emptyMessage:
+                          'No hay pagos pendientes de verificación',
                       emptyIcon: Icons.task_alt,
                       emptyColor: AppColors.ok,
                       onVerificar: (p) => _verificar(context, p),
@@ -108,7 +127,6 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
   Future<void> _verificar(BuildContext context, PagoModel pago) async {
     try {
       await context.read<PagosProvider>().verificar(pago.id);
-      // Recargar para asegurar estado actualizado
       if (mounted) _cargar();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -194,7 +212,8 @@ class _ErrorView extends StatelessWidget {
               mensaje,
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  color:
+                      Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
@@ -239,7 +258,9 @@ class _ListaPagos extends StatelessWidget {
             const SizedBox(height: 12),
             Text(emptyMessage,
                 style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
                     fontSize: 16)),
           ],
         ),
@@ -268,8 +289,8 @@ class _PagoVerificacionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    Color estadoColor;
-    String estadoLabel;
+    final Color estadoColor;
+    final String estadoLabel;
     if (pago.esVerificado) {
       estadoColor = AppColors.ok;
       estadoLabel = 'Verificado';

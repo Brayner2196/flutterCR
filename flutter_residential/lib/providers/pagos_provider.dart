@@ -11,9 +11,12 @@ class PagosProvider extends ChangeNotifier {
   bool get loading => _loading;
   String? get error => _error;
 
-  List<PagoModel> get pendientes => _pagos.where((p) => p.esPendiente).toList();
-  List<PagoModel> get verificados => _pagos.where((p) => p.esVerificado).toList();
-  List<PagoModel> get rechazados => _pagos.where((p) => p.esRechazado).toList();
+  List<PagoModel> get pendientes =>
+      _pagos.where((p) => p.esPendiente).toList();
+  List<PagoModel> get verificados =>
+      _pagos.where((p) => p.esVerificado).toList();
+  List<PagoModel> get rechazados =>
+      _pagos.where((p) => p.esRechazado).toList();
 
   Future<void> cargarMisPagos() async {
     _setLoading(true);
@@ -31,6 +34,23 @@ class PagosProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _pagos = await PagoService.listarPagosAdmin(estado: estado);
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Carga los tres estados a la vez para que los tabs muestren datos
+  Future<void> cargarTodosPagosAdmin() async {
+    _setLoading(true);
+    try {
+      final results = await Future.wait([
+        PagoService.listarPagosAdmin(estado: 'PENDIENTE_VERIFICACION'),
+        PagoService.listarPagosAdmin(estado: 'VERIFICADO'),
+        PagoService.listarPagosAdmin(estado: 'RECHAZADO'),
+      ]);
+      _pagos = [...results[0], ...results[1], ...results[2]];
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
     } finally {
@@ -57,7 +77,11 @@ class PagosProvider extends ChangeNotifier {
 
   void _reemplazar(PagoModel actualizado) {
     final idx = _pagos.indexWhere((p) => p.id == actualizado.id);
-    if (idx != -1) _pagos[idx] = actualizado;
+    if (idx != -1) {
+      _pagos[idx] = actualizado;
+    } else {
+      _pagos.add(actualizado);
+    }
     notifyListeners();
   }
 
