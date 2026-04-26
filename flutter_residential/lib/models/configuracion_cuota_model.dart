@@ -2,6 +2,8 @@ class ConfiguracionCuotaModel {
   final int id;
   final int? tipoPropiedadId;
   final int? propiedadId;
+  final int? numeroDesde;
+  final int? numeroHasta;
   final double monto;
   final String periodicidad;
   final String fechaVigenciaDesde;
@@ -11,6 +13,8 @@ class ConfiguracionCuotaModel {
     required this.id,
     this.tipoPropiedadId,
     this.propiedadId,
+    this.numeroDesde,
+    this.numeroHasta,
     required this.monto,
     required this.periodicidad,
     required this.fechaVigenciaDesde,
@@ -22,6 +26,8 @@ class ConfiguracionCuotaModel {
         id: json['id'] as int,
         tipoPropiedadId: json['tipoPropiedadId'] as int?,
         propiedadId: json['propiedadId'] as int?,
+        numeroDesde: json['numeroDesde'] as int?,
+        numeroHasta: json['numeroHasta'] as int?,
         monto: (json['monto'] as num).toDouble(),
         periodicidad: json['periodicidad'] as String,
         fechaVigenciaDesde: json['fechaVigenciaDesde'] as String,
@@ -31,6 +37,8 @@ class ConfiguracionCuotaModel {
   Map<String, dynamic> toJson() => {
         if (tipoPropiedadId != null) 'tipoPropiedadId': tipoPropiedadId,
         if (propiedadId != null) 'propiedadId': propiedadId,
+        if (numeroDesde != null) 'numeroDesde': numeroDesde,
+        if (numeroHasta != null) 'numeroHasta': numeroHasta,
         'monto': monto,
         'periodicidad': periodicidad,
         'fechaVigenciaDesde': fechaVigenciaDesde,

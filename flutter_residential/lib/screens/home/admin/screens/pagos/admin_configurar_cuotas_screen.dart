@@ -6,6 +6,8 @@ import '../../../../../models/configuracion_cuota_model.dart';
 import '../../../../../models/tipo_propiedad_nodo.dart';
 import '../../../../../services/cuota_service.dart';
 
+typedef _Preset = ({String label, String tipoNombre, double monto, int desde, int hasta});
+
 class AdminConfigurarCuotasScreen extends StatefulWidget {
   const AdminConfigurarCuotasScreen({super.key});
 
@@ -16,11 +18,21 @@ class AdminConfigurarCuotasScreen extends StatefulWidget {
 
 class _AdminConfigurarCuotasScreenState
     extends State<AdminConfigurarCuotasScreen> {
+  static const List<_Preset> _presets = [
+    (label: 'Apto Nros 1–10', tipoNombre: 'apartamento', monto: 194014.0, desde: 1, hasta: 10),
+    (label: 'Apto Nros 11–18', tipoNombre: 'apartamento', monto: 199696.0, desde: 11, hasta: 18),
+    (label: 'Parqueadero Nº 41', tipoNombre: 'parqueadero', monto: 34922.0, desde: 41, hasta: 41),
+    (label: 'Parqueaderos Nros 42–46', tipoNombre: 'parqueadero', monto: 40604.0, desde: 42, hasta: 46),
+  ];
+
   final _form = GlobalKey<FormState>();
   final _montoCtrl = TextEditingController();
+  final _desdeCtrl = TextEditingController();
+  final _hastaCtrl = TextEditingController();
   String _periodicidad = 'MENSUAL';
   int? _tipoPropiedadId;
   DateTime _fechaVigencia = DateTime.now();
+  bool _usarRango = false;
   bool _guardando = false;
   bool _cargando = true;
   List<TipoPropiedadNodo> _tiposFlat = [];
@@ -35,6 +47,8 @@ class _AdminConfigurarCuotasScreenState
   @override
   void dispose() {
     _montoCtrl.dispose();
+    _desdeCtrl.dispose();
+    _hastaCtrl.dispose();
     super.dispose();
   }
 
@@ -62,6 +76,33 @@ class _AdminConfigurarCuotasScreenState
     } finally {
       if (mounted) setState(() => _cargando = false);
     }
+  }
+
+  void _aplicarPreset(_Preset preset) {
+    final tipoId = _tiposFlat
+        .where((t) => t.nombre.toLowerCase().contains(preset.tipoNombre))
+        .map((t) => t.id)
+        .firstOrNull;
+    setState(() {
+      _tipoPropiedadId = tipoId;
+      _montoCtrl.text = preset.monto.toStringAsFixed(0);
+      _periodicidad = 'MENSUAL';
+      _usarRango = true;
+      _desdeCtrl.text = preset.desde.toString();
+      _hastaCtrl.text = preset.hasta.toString();
+    });
+  }
+
+  void _resetForm() {
+    _montoCtrl.clear();
+    _desdeCtrl.clear();
+    _hastaCtrl.clear();
+    setState(() {
+      _tipoPropiedadId = null;
+      _periodicidad = 'MENSUAL';
+      _usarRango = false;
+      _fechaVigencia = DateTime.now();
+    });
   }
 
   Future<void> _desactivar(int id) async {
@@ -97,14 +138,18 @@ class _AdminConfigurarCuotasScreenState
     try {
       final fechaStr =
           '${_fechaVigencia.year}-${_fechaVigencia.month.toString().padLeft(2, '0')}-${_fechaVigencia.day.toString().padLeft(2, '0')}';
-      await CuotaService.crear({
+      final body = <String, dynamic>{
         'tipoPropiedadId': _tipoPropiedadId,
         'monto': double.parse(_montoCtrl.text),
         'periodicidad': _periodicidad,
         'fechaVigenciaDesde': fechaStr,
-      });
-      _montoCtrl.clear();
-      setState(() => _tipoPropiedadId = null);
+      };
+      if (_usarRango) {
+        body['numeroDesde'] = int.parse(_desdeCtrl.text);
+        body['numeroHasta'] = int.parse(_hastaCtrl.text);
+      }
+      await CuotaService.crear(body);
+      _resetForm();
       await _cargarDatos();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -131,6 +176,7 @@ class _AdminConfigurarCuotasScreenState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Configurar Cuotas')),
       body: _cargando
@@ -142,10 +188,7 @@ class _AdminConfigurarCuotasScreenState
                 children: [
                   if (_cuotas.isNotEmpty) ..._buildCuotasActivas(),
                   Card(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer
-                        .withValues(alpha: 0.3),
+                    color: cs.primaryContainer.withValues(alpha: 0.3),
                     child: const Padding(
                       padding: EdgeInsets.all(16),
                       child: Row(
@@ -162,6 +205,25 @@ class _AdminConfigurarCuotasScreenState
                         ],
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Tarifas rápidas',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _presets
+                        .map((p) => OutlinedButton.icon(
+                              onPressed: () => _aplicarPreset(p),
+                              icon: const Icon(Icons.bolt, size: 16),
+                              label: Text(p.label,
+                                  style: const TextStyle(fontSize: 12)),
+                            ))
+                        .toList(),
                   ),
                   const SizedBox(height: 20),
                   Text('Nueva configuración',
@@ -196,7 +258,60 @@ class _AdminConfigurarCuotasScreenState
                       return null;
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
+                  SwitchListTile(
+                    value: _usarRango,
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Aplicar por rango de número'),
+                    onChanged: (v) => setState(() {
+                      _usarRango = v;
+                      if (!v) {
+                        _desdeCtrl.clear();
+                        _hastaCtrl.clear();
+                      }
+                    }),
+                  ),
+                  if (_usarRango) ...[  
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _desdeCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                                labelText: 'Número desde',
+                                border: OutlineInputBorder()),
+                            validator: (v) {
+                              if (!_usarRango) return null;
+                              if (v == null || v.isEmpty) return 'Requerido';
+                              if (int.tryParse(v) == null) return 'Entero';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _hastaCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                                labelText: 'Número hasta',
+                                border: OutlineInputBorder()),
+                            validator: (v) {
+                              if (!_usarRango) return null;
+                              if (v == null || v.isEmpty) return 'Requerido';
+                              final hasta = int.tryParse(v);
+                              if (hasta == null) return 'Entero';
+                              final desde = int.tryParse(_desdeCtrl.text) ?? 0;
+                              if (hasta < desde) return '≥ Desde';
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   DropdownButtonFormField<String>(
                     value: _periodicidad,
                     decoration: const InputDecoration(
@@ -207,8 +322,7 @@ class _AdminConfigurarCuotasScreenState
                           value: 'MENSUAL', child: Text('Mensual')),
                       DropdownMenuItem(
                           value: 'TRIMESTRAL', child: Text('Trimestral')),
-                      DropdownMenuItem(
-                          value: 'ANUAL', child: Text('Anual')),
+                      DropdownMenuItem(value: 'ANUAL', child: Text('Anual')),
                     ],
                     onChanged: (v) => setState(() => _periodicidad = v!),
                   ),
@@ -260,21 +374,28 @@ class _AdminConfigurarCuotasScreenState
               .titleMedium
               ?.copyWith(fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
-      ..._cuotas.map((c) => Card(
-            child: ListTile(
-              title: Text(c.tipoPropiedadId != null
-                  ? _nombreTipo(c.tipoPropiedadId!)
-                  : 'Propiedad #${c.propiedadId}'),
-              subtitle:
-                  Text('\$${c.monto.toStringAsFixed(2)} · ${c.periodicidad}'),
-              trailing: IconButton(
-                icon: const Icon(Icons.remove_circle_outline,
-                    color: Colors.red),
-                tooltip: 'Desactivar',
-                onPressed: () => _desactivar(c.id),
-              ),
+      ..._cuotas.map((c) {
+        final rangoStr = c.numeroDesde != null
+            ? (c.numeroDesde == c.numeroHasta
+                ? 'Nº ${c.numeroDesde} · '
+                : 'Nros ${c.numeroDesde}–${c.numeroHasta} · ')
+            : '';
+        return Card(
+          child: ListTile(
+            title: Text(c.tipoPropiedadId != null
+                ? _nombreTipo(c.tipoPropiedadId!)
+                : 'Propiedad #${c.propiedadId}'),
+            subtitle: Text(
+                '$rangoStr\$${c.monto.toStringAsFixed(0)} · ${c.periodicidad}'),
+            trailing: IconButton(
+              icon:
+                  const Icon(Icons.remove_circle_outline, color: Colors.red),
+              tooltip: 'Desactivar',
+              onPressed: () => _desactivar(c.id),
             ),
-          )),
+          ),
+        );
+      }),
       const Divider(height: 32),
     ];
   }
