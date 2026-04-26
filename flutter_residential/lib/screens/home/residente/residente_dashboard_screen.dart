@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/screens/home/residente/pagos/estado_cuenta_screen.dart';
+import 'package:flutter_residential/screens/home/residente/pagos/mis_pagos_screen.dart';
 import 'package:flutter_residential/screens/home/residente/widgets/banner_bienvenida.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
@@ -23,7 +24,8 @@ class ResidenteDashboardScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             'Accesos rápidos',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           GridView.count(
@@ -43,13 +45,23 @@ class ResidenteDashboardScreen extends StatelessWidget {
               ),
               _tarjeta(
                 theme: theme,
-                label: 'Mis Pagos',
-                icono: Icons.receipt_long_outlined,
+                label: 'Estado de Cuenta',
+                icono: Icons.account_balance_wallet_outlined,
                 color: Colors.blue,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (_) => const EstadoCuentaScreen()),
+                ),
+              ),
+              _tarjeta(
+                theme: theme,
+                label: 'Mis Pagos',
+                icono: Icons.receipt_long_outlined,
+                color: Colors.teal,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MisPagosScreen()),
                 ),
               ),
             ],
