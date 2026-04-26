@@ -14,7 +14,7 @@ class CuotaService {
   }
 
   static Future<ConfiguracionCuotaModel> crear(Map<String, dynamic> data) async {
-    final res = await ApiClient.post(ApiConstants.adminCuotas, data);
+    final res = await ApiClient.post(ApiConstants.adminCuotas, data, requiresAuth: true);
     final body = jsonDecode(res.body);
     if (res.statusCode == 201) return ConfiguracionCuotaModel.fromJson(body);
     throw Exception(body['message'] ?? 'Error al crear cuota');
