@@ -127,9 +127,9 @@ class _MorosoTile extends StatelessWidget {
           side: BorderSide(
               color: Colors.red.withValues(alpha: 0.3))),
       child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: Color.fromRGBO(255, 0, 0, 0.925),
-          child: Icon(Icons.warning_amber, color: Colors.red, size: 20),
+        leading: CircleAvatar(
+          backgroundColor: Colors.red.withValues(alpha: 0.15),
+          child: const Icon(Icons.warning_amber, color: Colors.red, size: 20),
         ),
         title: Text(cobro.propiedadIdentificador,
             style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -153,6 +153,4 @@ class _MorosoTile extends StatelessWidget {
       ),
     );
   }
-
-  
 }

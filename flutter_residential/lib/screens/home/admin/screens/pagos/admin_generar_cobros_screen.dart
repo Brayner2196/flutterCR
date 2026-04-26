@@ -17,8 +17,6 @@ class _AdminGenerarCobrosScreenState
   final _form = GlobalKey<FormState>();
   int _anio = DateTime.now().year;
   int _mes = DateTime.now().month;
-  DateTime _fechaInicio = DateTime.now();
-  DateTime _fechaFin = DateTime.now().add(const Duration(days: 30));
   DateTime _fechaLimite =
       DateTime.now().add(const Duration(days: 10));
   bool _creandoPeriodo = false;
@@ -54,11 +52,7 @@ class _AdminGenerarCobrosScreenState
                   : const Icon(Icons.auto_awesome),
               label: Text(widget.periodo != null
                   ? 'Generar cobros para ${widget.periodo!.nombreMes}'
-                  : 'Crear período y generar cobros',
-                  style: TextStyle(
-                    color: Colors.red
-                  ),
-              ),
+                  : 'Crear período y generar cobros'),
             ),
           ],
         ),
