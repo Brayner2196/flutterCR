@@ -16,7 +16,7 @@ class CobroService {
   }
 
   static Future<List<PeriodoCobroModel>> listarPeriodos() async {
-    final res = await ApiClient.get(ApiConstants.adminPeriodos);
+    final res = await ApiClient.get(ApiConstants.adminPeriodos, requiresAuth: true);
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) {
       return (body as List).map((e) => PeriodoCobroModel.fromJson(e)).toList();

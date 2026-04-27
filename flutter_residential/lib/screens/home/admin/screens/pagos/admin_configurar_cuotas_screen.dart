@@ -55,7 +55,7 @@ class _AdminConfigurarCuotasScreenState
   Future<void> _cargarDatos() async {
     setState(() => _cargando = true);
     try {
-      final resT = await ApiClient.get(ApiConstants.tiposPropiedad);
+      final resT = await ApiClient.get(ApiConstants.tiposPropiedad,requiresAuth: true);
       final listJson = jsonDecode(resT.body) as List;
       final nodos = listJson.map((e) => TipoPropiedadNodo.fromJson(e)).toList();
       final flat = <TipoPropiedadNodo>[];
