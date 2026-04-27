@@ -1,0 +1,26 @@
+class RecaudoMes {
+  final int anio;
+  final int mes;
+  final int porcentaje;
+  final int puntosVariacion;
+  final double recaudado;
+  final double esperado;
+
+  const RecaudoMes({
+    required this.anio,
+    required this.mes,
+    required this.porcentaje,
+    required this.puntosVariacion,
+    required this.recaudado,
+    required this.esperado,
+  });
+
+  factory RecaudoMes.fromJson(Map<String, dynamic> json) => RecaudoMes(
+        anio: (json['anio'] as num).toInt(),
+        mes: (json['mes'] as num).toInt(),
+        porcentaje: (json['porcentaje'] as num).toInt(),
+        puntosVariacion: (json['puntosVariacion'] as num).toInt(),
+        recaudado: (json['recaudado'] as num? ?? 0).toDouble(),
+        esperado: (json['esperado'] as num? ?? 0).toDouble(),
+      );
+}
