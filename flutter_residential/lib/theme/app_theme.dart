@@ -54,9 +54,9 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
   final cs = ColorScheme(
     brightness: brightness,
     primary:            primaryColor,
-    onPrimary:          Colors.white,
+    onPrimary:          isDark ?  AppColors.textHiDark : AppColors.surfaceAltDark,
     primaryContainer:   isDark ? AppColors.surfaceAltDark : AppColors.bgBlue,
-    onPrimaryContainer: isDark ? AppColors.textHiDark    : AppColors.blue,
+    onPrimaryContainer: isDark ? AppColors.blue    : AppColors.bgLight,
     secondary:          isDark ? AppColors.surfaceAltDark : AppColors.okSoft,
     onSecondary:        isDark ? AppColors.textMidDark   : AppColors.ok,
     error:              AppColors.danger,

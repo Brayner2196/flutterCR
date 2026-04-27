@@ -4,65 +4,67 @@ import 'package:flutter_residential/widgets/theme_toggle_switch.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_residential/providers/auth_provider.dart';
 
-class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
+class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget {
   final AuthProvider auth;
   final ColorScheme cs;
   final bool habilitarlogout;
 
-  const AppBarAdmin({super.key, required this.auth, required this.cs, required this.habilitarlogout});
+  const AppBarAdmin({
+    super.key,
+    required this.auth,
+    required this.cs,
+    required this.habilitarlogout,
+  });
 
   @override
   Widget build(BuildContext context) {
     final appProvider = context.watch<AppProvider>();
     return AppBar(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+      ),
       title: Align(
-          alignment: Alignment.topLeft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                domadorDeGritosGraficos(auth.nombreConjunto ?? ''),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  letterSpacing: -0.5,
-                  color: cs.onSurface
-                ),
+        alignment: Alignment.topLeft,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              domadorDeGritosGraficos(auth.nombreConjunto ?? ''),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                letterSpacing: -0.5,
+                color: cs.onSurface,
               ),
-              if(!habilitarlogout)
+            ),
+            if (!habilitarlogout)
               Text(
-                domadorDeGritosGraficos(auth.nombre??''),
-                style: TextStyle(
-                  fontSize: 10,
-
-                ),
+                domadorDeGritosGraficos(auth.nombre ?? ''),
+                style: TextStyle(fontSize: 10),
               ),
-            ],
-          ),
+          ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: Row(
-              children: [
-                ThemeToggleSwitch(
-                  isDark: appProvider.themeMode == ThemeMode.dark,
-                  onToggle: appProvider.toggleTheme,
-                ),
-                const SizedBox(width: 8),
-                if(habilitarlogout)
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12.0),
+          child: Row(
+            children: [
+              ThemeToggleSwitch(
+                isDark: appProvider.themeMode == ThemeMode.dark,
+                onToggle: appProvider.toggleTheme,
+              ),
+              const SizedBox(width: 8),
+              if (habilitarlogout)
                 IconButton(
-                  icon: Icon(
-                    Icons.logout,
-                    color: cs.error,
-                  ),
+                  icon: Icon(Icons.logout, color: cs.error),
                   tooltip: 'Cerrar sesión',
                   onPressed: () => _confirmarLogout(context),
                 ),
-              ],
-            ),
+            ],
           ),
-        ],
+        ),
+      ],
     );
   }
 
@@ -90,19 +92,19 @@ class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget{
   }
 
   String domadorDeGritosGraficos(String text) {
-  const lowerWords = ['de', 'la', 'el', 'los', 'las', 'y', 'en'];
+    const lowerWords = ['de', 'la', 'el', 'los', 'las', 'y', 'en'];
 
-  return text
-      .trim()
-      .toLowerCase()
-      .split(RegExp(r'\s+'))
-      .map((word) {
-        if (lowerWords.contains(word)) return word;
-        return word[0].toUpperCase() + word.substring(1);
-      })
-      .join(' ');
-}
-  
+    return text
+        .trim()
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .map((word) {
+          if (lowerWords.contains(word)) return word;
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
+  }
+
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

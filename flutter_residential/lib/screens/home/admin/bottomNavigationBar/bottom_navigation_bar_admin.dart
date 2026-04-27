@@ -23,10 +23,10 @@ class BottomNavigationBarAdmin extends StatelessWidget {
       ),
       child: NavigationBarTheme(
         data: NavigationBarThemeData(
-          indicatorColor: AppColors.bgBlue,
+          indicatorColor: Colors.transparent,
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return const TextStyle(color: AppColors.blue, fontWeight: FontWeight.bold);
+              return TextStyle(color: colorScheme.onPrimaryContainer , fontWeight: FontWeight.bold);
             }
             return null; // usa el estilo del tema por defecto
           }),
@@ -48,16 +48,10 @@ class BottomNavigationBarAdmin extends StatelessWidget {
           },
           labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
           destinations: [
-            NavigationDestination(
-              icon: Icon(
-                Icons.home_outlined,
-                color: AppColors.blue,
-              ),
-              label: 'Inicio'
-            ),
-            const NavigationDestination(icon: Icon(Icons.people_outline,color: AppColors.blue,), label: 'Usuarios'),
-            const NavigationDestination(icon: Icon(Icons.person_pin_outlined), label: 'Propietarios'),
-            const NavigationDestination(icon: Icon(Icons.home_work_outlined), label: 'Propiedades'),
+            NavigationDestination(icon: Icon(Icons.home_outlined, color: colorScheme.onPrimaryContainer, ), label: 'Inicio', ),
+            NavigationDestination(icon: Icon(Icons.people_outline , color: colorScheme.onPrimaryContainer,), label: 'Usuarios'),
+            NavigationDestination(icon: Icon(Icons.person_pin_outlined, color: colorScheme.onPrimaryContainer,), label: 'Propietarios'),
+            NavigationDestination(icon: Icon(Icons.home_work_outlined, color: colorScheme.onPrimaryContainer,), label: 'Propiedades'),
           ],
         ),
       ),
