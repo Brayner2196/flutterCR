@@ -216,7 +216,7 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
     final cs = Theme.of(context).colorScheme;
     if (_periodoSeleccionado == null) {
       return Center(
-          child: Text('Selecciona un período para ver los cobros',
+        child: Text('Registra un primer cobro presionando el boton superior +',
               style: TextStyle(color: cs.onSurfaceVariant)));
     }
     if (provider.cobros.isEmpty) {
@@ -231,19 +231,22 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
                 style: TextStyle(color: cs.onSurfaceVariant)),
             const SizedBox(height: 12),
             if (_periodoSeleccionado!.estaAbierto)
-              FilledButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) =>
-                          AdminGenerarCobrosScreen(
-                              periodo: _periodoSeleccionado)),
-                ).then((_) => context
-                    .read<CobrosProvider>()
-                    .cargarCobrosAdmin(
-                        periodoId: _periodoSeleccionado!.id)),
-                icon: const Icon(Icons.auto_awesome),
-                label: const Text('Generar cobros'),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            AdminGenerarCobrosScreen(
+                                periodo: _periodoSeleccionado)),
+                  ).then((_) => context
+                      .read<CobrosProvider>()
+                      .cargarCobrosAdmin(
+                          periodoId: _periodoSeleccionado!.id)),
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Generar cobros'),
+                ),
               ),
           ],
         ),
