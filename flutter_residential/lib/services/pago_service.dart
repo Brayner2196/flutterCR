@@ -7,7 +7,7 @@ class PagoService {
   // ─── Residente ───────────────────────────────────
 
   static Future<PagoModel> registrarPago(Map<String, dynamic> data) async {
-    final res = await ApiClient.post(ApiConstants.misPagos, data);
+    final res = await ApiClient.post(ApiConstants.misPagos, data, requiresAuth: true);
     final body = jsonDecode(res.body);
     if (res.statusCode == 200 || res.statusCode == 201) return PagoModel.fromJson(body);
     throw Exception(body['message'] ?? 'Error al registrar pago');
@@ -26,7 +26,7 @@ class PagoService {
 
   static Future<List<PagoModel>> listarPagosAdmin(
       {String estado = 'PENDIENTE_VERIFICACION'}) async {
-    final res = await ApiClient.get('${ApiConstants.adminPagos}?estado=$estado');
+    final res = await ApiClient.get('${ApiConstants.adminPagos}?estado=$estado',requiresAuth: true);
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) {
       return (body as List).map((e) => PagoModel.fromJson(e)).toList();
