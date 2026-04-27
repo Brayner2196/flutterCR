@@ -49,7 +49,7 @@ class _RegistrarPagoScreenState extends State<RegistrarPagoScreen> {
                     ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _metodo,
+              initialValue: _metodo,
               decoration: const InputDecoration(
                   labelText: 'Método de pago', border: OutlineInputBorder()),
               items: _metodos
