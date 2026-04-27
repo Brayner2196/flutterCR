@@ -19,7 +19,7 @@ class QuickAccessCard extends StatelessWidget {
     this.backgroundColor,
     this.iconBackgroundColor,
     this.iconColor,
-    this.iconSize = 28,
+    this.iconSize = 16,
     this.titleStyle,
     this.colorText
   });
@@ -48,7 +48,7 @@ class QuickAccessCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: iconBackgroundColor ?? cs.primaryContainer,
                 shape: BoxShape.circle,
@@ -63,10 +63,11 @@ class QuickAccessCard extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: titleStyle ??
+              style: titleStyle ?? 
                   Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w700,
                         color: colorText,
+                        fontSize: 10
                       ),
             ),
           ],
@@ -85,7 +86,7 @@ class QuickAccessGrid extends StatelessWidget {
   const QuickAccessGrid({
     super.key,
     required this.cards,
-    this.crossAxisCount = 2,
+    this.crossAxisCount = 3,
     this.spacing = 16,
     this.padding = const EdgeInsets.only(left: 18,right: 18,top:0),
   });
@@ -101,7 +102,7 @@ class QuickAccessGrid extends StatelessWidget {
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: spacing,
           mainAxisSpacing: spacing,
-          childAspectRatio: 1.60,
+          childAspectRatio: 1.20,
         ),
         itemCount: cards.length,
         itemBuilder: (context, index) {
