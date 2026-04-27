@@ -62,7 +62,7 @@ class PillTabBar extends StatelessWidget {
                       tab.label,
                       style: TextStyle(
                         color: isSelected
-                            ? colorScheme.onPrimary
+                            ? colorScheme.onPrimaryContainer
                             : colorScheme.onSurfaceVariant,
                         fontWeight: isSelected
                             ? FontWeight.w600
