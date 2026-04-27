@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(Icons.apartment, size: 48, color: AppColors.blue),
+                  child: Icon(Icons.apartment, size: 48, color: Colors.white),
                 ),
                 const SizedBox(height: 24),
                 Text(
