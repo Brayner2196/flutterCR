@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/screens/home/residente/pagos/estado_cuenta_screen.dart';
 import 'package:flutter_residential/screens/home/residente/pagos/mis_pagos_screen.dart';
+import 'package:flutter_residential/screens/home/residente/reservas/mis_reservas_screen.dart';
+import 'package:flutter_residential/screens/home/residente/pqrs/mis_pqrs_screen.dart';
 import 'package:flutter_residential/screens/home/residente/widgets/banner_bienvenida.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
@@ -62,6 +64,28 @@ class ResidenteDashboardScreen extends StatelessWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const MisPagosScreen()),
+                ),
+              ),
+              _tarjeta(
+                theme: theme,
+                label: 'Reservas',
+                icono: Icons.event_outlined,
+                color: Colors.orange,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const MisReservasScreen()),
+                ),
+              ),
+              _tarjeta(
+                theme: theme,
+                label: 'PQRs',
+                icono: Icons.support_agent_outlined,
+                color: Colors.purple,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const MisPqrsScreen()),
                 ),
               ),
             ],

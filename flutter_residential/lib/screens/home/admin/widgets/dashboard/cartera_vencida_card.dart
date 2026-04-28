@@ -30,29 +30,33 @@ class CarteraVencidaCard extends StatelessWidget {
               color: DashboardTokens.fgOrange,
             ),
           ),
-          const SizedBox(height: 6),
-          Row(
+          const SizedBox(height: 10),
+          Column(
             children: [
-              Icon(
-                positivo ? Icons.arrow_upward : Icons.arrow_downward,
-                size: 12,
-                color: DashboardTokens.fgOrange,
+              Row(
+                children: [
+                  Icon(
+                    positivo ? Icons.arrow_upward : Icons.arrow_downward,
+                    size: 12,
+                    color: DashboardTokens.fgOrange,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    '${positivo ? '+' : '−'}${formatoMillones(data.variacionMonto.abs())}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: DashboardTokens.fgOrange,
+                    ),
+                  ),
+                  
+                ],
               ),
-              const SizedBox(width: 2),
-              Text(
-                '${positivo ? '+' : '−'}${formatoMillones(data.variacionMonto.abs())}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: DashboardTokens.fgOrange,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${data.unidadesEnMora} unidades en mora',
-                style: const TextStyle(
-                    fontSize: 12, color: DashboardTokens.fgOrange),
-              ),
+                  Text(
+                    '${data.unidadesEnMora} unidades en mora',
+                    style: const TextStyle(
+                        fontSize: 14, color: DashboardTokens.fgOrange),
+                  ),
             ],
           ),
         ],
