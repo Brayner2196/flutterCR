@@ -9,6 +9,7 @@ import 'providers/dashboard_provider.dart';
 import 'providers/pagos_provider.dart';
 import 'providers/pqr_provider.dart';
 import 'providers/propiedad_provider.dart';
+import 'providers/reserva_provider.dart';
 import 'providers/usuario_provider.dart';
 import 'providers/tenant_provider.dart';
 import 'screens/splash_screen.dart';
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PagosProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => PqrProvider()),
+        ChangeNotifierProvider(create: (_) => ReservaProvider()),
       ],
       child: ToastificationWrapper(
         child: Consumer<AppProvider>(
