@@ -1,8 +1,8 @@
 class ApiConstants {
   /// Base URL for the API
   //static const String baseUrl = 'http://localhost:8080';
-  //static const String baseUrl = 'http://10.0.2.2:8080'; // Para emulador Android
-  static const String baseUrl = 'https://backendcr-ob40.onrender.com'; // Para emulador Android
+  static const String baseUrl = 'http://10.0.2.2:8080'; // Para emulador Android
+  //static const String baseUrl = 'https://backendcr-ob40.onrender.com'; // Para emulador Android
 
   // Auth
   static const String login = '/auth/login';
@@ -49,6 +49,16 @@ class ApiConstants {
   static const String misCobros = '/api/residente/cobros';
   static const String historialCobros = '/api/residente/cobros/historial';
   static const String misPagos = '/api/residente/pagos';
+
+  // Abonos — residente
+  static const String misAbonos = '/api/residente/abonos';
+  static const String simularAbono = '/api/residente/abonos/simular';
+  static const String saldoFavor = '/api/residente/saldo-favor';
+
+  // Abonos — admin
+  static const String adminAbonos = '/api/admin/abonos';
+  static String verificarAbono(int id) => '/api/admin/abonos/$id/verificar';
+  static String rechazarAbono(int id) => '/api/admin/abonos/$id/rechazar';
 
   // Dashboard — admin
   static const String adminDashboard = '/api/admin/dashboard';

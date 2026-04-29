@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../models/cobro_model.dart';
+import 'registrar_abono_screen.dart';
 import 'registrar_pago_screen.dart';
 
 class DetalleCobroScreen extends StatelessWidget {
@@ -12,7 +13,9 @@ class DetalleCobroScreen extends StatelessWidget {
         ? Colors.red
         : cobro.esPagado
             ? Colors.green
-            : Colors.orange;
+            : cobro.esParcial
+                ? Colors.blue
+                : Colors.orange;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detalle del Cobro')),
@@ -36,22 +39,52 @@ class DetalleCobroScreen extends StatelessWidget {
             if (cobro.montoMora > 0)
               _fila('Mora', _fmt(cobro.montoMora), color: Colors.red),
             _fila('Total a pagar', _fmt(cobro.montoTotal), bold: true),
+            if (cobro.esParcial) ...[
+              _fila('Abonado', _fmt(cobro.montoPagado), color: Colors.blue),
+              _fila('Pendiente', _fmt(cobro.montoPendiente),
+                  bold: true, color: Colors.orange),
+              const SizedBox(height: 8),
+              _barraProgreso(cobro),
+            ],
           ]),
         ],
       ),
-      bottomNavigationBar: (cobro.esPendiente || cobro.esVencido)
+      bottomNavigationBar: cobro.tieneDeuda
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: FilledButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            RegistrarPagoScreen(cobro: cobro)),
-                  ),
-                  icon: const Icon(Icons.payment),
-                  label: const Text('Registrar Pago'),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => RegistrarAbonoScreen(
+                                    propiedadId: cobro.propiedadId,
+                                    propiedadNombre: cobro.propiedadIdentificador,
+                                  )),
+                        ),
+                        icon: const Icon(Icons.savings_outlined),
+                        label: const Text('Abonar'),
+                      ),
+                    ),
+                    if (cobro.esPendiente || cobro.esVencido) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    RegistrarPagoScreen(cobro: cobro)),
+                          ),
+                          icon: const Icon(Icons.payment),
+                          label: const Text('Pagar total'),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             )
@@ -75,11 +108,48 @@ class DetalleCobroScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: color,
                     fontSize: 16)),
-            Text(_fmt(cobro.montoTotal),
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                    fontSize: 20)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  cobro.esParcial
+                      ? _fmt(cobro.montoPendiente)
+                      : _fmt(cobro.montoTotal),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                      fontSize: 20),
+                ),
+                if (cobro.esParcial)
+                  Text('pendiente',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: color.withValues(alpha: 0.7))),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Widget _barraProgreso(CobroModel c) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: c.porcentajePagado,
+                minHeight: 8,
+                backgroundColor: Colors.grey.shade200,
+                color: Colors.blue,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${(c.porcentajePagado * 100).toStringAsFixed(0)}% pagado',
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
+            ),
           ],
         ),
       );

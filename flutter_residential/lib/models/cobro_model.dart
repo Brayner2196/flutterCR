@@ -12,6 +12,8 @@ class CobroModel {
   final double montoBase;
   final double montoMora;
   final double montoTotal;
+  final double montoPagado;
+  final double montoPendiente;
   final String fechaGeneracion;
   final String fechaLimitePago;
   final String estado;
@@ -30,6 +32,8 @@ class CobroModel {
     required this.montoBase,
     required this.montoMora,
     required this.montoTotal,
+    required this.montoPagado,
+    required this.montoPendiente,
     required this.fechaGeneracion,
     required this.fechaLimitePago,
     required this.estado,
@@ -49,13 +53,20 @@ class CobroModel {
         montoBase: (json['montoBase'] as num).toDouble(),
         montoMora: (json['montoMora'] as num? ?? 0).toDouble(),
         montoTotal: (json['montoTotal'] as num).toDouble(),
+        montoPagado: (json['montoPagado'] as num? ?? 0).toDouble(),
+        montoPendiente: (json['montoPendiente'] as num? ?? json['montoTotal'] as num).toDouble(),
         fechaGeneracion: json['fechaGeneracion'] as String,
         fechaLimitePago: json['fechaLimitePago'] as String,
         estado: json['estado'] as String,
       );
 
   bool get esPendiente => estado == 'PENDIENTE';
+  bool get esParcial => estado == 'PARCIAL';
   bool get esVencido => estado == 'VENCIDO';
   bool get esPagado => estado == 'PAGADO';
   bool get esExonerado => estado == 'EXONERADO';
+  bool get tieneDeuda => esPendiente || esParcial || esVencido;
+
+  double get porcentajePagado =>
+      montoTotal > 0 ? (montoPagado / montoTotal).clamp(0.0, 1.0) : 0.0;
 }
