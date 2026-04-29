@@ -103,7 +103,7 @@ class _ThemeToggleSwitchState extends State<ThemeToggleSwitch>
           final ballColor = Color.lerp(Colors.yellow, Colors.white, t)!;
           final rotAngle = _rotateCtrl.value * 2 * pi;
           // Las nubes se desplazan junto con la bola + flotado
-          final cloudDx = 26.0 * t + _cloudFloat(_cloudCtrl.value);
+          final cloudDx = 26.0 * t + _cloudFloat(_cloudCtrl.value).clamp(0.0, 26.0);
 
           return Container(
             width: 60,
