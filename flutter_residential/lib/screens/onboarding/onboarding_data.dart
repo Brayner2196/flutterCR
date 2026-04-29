@@ -17,8 +17,6 @@ class OnboardingItem {
   });
 }
 
-/// Tres slides alineados con los pilares del producto:
-/// gestion del conjunto, cobros y pagos, separacion por rol.
 const List<OnboardingItem> onboardingItems = [
   OnboardingItem(
     icon: Icons.apartment_outlined,
@@ -42,6 +40,6 @@ const List<OnboardingItem> onboardingItems = [
     foreground: AppColors.purple,
     title: 'Pensado para tu rol',
     description:
-        'Super administrador, administrador del conjunto o residente: cada perfil ve la informacion que le corresponde.',
+        'Administrador del conjunto, residente, vigilante: cada perfil ve la informacion que le corresponde.',
   ),
 ];
