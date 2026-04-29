@@ -37,7 +37,6 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PagosProvider>();
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/screens/home/admin/screens/usuarios/usuarios_screen.dart';
-import 'package:flutter_residential/theme/app_theme.dart';
 
 class BottomNavigationBarAdmin extends StatelessWidget {
   final int tabActual;
