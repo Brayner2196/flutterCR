@@ -49,8 +49,6 @@ class BottomNavigationBarAdmin extends StatelessWidget {
           destinations: [
             NavigationDestination(icon: Icon(Icons.home_outlined, color: colorScheme.onPrimaryContainer, ), label: 'Inicio', ),
             NavigationDestination(icon: Icon(Icons.people_outline , color: colorScheme.onPrimaryContainer,), label: 'Usuarios'),
-            NavigationDestination(icon: Icon(Icons.person_pin_outlined, color: colorScheme.onPrimaryContainer,), label: 'Propietarios'),
-            NavigationDestination(icon: Icon(Icons.home_work_outlined, color: colorScheme.onPrimaryContainer,), label: 'Propiedades'),
           ],
         ),
       ),
