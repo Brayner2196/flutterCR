@@ -4,11 +4,13 @@ import 'package:flutter_residential/screens/tenants/widgets/mod_layout_table.dar
 import 'package:flutter_residential/screens/tenants/widgets/tenant_form_insert_edit_dialog.dart';
 import 'package:flutter_residential/screens/tenants/widgets/tenant_layout_switcher.dart';
 import 'package:flutter_residential/screens/tenants/widgets/filter_capsula.dart';
+import 'package:flutter_residential/screens/tenants/widgets/tenants_error_view.dart';
 import 'package:provider/provider.dart';
 import '../../providers/tenant_provider.dart';
 import '../../models/tenant_response.dart';
 import 'widgets/tenant_card.dart';
 import 'widgets/tenant_header_widget.dart';
+import 'widgets/tenants_empty_view.dart';
 
 class TenantsScreen extends StatefulWidget {
   const TenantsScreen({super.key});
@@ -124,7 +126,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
         }
 
         if (provider.error != null) {
-          return _ErrorView(
+          return TenantsErrorView(
             mensaje: provider.error!,
             onReintentar: () => context.read<TenantProvider>().cargarTodos(),
           );
@@ -188,7 +190,6 @@ class _TenantsScreenState extends State<TenantsScreen> {
                       ),
                     ),
                   ),
-
                   // ─── Filter chips ───
                   SliverToBoxAdapter(
                     child: SizedBox(
@@ -224,7 +225,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                   if (lista.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
-                      child: _EmptyView(),
+                      child: TenantsEmptyView(),
                     )
                   else if (_layout == ModosLayouts.table)
                     SliverToBoxAdapter(
@@ -292,68 +293,6 @@ class _TenantsScreenState extends State<TenantsScreen> {
           ],
         );
       },
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.apartment_outlined,
-            size: 64,
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'No hay tenants que coincidan',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String mensaje;
-  final VoidCallback onReintentar;
-
-  const _ErrorView({required this.mensaje, required this.onReintentar});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline,
-                size: 64, color: Theme.of(context).colorScheme.error),
-            const SizedBox(height: 12),
-            Text(
-              mensaje,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onReintentar,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
