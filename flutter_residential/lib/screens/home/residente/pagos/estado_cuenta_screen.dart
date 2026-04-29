@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/cobros_provider.dart';
+import '../../../../providers/residente_estadisticas_provider.dart';
 import '../../../../models/cobro_model.dart';
 import '../../../../models/estado_cuenta_model.dart';
+import '../widgets/estado_badge_card.dart';
+import '../widgets/kpi_card.dart';
+import '../widgets/proximo_vencimiento_card.dart';
 import 'detalle_cobro_screen.dart';
 import 'mis_cobros_screen.dart';
 
@@ -17,20 +21,33 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-        (_) => context.read<CobrosProvider>().cargarEstadoCuenta());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CobrosProvider>().cargarEstadoCuenta();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CobrosProvider>();
+    final stats = context.watch<ResidenteEstadisticasProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Estado de Cuenta')),
+      appBar: AppBar(
+        title: const Text('Estado de Cuenta'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<CobrosProvider>().cargarEstadoCuenta();
+              context.read<ResidenteEstadisticasProvider>().refrescar();
+            },
+          ),
+        ],
+      ),
       body: provider.loading
           ? const Center(child: CircularProgressIndicator())
           : provider.error != null
               ? _error(provider.error!)
-              : _body(provider.estadoCuenta),
+              : _body(provider.estadoCuenta, stats),
     );
   }
 
@@ -50,16 +67,106 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         ),
       );
 
-  Widget _body(EstadoCuentaModel? ec) {
+  Widget _body(EstadoCuentaModel? ec, ResidenteEstadisticasProvider stats) {
     if (ec == null) return const SizedBox.shrink();
+    final e = stats.estadisticas;
+
     return RefreshIndicator(
-      onRefresh: () => context.read<CobrosProvider>().cargarEstadoCuenta(),
+      onRefresh: () async {
+        await context.read<CobrosProvider>().cargarEstadoCuenta();
+        await context.read<ResidenteEstadisticasProvider>().refrescar();
+      },
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _tarjetaResumen(ec),
-          const SizedBox(height: 16),
-          if (ec.cobrosActivos.isNotEmpty) ...[            Row(
+          // ─── Badge de estado general ──────────────────
+          EstadoBadgeCard(
+            alDia: ec.alDia,
+            enMora: ec.cobrosVencidos > 0,
+            totalDeuda: ec.totalDeuda,
+            cobrosPendientes: ec.cobrosPendientes,
+            cobrosVencidos: ec.cobrosVencidos,
+            formatMonto: _fmt,
+          ),
+          const SizedBox(height: 14),
+
+          // ─── KPIs detallados ──────────────────────────
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 6,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1.8,
+            children: [
+              KpiCard(
+                label: 'Pendiente',
+                valor: _fmt(ec.totalPendiente),
+                icono: Icons.schedule_rounded,
+                color: Colors.orange,
+                subtitulo: '${ec.cobrosPendientes} cobro${ec.cobrosPendientes != 1 ? 's' : ''}',
+              ),
+              KpiCard(
+                label: 'Vencido',
+                valor: _fmt(ec.totalVencido),
+                icono: Icons.warning_amber_rounded,
+                color: Colors.red,
+                subtitulo: '${ec.cobrosVencidos} cobro${ec.cobrosVencidos != 1 ? 's' : ''}',
+              ),
+              if (e != null) ...[
+                KpiCard(
+                  label: 'Total pagado',
+                  valor: _fmt(e.totalPagadoHistorico),
+                  icono: Icons.check_circle_outline,
+                  color: Colors.green,
+                  subtitulo: '${e.cobrosPagados} cobros pagados',
+                ),
+                KpiCard(
+                  label: 'Cumplimiento',
+                  valor: '${e.porcentajeCumplimiento.toInt()}%',
+                  icono: Icons.trending_up_rounded,
+                  color: e.porcentajeCumplimiento >= 80
+                      ? Colors.green
+                      : e.porcentajeCumplimiento >= 50
+                          ? Colors.orange
+                          : Colors.red,
+                  subtitulo: '${e.cobrosPagados} de ${e.totalCobrosHistoricos}',
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // ─── Próximo vencimiento ──────────────────────
+          if (e != null && e.proximoVencimiento != null) ...[
+            ProximoVencimientoCard(
+              cobro: e.proximoVencimiento!,
+              diasRestantes: e.diasParaVencimiento,
+              formatMonto: _fmt,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      DetalleCobroScreen(cobro: e.proximoVencimiento!),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          // ─── Último pago ──────────────────────────────
+          if (ec.ultimoPago != null)
+            _infoCard(
+              icono: Icons.payment,
+              color: const Color(0xFF5479E0),
+              titulo: 'Último pago registrado',
+              subtitulo: ec.ultimoPago!,
+            ),
+
+          // ─── Cobros activos ───────────────────────────
+          if (ec.cobrosActivos.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Cobros activos',
@@ -72,69 +179,53 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
                       context,
                       MaterialPageRoute(
                           builder: (_) => const MisCobrosScreen())),
-                  child: const Text('Ver historial'),
+                  child: const Text('Ver todos'),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             ...ec.cobrosActivos.map((c) => _CobroCard(cobro: c)),
-          ] else
+          ] else if (ec.alDia) ...[
+            const SizedBox(height: 16),
             _tarjetaAlDia(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _tarjetaResumen(EstadoCuentaModel ec) {
-    final deuda = ec.totalDeuda;
-    final color = deuda > 0 ? Colors.red : Colors.green;
-    return Card(
-      color: color.withValues(alpha: 0.08),
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: color.withValues(alpha: 0.3))),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              Icon(
-                  deuda > 0
-                      ? Icons.warning_amber_rounded
-                      : Icons.check_circle,
-                  color: color),
-              const SizedBox(width: 8),
-              Text(
-                  deuda > 0
-                      ? 'Tienes deuda pendiente'
-                      : 'Estás al día',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: color)),
-            ]),
-            const SizedBox(height: 16),
-            Text(_fmt(deuda),
-                style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                    color: color)),
-            if (ec.totalVencido > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                    'Incluye ${_fmt(ec.totalVencido)} en mora',
+  Widget _infoCard({
+    required IconData icono,
+    required Color color,
+    required String titulo,
+    required String subtitulo,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Icon(icono, color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(titulo,
                     style: TextStyle(
-                        color: Colors.red.shade700, fontSize: 12)),
-              ),
-            const SizedBox(height: 8),
-            Text(
-                '${ec.cobrosPendientes} pendientes · ${ec.cobrosVencidos} vencidos',
-                style: const TextStyle(
-                    color: Colors.grey, fontSize: 12)),
-          ],
-        ),
+                        fontSize: 11, color: Colors.grey.shade500)),
+                Text(subtitulo,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -149,18 +240,19 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 52),
               SizedBox(height: 12),
-              Text('¡Estás al día!',
+              Text('Sin cobros pendientes',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18)),
+                      fontWeight: FontWeight.bold, fontSize: 16)),
               SizedBox(height: 4),
-              Text('No tienes cobros pendientes',
+              Text('Todas tus cuotas están al día',
                   style: TextStyle(color: Colors.grey)),
             ],
           ),
         ),
       );
 
-  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  String _fmt(double v) =>
+      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }
 
 class _CobroCard extends StatelessWidget {
@@ -182,10 +274,17 @@ class _CobroCard extends StatelessWidget {
           backgroundColor: color.withValues(alpha: 0.15),
           child: Icon(Icons.receipt_long, color: color, size: 22),
         ),
-        title: Text(cobro.propiedadIdentificador,
+        title: Text(cobro.concepto,
             style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text('Vence: ${cobro.fechaLimitePago}',
-            style: const TextStyle(fontSize: 12)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${cobro.mes}/${cobro.anio} · ${cobro.propiedadIdentificador}',
+                style: const TextStyle(fontSize: 12)),
+            Text('Vence: ${cobro.fechaLimitePago}',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+          ],
+        ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -195,6 +294,10 @@ class _CobroCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: color,
                     fontSize: 15)),
+            if (cobro.montoMora > 0)
+              Text('Mora: ${_fmt(cobro.montoMora)}',
+                  style: const TextStyle(
+                      color: Colors.red, fontSize: 10)),
             Container(
               padding:
                   const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -216,5 +319,6 @@ class _CobroCard extends StatelessWidget {
     );
   }
 
-  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  String _fmt(double v) =>
+      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }

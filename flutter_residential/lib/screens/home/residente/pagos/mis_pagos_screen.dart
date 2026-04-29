@@ -43,10 +43,43 @@ class _MisPagosScreenState extends State<MisPagosScreen>
         ],
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [
-            Tab(text: 'Pendientes'),
-            Tab(text: 'Verificados'),
-            Tab(text: 'Rechazados'),
+          tabs: [
+            Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Pendientes'),
+                  if (provider.pendientes.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    _badge(provider.pendientes.length, Colors.orange),
+                  ],
+                ],
+              ),
+            ),
+            Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Verificados'),
+                  if (provider.verificados.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    _badge(provider.verificados.length, Colors.green),
+                  ],
+                ],
+              ),
+            ),
+            Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Rechazados'),
+                  if (provider.rechazados.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    _badge(provider.rechazados.length, Colors.red),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -54,16 +87,38 @@ class _MisPagosScreenState extends State<MisPagosScreen>
           ? const Center(child: CircularProgressIndicator())
           : provider.error != null
               ? _error(provider.error!)
-              : TabBarView(
-                  controller: _tabs,
+              : Column(
                   children: [
-                    _ListaPagos(pagos: provider.pendientes),
-                    _ListaPagos(pagos: provider.verificados),
-                    _ListaPagos(pagos: provider.rechazados),
+                    // ─── Header de resumen ────────────────
+                    _ResumenHeader(provider: provider),
+                    // ─── Lista de pagos ──────────────────
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabs,
+                        children: [
+                          _ListaPagos(pagos: provider.pendientes),
+                          _ListaPagos(pagos: provider.verificados),
+                          _ListaPagos(pagos: provider.rechazados),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
     );
   }
+
+  Widget _badge(int count, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          '$count',
+          style: const TextStyle(
+              color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+        ),
+      );
 
   Widget _error(String msg) => Center(
         child: Column(
@@ -80,6 +135,109 @@ class _MisPagosScreenState extends State<MisPagosScreen>
           ],
         ),
       );
+}
+
+/// Header con resumen de pagos: total pagado, distribución por método
+class _ResumenHeader extends StatelessWidget {
+  final PagosProvider provider;
+  const _ResumenHeader({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final pagos = provider.pagos;
+    if (pagos.isEmpty) return const SizedBox.shrink();
+
+    final totalPagado = pagos
+        .where((p) => p.esVerificado)
+        .fold<double>(0, (s, p) => s + p.montoPagado);
+
+    // Distribución por método
+    final metodos = <String, int>{};
+    for (final p in pagos) {
+      metodos[p.metodoPago] = (metodos[p.metodoPago] ?? 0) + 1;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Total pagado verificado
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total verificado',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                ),
+                Text(
+                  _fmt(totalPagado),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Métodos
+          ...metodos.entries.take(3).map((e) => Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Column(
+                  children: [
+                    Icon(_iconoMetodo(e.key),
+                        size: 18, color: Colors.grey.shade600),
+                    const SizedBox(height: 2),
+                    Text('${e.value}',
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(_labelMetodo(e.key),
+                        style: TextStyle(
+                            fontSize: 9, color: Colors.grey.shade500)),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  IconData _iconoMetodo(String metodo) {
+    switch (metodo) {
+      case 'TRANSFERENCIA':
+        return Icons.swap_horiz;
+      case 'EFECTIVO':
+        return Icons.payments_outlined;
+      case 'CHEQUE':
+        return Icons.description_outlined;
+      default:
+        return Icons.credit_card;
+    }
+  }
+
+  String _labelMetodo(String metodo) {
+    switch (metodo) {
+      case 'TRANSFERENCIA':
+        return 'Transf.';
+      case 'EFECTIVO':
+        return 'Efectivo';
+      case 'CHEQUE':
+        return 'Cheque';
+      default:
+        return 'Otro';
+    }
+  }
+
+  String _fmt(double v) =>
+      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }
 
 class _ListaPagos extends StatelessWidget {
@@ -168,7 +326,7 @@ class _PagoTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             _fila('Fecha', pago.fechaPago),
-            _fila('Método', pago.metodoPago),
+            _fila('Método', _formatMetodo(pago.metodoPago)),
             if (pago.referencia != null) _fila('Referencia', pago.referencia!),
             if (pago.fechaVerificacion != null)
               _fila('Verificado el', pago.fechaVerificacion!),
@@ -217,6 +375,19 @@ class _PagoTile extends StatelessWidget {
           ],
         ),
       );
+
+  String _formatMetodo(String metodo) {
+    switch (metodo) {
+      case 'TRANSFERENCIA':
+        return 'Transferencia';
+      case 'EFECTIVO':
+        return 'Efectivo';
+      case 'CHEQUE':
+        return 'Cheque';
+      default:
+        return 'Otro';
+    }
+  }
 
   String _fmt(double v) =>
       '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
