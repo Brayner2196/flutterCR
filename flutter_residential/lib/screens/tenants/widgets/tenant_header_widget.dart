@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/theme/app_theme.dart';
+import 'package:flutter_residential/shared/theme/app_theme.dart';
 
 /// Header del diseño V1: saludo + KPIs (total, activos, inactivos)
 class TenantHeaderWidget extends StatelessWidget {

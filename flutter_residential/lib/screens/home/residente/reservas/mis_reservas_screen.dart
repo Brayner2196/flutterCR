@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/reserva_model.dart';
 import '../../../../providers/reserva_provider.dart';
-import '../../../../widgets/shared/estado_badge.dart';
-import '../../../../widgets/shared/filtro_chips.dart';
-import '../../../../widgets/shared/empty_state_widget.dart';
+import '../../../../shared/widgets/estado_badge.dart';
+import '../../../../shared/widgets/filtro_chips.dart';
+import '../../../../shared/widgets/empty_state_widget.dart';
 import 'crear_reserva_screen.dart';
 import 'detalle_reserva_screen.dart';
 

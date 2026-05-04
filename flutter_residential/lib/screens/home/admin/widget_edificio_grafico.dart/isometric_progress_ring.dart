@@ -18,9 +18,9 @@ class IsometricProgressRing extends StatefulWidget {
     required this.percentage,
     this.startOffset = 0.12,
     this.size = 300,
-    this.progressColor = const Color(0xFFEE2638),
-    this.baseColor = const Color(0xFFE8E8E8),
-    this.trackColor = Colors.white,
+    this.progressColor = const Color(0xFFBDD827),
+    this.baseColor = const Color(0xFF5AB020),
+    this.trackColor = const Color.fromARGB(255, 255, 255, 255),
     this.backgroundColor = Colors.black,
     this.animationDuration = const Duration(milliseconds: 1800),
   });
@@ -34,7 +34,7 @@ class _IsometricProgressRingState extends State<IsometricProgressRing>
   late AnimationController _controller;
   late Animation<double> _animation;
 
-  double get _target => widget.percentage.clamp(0.0, 1.0).toDouble();
+  double get _target => widget.percentage.clamp(0.0, 2.0).toDouble();
 
   @override
   void initState() {
@@ -112,7 +112,7 @@ class _IsometricRingPainter extends CustomPainter {
     required this.trackColor,
   });
 
-  static const double _yScale = 0.6;
+  static const double _yScale = 0.7;
   static const int _segments = 560;
 
   @override
@@ -124,39 +124,165 @@ class _IsometricRingPainter extends CustomPainter {
 
     final centerR = size.width * 0.3;
 
-    final armThickness = size.width * 0.088;
-    final armDepth = size.height * 0.042;
+    final armThickness = size.width * 0.008;   //aro
+    final armDepth = size.height * 0.007;       // más plano
 
-    final sleeveThickness = size.width * 0.118;
-    final sleeveDepth = size.height * 0.064;
+    final sleeveThickness = size.width * 0.055; //progreso
+    final sleeveDepth = size.height * 0.032;    // plano: ratio altura/ancho reducido
 
     final sleeveTopY = cy - sleeveDepth * 0.45;
     final sleeveBotY = sleeveTopY + sleeveDepth;
 
-    final armTopY = sleeveTopY + (sleeveDepth - armDepth) / 2;
+    final armTopY = sleeveTopY + (sleeveDepth - armDepth) / 2.5;
     final armBotY = armTopY + armDepth;
 
     final startAngle = -math.pi / 2 + (2 * math.pi * startOffset);
     final sweepAngle = 2 * math.pi * progress;
     final endAngle = startAngle + sweepAngle;
 
-    final connectionReveal = _connectionRevealForProgress(progress);
+    final discR = centerR - armThickness / 2 - size.width * 0.11;
+    final discHeight = size.height * 0.038;
+    final discTopY = sleeveTopY;
+    final discBotY = discTopY + discHeight;
 
-    _drawArmSegment3D(
+    // ── Plataforma base: disco 3D prominente ──────────────────────────────
+    _drawBasePlatform(
       canvas: canvas,
       cx: cx,
-      topY: armTopY,
-      botY: armBotY,
-      centerR: centerR,
-      thickness: armThickness,
-      startAngle: 0,
-      sweepAngle: 2 * math.pi,
-      drawStartCap: false,
-      drawEndCap: false,
+      discR: discR,
+      discTopY: discTopY,
+      discBotY: discBotY,
     );
 
-    if (progress > 0) {
-      _drawSleeve3D(
+    // ── Sin progreso: anillo completo, sin manga ───────────────────────────
+    if (progress <= 0) {
+      _drawArmSegment3D(
+        canvas: canvas,
+        cx: cx,
+        topY: armTopY,
+        botY: armBotY,
+        centerR: centerR,
+        thickness: armThickness,
+        startAngle: 0,
+        sweepAngle: 2 * math.pi,
+        drawStartCap: false,
+        drawEndCap: false,
+      );
+      return;
+    }
+
+    // ── Con progreso: NUNCA dibujar el anillo completo ─────────────────────
+    // Dibujamos el arm SOLO en las regiones donde debe verse,
+    // eliminando las cuñas en los extremos de la manga.
+    final remainingSweep = 2 * math.pi - sweepAngle;
+
+    double visibleSweep = 0.0;
+    double exitMaskSweep = 0.0;
+
+    if (remainingSweep > 0.001) {
+      final connectionReveal = _connectionRevealForProgress(progress);
+      final connectionBoost = (1.0 - progress).clamp(0.0, 1.0);
+      final dynamicFactor = 1.65 + (1.8 * connectionBoost);
+      final coverSweep = math.max(
+        0.12,
+        (armThickness / centerR) * dynamicFactor,
+      );
+      final rawHidden = coverSweep * (1.0 - connectionReveal);
+      final hiddenAtStartSweep = math
+          .min(remainingSweep * 0.6, rawHidden)
+          .toDouble();
+
+      visibleSweep = remainingSweep - hiddenAtStartSweep;
+
+      exitMaskSweep = _exitMaskSweepForProgress(
+        progress: progress,
+        armThickness: armThickness,
+        centerR: centerR,
+        availableSweep: visibleSweep,
+      );
+
+      final armVisibleStartAngle = endAngle + exitMaskSweep;
+      final armVisibleSweep = visibleSweep - exitMaskSweep;
+
+      // Arm en la región visible (entre cap de fin y zona oculta del inicio)
+      if (armVisibleSweep > 0.001) {
+        _drawArmSegment3D(
+          canvas: canvas,
+          cx: cx,
+          topY: armTopY,
+          botY: armBotY,
+          centerR: centerR,
+          thickness: armThickness,
+          startAngle: armVisibleStartAngle,
+          sweepAngle: armVisibleSweep,
+          drawStartCap: false,
+          drawEndCap: false,
+        );
+      }
+
+      // Pequeño segmento justo bajo el cap de inicio:
+      // da continuidad visual (visible a través de la ranura del cap)
+      // sin extenderse hasta los extremos de la manga.
+      final slotExtend = (armThickness / centerR) * 0.9;
+      final slotStart = startAngle - hiddenAtStartSweep;
+      final slotSweep = hiddenAtStartSweep + slotExtend;
+      if (slotSweep > 0.001) {
+        _drawArmSegment3D(
+          canvas: canvas,
+          cx: cx,
+          topY: armTopY,
+          botY: armBotY,
+          centerR: centerR,
+          thickness: armThickness,
+          startAngle: slotStart,
+          sweepAngle: slotSweep,
+          drawStartCap: false,
+          drawEndCap: false,
+        );
+      }
+    }
+
+    // ── Manga encima del arm ───────────────────────────────────────────────
+    _drawSleeve3D(
+      canvas: canvas,
+      cx: cx,
+      topY: sleeveTopY,
+      botY: sleeveBotY,
+      armTopY: armTopY,
+      armBotY: armBotY,
+      centerR: centerR,
+      sleeveThickness: sleeveThickness,
+      armThickness: armThickness,
+      startAngle: startAngle,
+      sweepAngle: sweepAngle,
+    );
+
+    _drawSoftBridge(
+  canvas: canvas,
+  cx: cx,
+  topY: armTopY,
+  botY: armBotY,
+  centerR: centerR,
+  armThickness: armThickness,
+  angle: endAngle,
+  progress: progress,
+);
+
+    if (remainingSweep > 0.001) {
+      _redrawSleeveEndCap(
+        canvas: canvas,
+        cx: cx,
+        topY: sleeveTopY,
+        botY: sleeveBotY,
+        armTopY: armTopY,
+        armBotY: armBotY,
+        centerR: centerR,
+        sleeveThickness: sleeveThickness,
+        armThickness: armThickness,
+        endAngle: endAngle,
+      );
+
+      _redrawSleeveStartCap(
         canvas: canvas,
         cx: cx,
         topY: sleeveTopY,
@@ -167,114 +293,42 @@ class _IsometricRingPainter extends CustomPainter {
         sleeveThickness: sleeveThickness,
         armThickness: armThickness,
         startAngle: startAngle,
+      );
+
+      _redrawSleeveTopSurface(
+        canvas: canvas,
+        cx: cx,
+        topY: sleeveTopY,
+        centerR: centerR,
+        sleeveThickness: sleeveThickness,
+        startAngle: startAngle,
         sweepAngle: sweepAngle,
       );
 
-      final remainingSweep = 2 * math.pi - sweepAngle;
-
-      if (remainingSweep > 0.001) {
-        final connectionBoost = (1.0 - progress).clamp(0.0, 1.0);
-
-        final dynamicFactor = 1.65 + (1.8 * connectionBoost);
-
-        final coverSweep = math.max(
-          0.12,
-          (armThickness / centerR) * dynamicFactor,
-        );
-
-        final rawHidden = coverSweep * (1.0 - connectionReveal);
-        final hiddenAtStartSweep = math
-            .min(
-              remainingSweep * 0.6,
-              rawHidden,
-            )
-            .toDouble();
-
-        final visibleSweep = remainingSweep - hiddenAtStartSweep;
-
-        final exitMaskSweep = _exitMaskSweepForProgress(
-          progress: progress,
-          armThickness: armThickness,
-          centerR: centerR,
-          availableSweep: visibleSweep,
-        );
-
-        final armVisibleStartAngle = endAngle + exitMaskSweep;
-        final armVisibleSweep = visibleSweep - exitMaskSweep;
-
-        if (armVisibleSweep > 0.001) {
-          _drawArmSegment3D(
-            canvas: canvas,
-            cx: cx,
-            topY: armTopY,
-            botY: armBotY,
-            centerR: centerR,
-            thickness: armThickness,
-            startAngle: armVisibleStartAngle,
-            sweepAngle: armVisibleSweep,
-            drawStartCap: false,
-            drawEndCap: false,
-          );
-        }
-
-        _redrawSleeveEndCap(
+      if (visibleSweep > 0.001) {
+        _drawArmExitConnector(
           canvas: canvas,
           cx: cx,
-          topY: sleeveTopY,
-          botY: sleeveBotY,
-          armTopY: armTopY,
-          armBotY: armBotY,
+          topY: armTopY,
+          botY: armBotY,
           centerR: centerR,
-          sleeveThickness: sleeveThickness,
           armThickness: armThickness,
           endAngle: endAngle,
+          availableSweep: visibleSweep,
+          exitMaskSweep: exitMaskSweep,
         );
-
-        _redrawSleeveStartCap(
-          canvas: canvas,
-          cx: cx,
-          topY: sleeveTopY,
-          botY: sleeveBotY,
-          armTopY: armTopY,
-          armBotY: armBotY,
-          centerR: centerR,
-          sleeveThickness: sleeveThickness,
-          armThickness: armThickness,
-          startAngle: startAngle,
-        );
-
-        _redrawSleeveTopSurface(
-          canvas: canvas,
-          cx: cx,
-          topY: sleeveTopY,
-          centerR: centerR,
-          sleeveThickness: sleeveThickness,
-          startAngle: startAngle,
-          sweepAngle: sweepAngle,
-        );
-
-        if (visibleSweep > 0.001) {
-          _drawArmExitConnector(
-            canvas: canvas,
-            cx: cx,
-            topY: armTopY,
-            botY: armBotY,
-            centerR: centerR,
-            armThickness: armThickness,
-            endAngle: endAngle,
-            availableSweep: visibleSweep,
-            exitMaskSweep: exitMaskSweep,
-          );
-        }
       }
     }
   }
 
   double _connectionRevealForProgress(double progress) {
-    if (progress <= 0.18) return 1.0;
-    if (progress >= 0.38) return 0.0;
+    // Ventana adelantada para arm grueso (0.088):
+    // a 20 % ya ocultamos ~36° del arm antes del inicio de la manga,
+    // eliminando el artefacto de cuña en porcentajes bajos.
+    if (progress <= 0.06) return 1.0;
+    if (progress >= 0.28) return 0.0;
 
-    final t = ((progress - 0.18) / (0.38 - 0.18)).clamp(0.0, 1.0).toDouble();
+    final t = ((progress - 0.06) / (0.28 - 0.06)).clamp(0.0, 1.0).toDouble();
     final smooth = t * t * (3.0 - 2.0 * t);
 
     return 1.0 - smooth;
@@ -305,7 +359,9 @@ class _IsometricRingPainter extends CustomPainter {
       (armThickness / centerR) * (0.55 + 0.35 * lowProgress),
     );
 
-    return math.min(availableSweep * 0.35, targetSweep).toDouble();
+    final dynamicClamp = 0.35 + (0.25 * (1 - progress));
+
+return math.min(availableSweep * dynamicClamp, targetSweep);
   }
 
   void _drawArmExitConnector({
@@ -325,14 +381,14 @@ class _IsometricRingPainter extends CustomPainter {
 
     if (lowProgress <= 0 || availableSweep <= 0.001) return;
 
-    final outerR = centerR + armThickness / 2;
-    final innerR = centerR - armThickness / 2;
+    final outerR = centerR + armThickness / 2 ;
+    final innerR = centerR - armThickness / 2 ;
 
     final centerBridgeSweep = math.min(
       availableSweep,
       math.max(
         exitMaskSweep,
-        (armThickness / centerR) * (1.1 + 0.85 * lowProgress),
+        (armThickness / centerR) * (1.6 + 1.2 * lowProgress),
       ),
     ).toDouble();
 
@@ -375,6 +431,103 @@ class _IsometricRingPainter extends CustomPainter {
 
     canvas.restore();
   }
+
+  // ── Plataforma base: disco 3D prominente ────────────────────────────────
+  /// Dibuja un disco/moneda 3D isométrico como plataforma central.
+  /// Top: amarillo-lima (progressColor). Pared lateral: verde oscuro.
+  void _drawBasePlatform({
+    required Canvas canvas,
+    required double cx,
+    required double discR,
+    required double discTopY,
+    required double discBotY,
+  }) {
+    // ── Sombra difusa debajo del disco ──────────────────────────────────
+    final shadowRect = Rect.fromCenter(
+      center: Offset(cx, discBotY + 4),
+      width: (discR + 16) * 2,
+      height: (discR + 16) * _yScale * 0.55,
+    );
+    canvas.drawOval(
+      shadowRect,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [Colors.black.withOpacity(0.32), Colors.transparent],
+        ).createShader(shadowRect)
+        ..isAntiAlias = true,
+    );
+
+    // ── Pared del cilindro (mitad frontal visible) ──────────────────────
+    final sideColor = _darken(progressColor, 0.26);
+    final wallPath = _buildWallPath(
+      cx: cx,
+      topY: discTopY,
+      botY: discBotY,
+      r: discR,
+      startAngle: 0,
+      sweepAngle: math.pi,
+    );
+    canvas.drawPath(
+      wallPath,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _lighten(sideColor, 0.06),
+            sideColor,
+            _darken(sideColor, 0.14),
+          ],
+          stops: const [0.0, 0.45, 1.0],
+        ).createShader(wallPath.getBounds())
+        ..isAntiAlias = true,
+    );
+
+    // ── Cara superior del disco (amarillo-lima) ─────────────────────────
+    final topRect = Rect.fromCenter(
+      center: Offset(cx, discTopY),
+      width: discR * 2,
+      height: discR * 2 * _yScale,
+    );
+    final topPath = Path()..addOval(topRect);
+
+    canvas.drawPath(
+      topPath,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _lighten(progressColor, 0.22),
+            _lighten(progressColor, 0.08),
+            progressColor,
+            _darken(progressColor, 0.10),
+            _darken(progressColor, 0.18),
+          ],
+          stops: const [0.0, 0.22, 0.55, 0.80, 1.0],
+        ).createShader(topRect)
+        ..isAntiAlias = true,
+    );
+
+    // Especular — reflejo de luz frontal-izquierdo
+    canvas.drawPath(
+      topPath,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.35, -0.45),
+          radius: 0.80,
+          colors: [
+            Colors.white.withOpacity(0.22),
+            Colors.white.withOpacity(0.06),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.38, 1.0],
+        ).createShader(topRect)
+        ..blendMode = BlendMode.screen
+        ..isAntiAlias = true,
+    );
+  }
+  // ───────────────────────────────────────────────────────────────────────
 
   void _drawArmSegment3D({
     required Canvas canvas,
@@ -564,9 +717,11 @@ class _IsometricRingPainter extends CustomPainter {
   }) {
     final connectionBoost = (1.0 - percentage).clamp(0.0, 1.0);
 
+    // Bleed escalado al grosor del arm para cubrir bien el borde lateral
+    // cuando el arm es grueso (antes era fijo en ~0.8 px, insuficiente).
     final bleed = math.max(
-      0.8,
-      sleeveThickness * (0.012 + 0.05 * connectionBoost),
+      armThickness * 0.06,
+      sleeveThickness * (0.005 + 0.06 * connectionBoost),
     );
 
     final outerR = centerR + sleeveThickness / 2 + bleed;
@@ -603,10 +758,9 @@ class _IsometricRingPainter extends CustomPainter {
     required double armThickness,
     required double endAngle,
   }) {
-    final bleed = math.max(0.5, sleeveThickness * 0.012);
 
-    final outerR = centerR + sleeveThickness / 2 + bleed;
-    final innerR = centerR - sleeveThickness / 2 - bleed;
+    final outerR = centerR + sleeveThickness / 2 ;
+    final innerR = centerR - sleeveThickness / 2 ;
 
     final armOuterR = centerR + armThickness / 2;
     final armInnerR = centerR - armThickness / 2;
@@ -626,6 +780,60 @@ class _IsometricRingPainter extends CustomPainter {
       color: _darken(progressColor, 0.08),
     );
   }
+
+  void _drawSoftBridge({
+  required Canvas canvas,
+  required double cx,
+  required double topY,
+  required double botY,
+  required double centerR,
+  required double armThickness,
+  required double angle,
+  required double progress,
+}) {
+  final outerR = centerR + armThickness / 2;
+  final innerR = centerR - armThickness / 2;
+
+  // Cuanto más bajo el progreso → más grande el puente
+  final intensity = ((0.35 - progress) / 0.35).clamp(0.0, 1.0);
+
+  if (intensity <= 0) return;
+
+  // Sweep pequeño pero dinámico
+  final bridgeSweep = (armThickness / centerR) * (1.2 + 1.8 * intensity);
+
+  // Expandimos ligeramente para tapar el gap
+  final bleed = armThickness * (0.15 + 0.25 * intensity);
+
+  final path = _buildAnnularSector(
+    cx: cx,
+    cy: topY,
+    outerR: outerR + bleed,
+    innerR: innerR - bleed,
+    startAngle: angle,
+    sweepAngle: bridgeSweep,
+  );
+
+  final bounds = path.getBounds();
+
+  canvas.drawPath(
+    path,
+    Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(-0.2, -0.3),
+        radius: 1.0,
+        colors: [
+          _lighten(trackColor, 0.12).withOpacity(0.9 * intensity),
+          trackColor.withOpacity(0.7 * intensity),
+          trackColor.withOpacity(0.25 * intensity),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.4, 0.75, 1.0],
+      ).createShader(bounds)
+      ..blendMode = BlendMode.srcOver
+      ..isAntiAlias = true,
+  );
+}
 
   void _redrawSleeveTopSurface({
     required Canvas canvas,
@@ -672,6 +880,7 @@ class _IsometricRingPainter extends CustomPainter {
 
     final bounds = topFace.getBounds();
 
+    // ── Commit 3: gradiente base con mayor contraste claro/oscuro ──────────
     canvas.drawPath(
       topFace,
       Paint()
@@ -679,32 +888,52 @@ class _IsometricRingPainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            _lighten(progressColor, 0.12),
-            _lighten(progressColor, 0.05),
+            _lighten(progressColor, 0.20),
+            _lighten(progressColor, 0.08),
             progressColor,
-            _darken(progressColor, 0.06),
+            _darken(progressColor, 0.10),
+            _darken(progressColor, 0.18),
           ],
-          stops: const [0.0, 0.34, 0.72, 1.0],
+          stops: const [0.0, 0.22, 0.55, 0.80, 1.0],
         ).createShader(bounds)
         ..isAntiAlias = true,
     );
 
+    // Especular principal — reflejo de luz frontal-izquierdo
     canvas.drawPath(
       topFace,
       Paint()
         ..shader = RadialGradient(
-          center: const Alignment(-0.42, -0.52),
-          radius: 1.15,
+          center: const Alignment(-0.55, -0.60),
+          radius: 1.05,
           colors: [
-            Colors.white.withOpacity(0.10),
-            Colors.white.withOpacity(0.025),
+            Colors.white.withOpacity(0.22),
+            Colors.white.withOpacity(0.07),
             Colors.transparent,
           ],
-          stops: const [0.0, 0.48, 1.0],
+          stops: const [0.0, 0.40, 1.0],
         ).createShader(bounds)
         ..blendMode = BlendMode.screen
         ..isAntiAlias = true,
     );
+
+    // Especular secundario sutil — borde derecho de la superficie
+    canvas.drawPath(
+      topFace,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(0.75, 0.60),
+          radius: 0.65,
+          colors: [
+            Colors.white.withOpacity(0.06),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 1.0],
+        ).createShader(bounds)
+        ..blendMode = BlendMode.screen
+        ..isAntiAlias = true,
+    );
+    // ───────────────────────────────────────────────────────────────────────
 
     _drawTopRims(
       canvas: canvas,
@@ -765,66 +994,65 @@ class _IsometricRingPainter extends CustomPainter {
   }
 
   void _drawContinuousVisibleWall({
-  required Canvas canvas,
-  required double cx,
-  required double topY,
-  required double botY,
-  required double r,
-  required double startAngle,
-  required double sweepAngle,
-  required Color baseColor,
-  required bool Function(double angle) visibleWhen,
-  required double bottomEdgeOpacity,
-}) {
-  final steps = math.max(
-    16, // 🔥 más resolución
-    (_segments * sweepAngle.abs() / (2 * math.pi)).ceil(),
-  );
+    required Canvas canvas,
+    required double cx,
+    required double topY,
+    required double botY,
+    required double r,
+    required double startAngle,
+    required double sweepAngle,
+    required Color baseColor,
+    required bool Function(double angle) visibleWhen,
+    required double bottomEdgeOpacity,
+  }) {
+    final steps = math.max(
+      16,
+      (_segments * sweepAngle.abs() / (2 * math.pi)).ceil(),
+    );
 
-  for (int i = 0; i < steps; i++) {
-    final a0 = startAngle + sweepAngle * (i / steps);
-    final a1 = startAngle + sweepAngle * ((i + 1) / steps);
-    final mid = (a0 + a1) / 2;
+    for (int i = 0; i < steps; i++) {
+      final a0 = startAngle + sweepAngle * (i / steps);
+      final a1 = startAngle + sweepAngle * ((i + 1) / steps);
+      final mid = (a0 + a1) / 2;
 
-    // 🔥 suavizado en vez de corte duro
-    double visibility = visibleWhen(mid) ? 1.0 : 0.0;
+      double visibility = visibleWhen(mid) ? 1.0 : 0.0;
 
-    // transición suave cerca del horizonte
-    final fadeZone = 0.12;
-    final horizon = math.sin(mid);
+      // Transición suave cerca del horizonte
+      const fadeZone = 0.12;
+      final horizon = math.sin(mid);
 
-    if (horizon > -fadeZone && horizon < fadeZone) {
-      final t = ((horizon + fadeZone) / (2 * fadeZone)).clamp(0.0, 1.0);
-      visibility *= t;
+      if (horizon > -fadeZone && horizon < fadeZone) {
+        final t = ((horizon + fadeZone) / (2 * fadeZone)).clamp(0.0, 1.0);
+        visibility *= t;
+      }
+
+      if (visibility <= 0.01) continue;
+
+      final wall = _buildWallPath(
+        cx: cx,
+        topY: topY,
+        botY: botY,
+        r: r,
+        startAngle: a0,
+        sweepAngle: a1 - a0,
+      );
+
+      canvas.drawPath(
+        wall,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              _lighten(baseColor, 0.055).withOpacity(visibility),
+              baseColor.withOpacity(visibility),
+              _darken(baseColor, 0.115).withOpacity(visibility),
+            ],
+          ).createShader(wall.getBounds())
+          ..isAntiAlias = true,
+      );
     }
-
-    if (visibility <= 0.01) continue;
-
-    final wall = _buildWallPath(
-      cx: cx,
-      topY: topY,
-      botY: botY,
-      r: r,
-      startAngle: a0,
-      sweepAngle: a1 - a0,
-    );
-
-    canvas.drawPath(
-      wall,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            _lighten(baseColor, 0.055).withOpacity(visibility),
-            baseColor.withOpacity(visibility),
-            _darken(baseColor, 0.115).withOpacity(visibility),
-          ],
-        ).createShader(wall.getBounds())
-        ..isAntiAlias = true,
-    );
   }
-}
 
   void _drawSleeveCap({
     required Canvas canvas,

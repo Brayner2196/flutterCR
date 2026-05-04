@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../models/pqr_model.dart';
-import '../../../../widgets/shared/estado_badge.dart';
+import '../../../../shared/widgets/estado_badge.dart';
 import '../../../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
 
 class DetallePqrScreen extends StatelessWidget {

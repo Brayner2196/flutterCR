@@ -5,7 +5,7 @@ import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/botto
 import 'package:provider/provider.dart';
 import '../../../../../providers/usuario_provider.dart';
 import '../../../../../models/usuario_response.dart';
-import '../../../../../widgets/pill_tab_bar.dart';
+import '../../../../../shared/widgets/pill_tab_bar.dart';
 import 'usuario_crear_dialog.dart';
 import 'widgets/usuario_card.dart';
 import 'widgets/usuario_detalle_sheet.dart';

@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../models/reserva_model.dart';
 import '../../../../providers/reserva_provider.dart';
-import '../../../../widgets/shared/estado_badge.dart';
-import '../../../../widgets/shared/confirm_dialog.dart';
+import '../../../../shared/widgets/estado_badge.dart';
+import '../../../../shared/widgets/confirm_dialog.dart';
 
 class DetalleReservaScreen extends StatefulWidget {
   final ReservaModel reserva;

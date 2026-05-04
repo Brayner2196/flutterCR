@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
+import '../../shared/theme/app_theme.dart';
 
 class OnboardingItem {
   final IconData icon;

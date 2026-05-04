@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../../providers/cobros_provider.dart';
 import '../../../../../models/cobro_model.dart';
 import '../../../../../models/periodo_cobro_model.dart';
-import '../../../../../theme/app_theme.dart';
+import '../../../../../shared/theme/app_theme.dart';
 import 'admin_configurar_cuotas_screen.dart';
 import 'admin_generar_cobros_screen.dart';
 

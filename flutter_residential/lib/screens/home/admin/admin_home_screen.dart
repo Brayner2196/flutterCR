@@ -10,7 +10,7 @@ import 'package:flutter_residential/screens/home/admin/screens/reservas/admin_re
 import 'package:flutter_residential/screens/home/admin/screens/usuarios/usuarios_screen.dart';
 import 'package:flutter_residential/screens/home/admin/widgets/dashboard/admin_dashboard.dart';
 import 'package:flutter_residential/screens/home/admin/widgets/quick_access_cards.dart';
-import 'package:flutter_residential/theme/app_theme.dart';
+import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/dashboard_provider.dart';

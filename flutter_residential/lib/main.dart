@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/providers/app_provider.dart';
-import 'package:flutter_residential/theme/app_theme.dart';
+import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'providers/auth_provider.dart';
