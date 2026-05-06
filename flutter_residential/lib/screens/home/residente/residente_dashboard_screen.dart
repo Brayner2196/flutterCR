@@ -4,16 +4,11 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/residente_estadisticas_provider.dart';
 import 'pagos/estado_cuenta_screen.dart';
-import 'pagos/mis_cobros_screen.dart';
 import 'pagos/mis_pagos_screen.dart';
 import 'reservas/mis_reservas_screen.dart';
 import 'pqrs/mis_pqrs_screen.dart';
 import 'widgets/banner_bienvenida.dart';
-import 'widgets/estado_badge_card.dart';
-import 'widgets/kpi_card.dart';
-import 'widgets/proximo_vencimiento_card.dart';
-import 'widgets/cumplimiento_card.dart';
-import 'widgets/resumen_pagos_card.dart';
+import 'widgets/deuda_resumen_widget.dart';
 
 class ResidenteDashboardScreen extends StatefulWidget {
   final void Function(int index) onNavegar;
@@ -51,11 +46,19 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
             BannerBienvenidaResidente(nombreUser: auth.nombre ?? 'Usuario'),
             const SizedBox(height: 16),
 
-            // ─── Estado financiero ──────────────────────────
+            // ─── Resumen financiero coloquial ───────────────
             Skeletonizer(
               enabled: stats.loading,
               child: stats.estadisticas != null
-                  ? _buildFinanciero(theme, stats)
+                  ? DeudaResumenWidget(
+                      stats: stats.estadisticas!,
+                      formatMonto: _fmt,
+                      onVerEstadoCuenta: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const EstadoCuentaScreen()),
+                      ),
+                    )
                   : stats.error != null
                       ? _buildError(stats)
                       : _buildPlaceholder(),
@@ -135,109 +138,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     );
   }
 
-  Widget _buildFinanciero(
-      ThemeData theme, ResidenteEstadisticasProvider stats) {
-    final e = stats.estadisticas!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Estado general (al día / en mora / pendiente)
-        EstadoBadgeCard(
-          alDia: e.alDia,
-          enMora: e.enMora,
-          totalDeuda: e.totalDeuda,
-          cobrosPendientes: e.cobrosPendientes,
-          cobrosVencidos: e.cobrosVencidos,
-          formatMonto: _fmt,
-        ),
-        const SizedBox(height: 12),
-
-        // KPIs en grid 2x2
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.4,
-          children: [
-            KpiCard(
-              label: 'Pendiente',
-              valor: _fmt(e.totalPendiente),
-              icono: Icons.schedule_rounded,
-              color: Colors.orange,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MisCobrosScreen()),
-              ),
-            ),
-            KpiCard(
-              label: 'Vencido',
-              valor: _fmt(e.totalVencido),
-              icono: Icons.warning_amber_rounded,
-              color: Colors.red,
-              subtitulo: e.totalMora > 0 ? 'Mora: ${_fmt(e.totalMora)}' : null,
-            ),
-            KpiCard(
-              label: 'Pagos verificados',
-              valor: '${e.pagosVerificados}',
-              icono: Icons.check_circle_outline,
-              color: Colors.green,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MisPagosScreen()),
-              ),
-            ),
-            KpiCard(
-              label: 'Por verificar',
-              valor: '${e.pagosPendientesVerificacion}',
-              icono: Icons.hourglass_top_rounded,
-              color: const Color(0xFF5479E0),
-              subtitulo: e.ultimoPago != null
-                  ? 'Último: ${e.ultimoPago!.fechaPago}'
-                  : null,
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // Próximo vencimiento
-        if (e.proximoVencimiento != null) ...[
-          ProximoVencimientoCard(
-            cobro: e.proximoVencimiento!,
-            diasRestantes: e.diasParaVencimiento,
-            formatMonto: _fmt,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const MisCobrosScreen()),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-
-        // Cumplimiento
-        if (e.totalCobrosHistoricos > 0)
-          CumplimientoCard(
-            porcentaje: e.porcentajeCumplimiento,
-            pagados: e.cobrosPagados,
-            total: e.totalCobrosHistoricos,
-            totalPagado: e.totalPagadoHistorico,
-            formatMonto: _fmt,
-          ),
-
-        if (e.totalPagos > 0) ...[
-          const SizedBox(height: 12),
-          ResumenPagosCard(
-            verificados: e.pagosVerificados,
-            pendientes: e.pagosPendientesVerificacion,
-            rechazados: e.pagosRechazados,
-            metodoFavorito: _metodoFavorito(e.pagosPorMetodo),
-          ),
-        ],
-      ],
-    );
-  }
-
   Widget _buildError(ResidenteEstadisticasProvider stats) {
     return Container(
       width: double.infinity,
@@ -263,42 +163,14 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
   }
 
   Widget _buildPlaceholder() {
-    // Placeholder para el skeletonizer
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          height: 80,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        const SizedBox(height: 12),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.4,
-          children: List.generate(
-            4,
-            (_) => Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return Container(
+      width: double.infinity,
+      height: 160,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(20),
+      ),
     );
-  }
-
-  String? _metodoFavorito(Map<String, int> metodos) {
-    if (metodos.isEmpty) return null;
-    return metodos.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
   }
 
   Widget _tarjeta({

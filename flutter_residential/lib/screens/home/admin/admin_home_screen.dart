@@ -8,7 +8,7 @@ import 'package:flutter_residential/screens/home/admin/screens/pagos/admin_verif
 import 'package:flutter_residential/screens/home/admin/screens/pqr/admin_pqrs_screen.dart';
 import 'package:flutter_residential/screens/home/admin/screens/reservas/admin_reservas_screen.dart';
 import 'package:flutter_residential/screens/home/admin/screens/usuarios/usuarios_screen.dart';
-import 'package:flutter_residential/screens/home/admin/widgets/dashboard/admin_dashboard.dart';
+import 'package:flutter_residential/screens/home/admin/widgets/kpi/kpi_carousel.dart';
 import 'package:flutter_residential/screens/home/admin/widgets/quick_access_cards.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -70,11 +70,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: AdminDashboard(
-                  onTapComprobantes: () => _abrir(const AdminVerificarPagosScreen()),
+                child: KpiCarouselDashboard(
                   onTapPqrs: () => _abrir(const AdminPqrsScreen()),
-                  onTapReservas: () => _abrir(const AdminReservasScreen()),
                   onTapPagos: () => _abrir(const AdminVerificarPagosScreen()),
+                  onTapComprobantes: () => _abrir(const AdminVerificarPagosScreen()),
+                  onTapReservas: () => _abrir(const AdminReservasScreen()),
                 ),
               ),
               const SizedBox(height: 20),

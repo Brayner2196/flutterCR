@@ -44,12 +44,18 @@ class TendenciaRecaudoChart extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 140,
+            height: 180,
             child: LineChart(_buildChartData(cs)),
           ),
         ],
       ),
     );
+  }
+
+  static String _fmt(double v) {
+    if (v >= 1000000) return '\$ ${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000) return '\$ ${(v / 1000).toStringAsFixed(0)}K';
+    return '\$ ${v.toStringAsFixed(0)}';
   }
 
   LineChartData _buildChartData(ColorScheme cs) {
@@ -75,15 +81,32 @@ class TendenciaRecaudoChart extends StatelessWidget {
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            reservedSize: 22,
+            reservedSize: 34,
+            // interval: 1 evita que fl_chart interpole posiciones intermedias
+            // que causaban etiquetas duplicadas (DIC DIC, ENE ENE, etc.)
+            interval: 1,
             getTitlesWidget: (value, meta) {
-              final i = value.toInt();
+              final i = value.round();
               if (i < 0 || i >= data.meses.length) return const SizedBox.shrink();
+              // Mostrar año junto a la etiqueta cuando cambia el año
+              final mes = data.meses[i];
+              final mostrarAnio = i == 0 ||
+                  data.meses[i - 1].anio != mes.anio;
               return Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  data.meses[i].etiqueta,
-                  style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      mes.etiqueta,
+                      style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+                    ),
+                    if (mostrarAnio)
+                      Text(
+                        '${mes.anio}'.substring(2),
+                        style: TextStyle(fontSize: 9, color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
+                      ),
+                  ],
                 ),
               );
             },
@@ -92,15 +115,21 @@ class TendenciaRecaudoChart extends StatelessWidget {
       ),
       lineTouchData: LineTouchData(
         touchTooltipData: LineTouchTooltipData(
-          getTooltipItems: (spots) => spots
-              .map((s) => LineTooltipItem(
-                    '${s.y.toInt()}%',
-                    const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12),
-                  ))
-              .toList(),
+          getTooltipItems: (spots) => spots.map((s) {
+            final i = s.x.round().clamp(0, data.meses.length - 1);
+            final mes = data.meses[i];
+            final montoStr = mes.recaudado > 0
+                ? '\n${_fmt(mes.recaudado)}'
+                : '';
+            return LineTooltipItem(
+              '${s.y.toInt()}%$montoStr',
+              const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            );
+          }).toList(),
         ),
       ),
       lineBarsData: [

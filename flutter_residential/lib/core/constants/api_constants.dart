@@ -49,6 +49,7 @@ class ApiConstants {
   static const String misCobros = '/api/residente/cobros';
   static const String historialCobros = '/api/residente/cobros/historial';
   static const String misPagos = '/api/residente/pagos';
+  static String movimientosCobro(int id) => '/api/residente/cobros/$id/movimientos';
 
   // Abonos — residente
   static const String misAbonos = '/api/residente/abonos';

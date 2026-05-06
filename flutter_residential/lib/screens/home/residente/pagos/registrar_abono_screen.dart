@@ -7,11 +7,14 @@ import '../../../../services/abono_service.dart';
 class RegistrarAbonoScreen extends StatefulWidget {
   final int propiedadId;
   final String propiedadNombre;
+  /// Si viene de un cobro parcial, pre-llena el monto con el saldo restante
+  final double? montoSugerido;
 
   const RegistrarAbonoScreen({
     super.key,
     required this.propiedadId,
     required this.propiedadNombre,
+    this.montoSugerido,
   });
 
   @override
@@ -31,6 +34,14 @@ class _RegistrarAbonoScreenState extends State<RegistrarAbonoScreen> {
   bool _simulando = false;
 
   static const _metodos = ['TRANSFERENCIA', 'EFECTIVO', 'CHEQUE', 'OTRO'];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.montoSugerido != null && widget.montoSugerido! > 0) {
+      _montoCtrl.text = widget.montoSugerido!.toStringAsFixed(0);
+    }
+  }
 
   @override
   void dispose() {
@@ -65,6 +76,10 @@ class _RegistrarAbonoScreenState extends State<RegistrarAbonoScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             _resumenPropiedad(),
+            if (widget.montoSugerido != null && widget.montoSugerido! > 0) ...[
+              const SizedBox(height: 12),
+              _BannerSaldoPendiente(monto: widget.montoSugerido!),
+            ],
             const SizedBox(height: 20),
             Text('Datos del abono',
                 style: Theme.of(context)
@@ -215,6 +230,51 @@ class _RegistrarAbonoScreenState extends State<RegistrarAbonoScreen> {
     } finally {
       if (mounted) setState(() => _enviando = false);
     }
+  }
+}
+
+// ─── Banner saldo pendiente ──────────────────────────────────────
+
+class _BannerSaldoPendiente extends StatelessWidget {
+  final double monto;
+  const _BannerSaldoPendiente({required this.monto});
+
+  String _fmt(double v) =>
+      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Colors.orange, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                children: [
+                  const TextSpan(text: 'Saldo pendiente por pagar: '),
+                  TextSpan(
+                    text: _fmt(monto),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

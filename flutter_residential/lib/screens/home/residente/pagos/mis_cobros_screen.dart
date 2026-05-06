@@ -254,7 +254,7 @@ class _CobroTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${cobro.mes}/${cobro.anio} · ${cobro.propiedadIdentificador}',
+              '${_adapterMesText(cobro.mes)}/${cobro.anio} · ${cobro.propiedadIdentificador}',
               style: const TextStyle(fontSize: 12),
             ),
             Row(
@@ -313,4 +313,15 @@ class _CobroTile extends StatelessWidget {
 
   String _fmt(double v) =>
       '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+
+  String _adapterMesText(int numberMes) {
+    const meses = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  ];
+
+  return (numberMes >= 1 && numberMes <= 12)
+      ? meses[numberMes - 1]
+      : '';
+  }
 }

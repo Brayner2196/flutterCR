@@ -17,6 +17,7 @@ class CobroModel {
   final String fechaGeneracion;
   final String fechaLimitePago;
   final String estado;
+  final bool tieneMovimientos;
 
   const CobroModel({
     required this.id,
@@ -37,6 +38,7 @@ class CobroModel {
     required this.fechaGeneracion,
     required this.fechaLimitePago,
     required this.estado,
+    this.tieneMovimientos = false,
   });
 
   factory CobroModel.fromJson(Map<String, dynamic> json) => CobroModel(
@@ -58,6 +60,7 @@ class CobroModel {
         fechaGeneracion: json['fechaGeneracion'] as String,
         fechaLimitePago: json['fechaLimitePago'] as String,
         estado: json['estado'] as String,
+        tieneMovimientos: json['tieneMovimientos'] as bool? ?? false,
       );
 
   bool get esPendiente => estado == 'PENDIENTE';

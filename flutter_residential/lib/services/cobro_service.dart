@@ -3,6 +3,7 @@ import '../core/constants/api_constants.dart';
 import '../core/network/api_client.dart';
 import '../models/cobro_model.dart';
 import '../models/estado_cuenta_model.dart';
+import '../models/movimiento_cobro_model.dart';
 import '../models/periodo_cobro_model.dart';
 
 class CobroService {
@@ -80,6 +81,15 @@ class CobroService {
       return (body as List).map((e) => CobroModel.fromJson(e)).toList();
     }
     throw Exception(body['message'] ?? 'Error al obtener cobros');
+  }
+
+  static Future<List<MovimientoCobroModel>> getMovimientosCobro(int cobroId) async {
+    final res = await ApiClient.get(ApiConstants.movimientosCobro(cobroId));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      return (body as List).map((e) => MovimientoCobroModel.fromJson(e)).toList();
+    }
+    throw Exception(body['message'] ?? 'Error al obtener movimientos del cobro');
   }
 
   static Future<List<CobroModel>> getHistorial() async {

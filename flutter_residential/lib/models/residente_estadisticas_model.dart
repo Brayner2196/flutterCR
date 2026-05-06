@@ -71,11 +71,15 @@ class ResidenteEstadisticasModel {
     // ── Cobros por estado ──
     final pendientes =
         todosLosCobros.where((c) => c.esPendiente).toList();
+    final parciales =
+        todosLosCobros.where((c) => c.esParcial).toList();
     final vencidos = todosLosCobros.where((c) => c.esVencido).toList();
     final pagados = todosLosCobros.where((c) => c.esPagado).toList();
 
+    // Los parciales usan montoPendiente (saldo restante), no montoTotal
     final totalPendiente =
-        pendientes.fold<double>(0, (s, c) => s + c.montoTotal);
+        pendientes.fold<double>(0, (s, c) => s + c.montoTotal) +
+        parciales.fold<double>(0, (s, c) => s + c.montoPendiente);
     final totalVencido =
         vencidos.fold<double>(0, (s, c) => s + c.montoTotal);
     final totalMora =
@@ -113,7 +117,7 @@ class ResidenteEstadisticasModel {
     // ── Próximo vencimiento ──
     CobroModel? proximo;
     int? diasVenc;
-    final activos = [...pendientes, ...vencidos];
+    final activos = [...pendientes, ...parciales, ...vencidos];
     if (activos.isNotEmpty) {
       activos.sort(
           (a, b) => a.fechaLimitePago.compareTo(b.fechaLimitePago));
@@ -128,7 +132,7 @@ class ResidenteEstadisticasModel {
       totalPendiente: totalPendiente,
       totalVencido: totalVencido,
       totalMora: totalMora,
-      cobrosPendientes: pendientes.length,
+      cobrosPendientes: pendientes.length + parciales.length,
       cobrosVencidos: vencidos.length,
       totalPagadoHistorico: totalPagado,
       totalCobrosHistoricos: totalCobros,

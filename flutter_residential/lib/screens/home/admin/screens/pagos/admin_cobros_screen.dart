@@ -281,6 +281,10 @@ class _CobroAdminTile extends StatelessWidget {
     final puedeExonerar = cobro.esPendiente || cobro.esVencido;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorEstado.withValues(alpha: 0.5), width: 1.5),
+      ),
       child: Column(
         children: [
           ListTile(
@@ -300,6 +304,7 @@ class _CobroAdminTile extends StatelessWidget {
               children: [
                 Text(_fmt(cobro.montoTotal),
                     style: TextStyle(
+                      fontSize: 16,
                         fontWeight: FontWeight.bold, color: cs.onSurface)),
                 Container(
                   padding:
@@ -340,5 +345,5 @@ class _CobroAdminTile extends StatelessWidget {
   }
 
   String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+      ' \$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }
