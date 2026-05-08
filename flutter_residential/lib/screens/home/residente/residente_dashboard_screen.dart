@@ -52,6 +52,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
               child: stats.estadisticas != null
                   ? DeudaResumenWidget(
                       stats: stats.estadisticas!,
+                      saldoFavor: stats.saldoFavor,
                       formatMonto: _fmt,
                       onVerEstadoCuenta: () => Navigator.push(
                         context,

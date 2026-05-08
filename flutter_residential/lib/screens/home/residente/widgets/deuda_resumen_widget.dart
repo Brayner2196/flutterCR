@@ -5,12 +5,14 @@ import '../../../../models/residente_estadisticas_model.dart';
 /// de manera simple y natural en el home. Reemplaza los KPI cards técnicos.
 class DeudaResumenWidget extends StatelessWidget {
   final ResidenteEstadisticasModel stats;
+  final double saldoFavor;
   final String Function(double) formatMonto;
   final VoidCallback onVerEstadoCuenta;
 
   const DeudaResumenWidget({
     super.key,
     required this.stats,
+    this.saldoFavor = 0.0,
     required this.formatMonto,
     required this.onVerEstadoCuenta,
   });
@@ -63,6 +65,23 @@ class DeudaResumenWidget extends StatelessWidget {
                   'No tienes cobros pendientes por el momento.',
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
+                if (saldoFavor > 0) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.savings_outlined,
+                          color: Colors.teal, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Saldo a favor: ${formatMonto(saldoFavor)}',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.teal,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -121,7 +140,9 @@ class DeudaResumenWidget extends StatelessWidget {
             ),
           ),
           Text(
-            'en total por pagar',
+            saldoFavor > 0
+                ? 'en total · neto a pagar ${formatMonto((stats.totalDeuda - saldoFavor).clamp(0, double.infinity))}'
+                : 'en total por pagar',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
           ),
           const SizedBox(height: 16),
@@ -156,6 +177,16 @@ class DeudaResumenWidget extends StatelessWidget {
               color: Colors.red.shade300,
               texto: 'Recargos por mora incluidos',
               monto: formatMonto(stats.totalMora),
+              italica: true,
+            ),
+          ],
+          if (saldoFavor > 0) ...[
+            const SizedBox(height: 10),
+            _linea(
+              icon: Icons.savings_outlined,
+              color: Colors.teal,
+              texto: 'Saldo a favor disponible',
+              monto: '− ${formatMonto(saldoFavor)}',
               italica: true,
             ),
           ],

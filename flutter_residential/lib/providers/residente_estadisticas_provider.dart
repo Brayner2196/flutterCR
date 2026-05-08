@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/cobro_model.dart';
 import '../models/pago_model.dart';
 import '../models/residente_estadisticas_model.dart';
+import '../services/abono_service.dart';
 import '../services/cobro_service.dart';
 import '../services/pago_service.dart';
 
@@ -9,10 +10,12 @@ import '../services/pago_service.dart';
 /// combinando datos de cobros y pagos existentes.
 class ResidenteEstadisticasProvider extends ChangeNotifier {
   ResidenteEstadisticasModel? _estadisticas;
+  double _saldoFavor = 0.0;
   bool _loading = false;
   String? _error;
 
   ResidenteEstadisticasModel? get estadisticas => _estadisticas;
+  double get saldoFavor => _saldoFavor;
   bool get loading => _loading;
   String? get error => _error;
 
@@ -35,6 +38,16 @@ class ResidenteEstadisticasProvider extends ChangeNotifier {
         todosLosCobros: cobros,
         todosLosPagos: pagos,
       );
+
+      // Cargar saldo a favor usando el propiedadId del primer cobro
+      if (cobros.isNotEmpty) {
+        try {
+          final sf = await AbonoService.getSaldoFavor(cobros.first.propiedadId);
+          _saldoFavor = sf.saldo;
+        } catch (_) {
+          _saldoFavor = 0.0;
+        }
+      }
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
     } finally {
@@ -47,6 +60,7 @@ class ResidenteEstadisticasProvider extends ChangeNotifier {
 
   void limpiar() {
     _estadisticas = null;
+    _saldoFavor = 0.0;
     _error = null;
     _loading = false;
     notifyListeners();

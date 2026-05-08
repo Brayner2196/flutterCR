@@ -27,7 +27,11 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   String? _estadoFiltro;
 
   static const _estadoOpciones = [
-    'PENDIENTE', 'PARCIAL', 'VENCIDO', 'PAGADO', 'EXONERADO',
+    'PENDIENTE',
+    'PARCIAL',
+    'VENCIDO',
+    'PAGADO',
+    'EXONERADO',
   ];
 
   static Color _colorEstado(String estado) {
@@ -43,13 +47,33 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   }
 
   static const _nombresMes = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
 
   static const _abrevMes = [
-    'ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN',
-    'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC',
+    'ENE',
+    'FEB',
+    'MAR',
+    'ABR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AGO',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DIC',
   ];
 
   @override
@@ -118,11 +142,11 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   }
 
   List<CobroModel> get _cobrosFiltrados => _historial.where((c) {
-        if (_anioFiltro != null && c.anio != _anioFiltro) return false;
-        if (_mesFiltro != null && c.mes != _mesFiltro) return false;
-        if (_estadoFiltro != null && c.estado != _estadoFiltro) return false;
-        return true;
-      }).toList();
+    if (_anioFiltro != null && c.anio != _anioFiltro) return false;
+    if (_mesFiltro != null && c.mes != _mesFiltro) return false;
+    if (_estadoFiltro != null && c.estado != _estadoFiltro) return false;
+    return true;
+  }).toList();
 
   // ─── Build ─────────────────────────────────────────────────────────────────
 
@@ -145,86 +169,80 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
           ),
         ],
       ),
-      body: provider.loading && _loadingHistorial
-          ? const Center(child: CircularProgressIndicator())
+      body: _loadingHistorial && _historial.isEmpty
+          ? const _SkeletonBody()
           : provider.error != null
-              ? _buildError(provider.error!)
-              : RefreshIndicator(
-                  onRefresh: () async {
-                    await context.read<CobrosProvider>().cargarEstadoCuenta();
-                    await _cargarHistorial();
-                  },
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      // ── Balance header ──────────────────────────
-                      _BalanceHeader(
-                        estadoCuenta: provider.estadoCuenta,
-                        saldoFavor: abonos.saldoFavor?.saldo ?? 0,
-                        formatMonto: _fmt,
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ── Filtros ─────────────────────────────
-                            _buildFiltros(),
-                            const SizedBox(height: 16),
-                            // ── Título sección ──────────────────────
-                            Text(
-                              'Historial Detallado',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'Línea de tiempo de sus movimientos financieros.',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade500),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // ── Timeline ────────────────────────────
-                            if (_loadingHistorial)
-                              const Center(
-                                  child: Padding(
-                                padding: EdgeInsets.all(32),
-                                child: CircularProgressIndicator(),
-                              ))
-                            else if (_cobrosFiltrados.isEmpty)
-                              _buildVacio()
-                            else
-                              ..._buildTimeline(_cobrosFiltrados),
-
-                            const SizedBox(height: 24),
-                          ],
-                        ),
-                      ),
-                    ],
+          ? _buildError(provider.error!)
+          : RefreshIndicator(
+              onRefresh: () async {
+                await context.read<CobrosProvider>().cargarEstadoCuenta();
+                await _cargarHistorial();
+              },
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  // ── Balance header ──────────────────────────
+                  _BalanceHeader(
+                    estadoCuenta: provider.estadoCuenta,
+                    saldoFavor: abonos.saldoFavor?.saldo ?? 0,
+                    formatMonto: _fmt,
                   ),
-                ),
+
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Filtros ─────────────────────────────
+                        _buildFiltros(),
+                        const SizedBox(height: 16),
+                        // ── Título sección ──────────────────────
+                        Text(
+                          'Historial Detallado',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Línea de tiempo de sus movimientos financieros.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // ── Timeline ────────────────────────────
+                        if (_loadingHistorial)
+                          const _SkeletonTimeline()
+                        else if (_cobrosFiltrados.isEmpty)
+                          _buildVacio()
+                        else
+                          ..._buildTimeline(_cobrosFiltrados),
+
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _buildError(String msg) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 12),
-            Text(msg, textAlign: TextAlign.center),
-            TextButton(
-              onPressed: () =>
-                  context.read<CobrosProvider>().cargarEstadoCuenta(),
-              child: const Text('Reintentar'),
-            ),
-          ],
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+        const SizedBox(height: 12),
+        Text(msg, textAlign: TextAlign.center),
+        TextButton(
+          onPressed: () => context.read<CobrosProvider>().cargarEstadoCuenta(),
+          child: const Text('Reintentar'),
         ),
-      );
+      ],
+    ),
+  );
 
   // ─── Filtros ──────────────────────────────────────────────────────────────
 
@@ -239,8 +257,9 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
           isActive: _anioFiltro != null,
           opciones: [
             const DropdownMenuItem(value: null, child: Text('Todos los años')),
-            ..._aniosDisponibles.map((a) =>
-                DropdownMenuItem(value: a, child: Text(a.toString()))),
+            ..._aniosDisponibles.map(
+              (a) => DropdownMenuItem(value: a, child: Text(a.toString())),
+            ),
           ],
           value: _anioFiltro,
           onChanged: (v) => setState(() {
@@ -256,10 +275,10 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
           isActive: _mesFiltro != null,
           opciones: [
             const DropdownMenuItem(value: null, child: Text('Todos los meses')),
-            ..._mesesDisponibles.map((m) => DropdownMenuItem(
-                  value: m,
-                  child: Text(_nombresMes[m - 1]),
-                )),
+            ..._mesesDisponibles.map(
+              (m) =>
+                  DropdownMenuItem(value: m, child: Text(_nombresMes[m - 1])),
+            ),
           ],
           value: _mesFiltro,
           onChanged: (v) => setState(() => _mesFiltro = v),
@@ -268,27 +287,33 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         _FiltroChip<String?>(
           label: _estadoFiltro ?? 'Estado',
           isActive: _estadoFiltro != null,
-          activeColor:
-              _estadoFiltro != null ? _colorEstado(_estadoFiltro!) : null,
+          activeColor: _estadoFiltro != null
+              ? _colorEstado(_estadoFiltro!)
+              : null,
           opciones: [
-            const DropdownMenuItem(value: null, child: Text('Todos los estados')),
-            ..._estadoOpciones.map((e) => DropdownMenuItem(
-                  value: e,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 1,
-                        height: 6,
-                        margin: const EdgeInsets.only(right: 2),
-                        decoration: BoxDecoration(
-                          color: _colorEstado(e),
-                          shape: BoxShape.rectangle,
-                        ),
+            const DropdownMenuItem(
+              value: null,
+              child: Text('Todos los estados'),
+            ),
+            ..._estadoOpciones.map(
+              (e) => DropdownMenuItem(
+                value: e,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 1,
+                      height: 6,
+                      margin: const EdgeInsets.only(right: 2),
+                      decoration: BoxDecoration(
+                        color: _colorEstado(e),
+                        shape: BoxShape.rectangle,
                       ),
-                      Text(e, style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                )),
+                    ),
+                    Text(e, style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ),
           ],
           value: _estadoFiltro,
           onChanged: (v) => setState(() => _estadoFiltro = v),
@@ -325,8 +350,11 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Column(
           children: [
-            Icon(Icons.receipt_long_outlined,
-                size: 48, color: Colors.grey.shade300),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 48,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 12),
             Text(
               'Sin cobros en este período',
@@ -341,9 +369,13 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   // ─── Navegación ───────────────────────────────────────────────────────────
 
   Future<void> _irARegistrarPago(CobroModel cobro) async {
+    final saldoFavor = context.read<AbonoProvider>().saldoFavor?.saldo ?? 0.0;
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => RegistrarPagoScreen(cobro: cobro)),
+      MaterialPageRoute(
+        builder: (_) =>
+            RegistrarPagoScreen(cobro: cobro, saldoFavor: saldoFavor),
+      ),
     );
     if (result == true && mounted) {
       context.read<CobrosProvider>().cargarEstadoCuenta();
@@ -354,12 +386,14 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   Future<void> _irARegistrarAbono(CobroModel cobro) async {
     // Para cobros parciales usamos RegistrarPagoScreen con cobroId explícito,
     // así el backend aplica el pago al cobro correcto en vez de FIFO.
+    final saldoFavor = context.read<AbonoProvider>().saldoFavor?.saldo ?? 0.0;
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => RegistrarPagoScreen(
           cobro: cobro,
           montoPagar: cobro.montoPendiente,
+          saldoFavor: saldoFavor,
         ),
       ),
     );
@@ -423,14 +457,17 @@ class _BalanceHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Por pagar',
-                  style: TextStyle(color: Colors.white70, fontSize: 14)),
+              const Text(
+                'Por pagar',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
               Text(
                 formatMonto(totalPendiente),
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600),
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -441,14 +478,17 @@ class _BalanceHeader extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Saldo a favor',
-                    style: TextStyle(color: Colors.white70, fontSize: 14)),
+                const Text(
+                  'Saldo a favor',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
                 Text(
                   '− ${formatMonto(saldoFavor)}',
                   style: const TextStyle(
-                      color: Color(0xFF80CBC4),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600),
+                    color: Color(0xFF80CBC4),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -468,24 +508,23 @@ class _BalanceHeader extends StatelessWidget {
                 children: [
                   Text(
                     estaAlDia ? '¡Estás al día!' : 'Neto a pagar',
-                    style: const TextStyle(
-                        color: Colors.white70, fontSize: 13),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   const SizedBox(height: 2),
                   if (ec != null && !estaAlDia)
                     Text(
                       '${ec.cobrosVencidos} vencido${ec.cobrosVencidos != 1 ? 's' : ''} · ${ec.cobrosPendientes} pendiente${ec.cobrosPendientes != 1 ? 's' : ''}',
                       style: const TextStyle(
-                          color: Colors.white54, fontSize: 11),
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
                     ),
                 ],
               ),
               Text(
                 estaAlDia ? formatMonto(0) : formatMonto(neto),
                 style: TextStyle(
-                  color: estaAlDia
-                      ? const Color(0xFF80CBC4)
-                      : Colors.white,
+                  color: estaAlDia ? const Color(0xFF80CBC4) : Colors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
@@ -534,34 +573,40 @@ class _FiltroChip<T> extends StatelessWidget {
             }
           },
           selectedItemBuilder: (ctx) => opciones
-              .map((_) => Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
+              .map(
+                (_) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? color.withValues(alpha: 0.1)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
                       color: isActive
-                          ? color.withValues(alpha: 0.1)
-                          : Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: isActive
-                              ? color.withValues(alpha: 0.4)
-                              : Colors.grey.shade300),
+                          ? color.withValues(alpha: 0.4)
+                          : Colors.grey.shade300,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(label,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: color,
-                              fontWeight: FontWeight.w500,
-                            )),
-                        const SizedBox(width: 6),
-                        Icon(Icons.keyboard_arrow_down,
-                            size: 16, color: color),
-                      ],
-                    ),
-                  ))
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: color,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(Icons.keyboard_arrow_down, size: 16, color: color),
+                    ],
+                  ),
+                ),
+              )
               .toList(),
           icon: const SizedBox.shrink(),
           isDense: true,
@@ -616,12 +661,12 @@ class _TimelineItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: _dotColor,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                        color: Colors.white, width: 2),
+                    border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                          color: _dotColor.withValues(alpha: 0.4),
-                          blurRadius: 4)
+                        color: _dotColor.withValues(alpha: 0.4),
+                        blurRadius: 4,
+                      ),
                     ],
                   ),
                 ),
@@ -709,7 +754,24 @@ class _CobroCardState extends State<_CobroCard> {
     if (cobro.esPagado || cobro.esExonerado) {
       return 'Liquidado antes del ${_formatFecha(cobro.fechaLimitePago)}';
     }
-    if (cobro.esVencido) {
+    try {
+      final limite = DateTime.parse(cobro.fechaLimitePago);
+      final hoy = DateTime.now();
+
+      final diff = DateTime(
+        limite.year,
+        limite.month,
+        limite.day,
+      ).difference(DateTime(hoy.year, hoy.month, hoy.day)).inDays;
+
+      if (diff == 0) return 'Vence hoy';
+      if (diff < 0) return 'Vencido hace ${-diff} día${diff == -1 ? '' : 's'}';
+      return 'Vencerá dentro de $diff día${diff == 1 ? '' : 's'}';
+    } catch (_) {
+      return 'Vence el ${_formatFecha(cobro.fechaLimitePago)}';
+    }
+
+    /*if (cobro.esVencido) {
       try {
         final limite = DateTime.parse(cobro.fechaLimitePago);
         final dias = DateTime.now().difference(limite).inDays;
@@ -718,7 +780,7 @@ class _CobroCardState extends State<_CobroCard> {
         return 'Vencido el ${_formatFecha(cobro.fechaLimitePago)}';
       }
     }
-    return 'Vence el ${_formatFecha(cobro.fechaLimitePago)}';
+    return 'Vence el ${_formatFecha(cobro.fechaLimitePago)}';*/
   }
 
   Color get _fechaInfoColor {
@@ -776,13 +838,16 @@ class _CobroCardState extends State<_CobroCard> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: _badgeColor.withValues(alpha: 0.45), width: 1.5),
+        border: Border.all(
+          color: _badgeColor.withValues(alpha: 0.45),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2))
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -803,27 +868,33 @@ class _CobroCardState extends State<_CobroCard> {
                           Text(
                             '${widget.nombreMes} ${cobro.anio}',
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 15),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
                           ),
                           Text(
                             _periodoTexto,
                             style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade500,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3),
+                              fontSize: 11,
+                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.3,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _badgeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                            color: _badgeColor.withValues(alpha: 0.3)),
+                          color: _badgeColor.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -853,9 +924,10 @@ class _CobroCardState extends State<_CobroCard> {
                 Text(
                   _fechaInfo,
                   style: TextStyle(
-                      fontSize: 12,
-                      color: _fechaInfoColor,
-                      fontWeight: FontWeight.w500),
+                    fontSize: 12,
+                    color: _fechaInfoColor,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -875,9 +947,13 @@ class _CobroCardState extends State<_CobroCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(cobro.concepto,
-                              style: TextStyle(
-                                  fontSize: 13, color: Colors.grey.shade700)),
+                          Text(
+                            cobro.concepto,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             cobro.descripcion != null &&
@@ -885,7 +961,9 @@ class _CobroCardState extends State<_CobroCard> {
                                 ? cobro.descripcion!
                                 : cobro.propiedadIdentificador,
                             style: TextStyle(
-                                fontSize: 11, color: Colors.grey.shade400),
+                              fontSize: 11,
+                              color: Colors.grey.shade400,
+                            ),
                           ),
                         ],
                       ),
@@ -893,9 +971,10 @@ class _CobroCardState extends State<_CobroCard> {
                     Text(
                       widget.formatMonto(cobro.montoBase),
                       style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
                     ),
                   ],
                 ),
@@ -926,20 +1005,21 @@ class _CobroCardState extends State<_CobroCard> {
                     Text(
                       _estaActivo ? 'POR PAGAR' : 'TOTAL',
                       style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                          letterSpacing: 0.5),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                     Text(
                       _estaActivo
                           ? widget.formatMonto(cobro.montoPendiente)
                           : widget.formatMonto(cobro.montoTotal),
                       style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
-                          color:
-                              _estaActivo ? _badgeColor : Colors.grey.shade700),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        color: _estaActivo ? _badgeColor : Colors.grey.shade700,
+                      ),
                     ),
                   ],
                 ),
@@ -949,59 +1029,63 @@ class _CobroCardState extends State<_CobroCard> {
 
           // ── Botón "Ver movimientos" (solo si hay movimientos) ───
           if (cobro.tieneMovimientos) ...[
-          Divider(height: 1, color: Colors.grey.shade100),
-          InkWell(
-            onTap: _toggleMovimientos,
-            borderRadius: _estaActivo
-                ? BorderRadius.zero
-                : const BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 16,
-                    color: Colors.grey.shade500,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Ver movimientos',
-                    style:
-                        TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  ),
-                  const Spacer(),
-                  if (_cargando)
-                    const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                  else
+            Divider(height: 1, color: Colors.grey.shade100),
+            InkWell(
+              onTap: _toggleMovimientos,
+              borderRadius: _estaActivo
+                  ? BorderRadius.zero
+                  : const BorderRadius.only(
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
                     Icon(
-                      _expandido
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      size: 18,
+                      Icons.receipt_long_outlined,
+                      size: 16,
                       color: Colors.grey.shade500,
                     ),
-                ],
+                    const SizedBox(width: 6),
+                    Text(
+                      'Ver movimientos',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (_cargando)
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      Icon(
+                        _expandido
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        size: 18,
+                        color: Colors.grey.shade500,
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // ── Mini-timeline de movimientos ─────────────────────────
-          if (_expandido && _movimientos != null)
-            _MovimientosTimeline(
-              movimientos: _movimientos!,
-              formatMonto: widget.formatMonto,
-              esUltimoNivel: !_estaActivo,
-            ),
+            // ── Mini-timeline de movimientos ─────────────────────────
+            if (_expandido && _movimientos != null)
+              _MovimientosTimeline(
+                movimientos: _movimientos!,
+                formatMonto: widget.formatMonto,
+                esUltimoNivel: !_estaActivo,
+              ),
           ], // fin if (cobro.tieneMovimientos)
-
           // ── Botón Liquidar ────────────────────────────────────────
           if (_estaActivo)
             Container(
@@ -1027,9 +1111,10 @@ class _CobroCardState extends State<_CobroCard> {
                 child: Text(
                   widget.esAbono ? 'Abonar saldo restante' : 'Pagar Ahora',
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
               ),
             ),
@@ -1068,8 +1153,7 @@ class _MovimientosTimeline extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   'Sin movimientos registrados',
-                  style: TextStyle(
-                      fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                 ),
               ),
             )
@@ -1109,8 +1193,9 @@ class _FilaMovimiento extends StatelessWidget {
     return 'Pendiente';
   }
 
-  IconData get _tipoIcon =>
-      mov.esPago ? Icons.credit_card_outlined : Icons.account_balance_wallet_outlined;
+  IconData get _tipoIcon => mov.esPago
+      ? Icons.credit_card_outlined
+      : Icons.account_balance_wallet_outlined;
 
   @override
   Widget build(BuildContext context) {
@@ -1152,22 +1237,27 @@ class _FilaMovimiento extends StatelessWidget {
                     Text(
                       mov.esPago ? 'Pago' : 'Abono',
                       style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
                     ),
                     if (mov.metodoPago != null) ...[
                       Text(
                         ' · ${mov.metodoPago}',
                         style: TextStyle(
-                            fontSize: 11, color: Colors.grey.shade500),
+                          fontSize: 11,
+                          color: Colors.grey.shade500,
+                        ),
                       ),
                     ],
                     const Spacer(),
                     Text(
                       formatMonto(mov.monto),
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 13),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -1176,7 +1266,9 @@ class _FilaMovimiento extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 1),
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         color: _estadoColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
@@ -1184,9 +1276,10 @@ class _FilaMovimiento extends StatelessWidget {
                       child: Text(
                         _estadoTexto,
                         style: TextStyle(
-                            fontSize: 10,
-                            color: _estadoColor,
-                            fontWeight: FontWeight.w600),
+                          fontSize: 10,
+                          color: _estadoColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     if (mov.fecha != null) ...[
@@ -1194,7 +1287,9 @@ class _FilaMovimiento extends StatelessWidget {
                       Text(
                         mov.fecha!,
                         style: TextStyle(
-                            fontSize: 11, color: Colors.grey.shade500),
+                          fontSize: 11,
+                          color: Colors.grey.shade500,
+                        ),
                       ),
                     ],
                     if (mov.motivoRechazo != null) ...[
@@ -1203,7 +1298,9 @@ class _FilaMovimiento extends StatelessWidget {
                         child: Text(
                           mov.motivoRechazo!,
                           style: const TextStyle(
-                              fontSize: 10, color: Colors.red),
+                            fontSize: 10,
+                            color: Colors.red,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -1214,6 +1311,219 @@ class _FilaMovimiento extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Skeleton UI ─────────────────────────────────────────────────────────────
+
+/// Pantalla completa de skeleton — reemplaza el CircularProgressIndicator
+/// en la primera carga. Header estático + cards con su propia animación.
+class _SkeletonBody extends StatelessWidget {
+  const _SkeletonBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        // ── Header skeleton (fondo azul oscuro, cajas grises estáticas) ─
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+          color: const Color(0xFF283593),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SkBox(w: 130, h: 11),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [_SkBox(w: 80, h: 14), _SkBox(w: 100, h: 16)],
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.white24, height: 1),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _SkBox(w: 90, h: 13),
+                      const SizedBox(height: 6),
+                      _SkBox(w: 150, h: 11),
+                    ],
+                  ),
+                  _SkBox(w: 120, h: 28),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // ── Cards skeleton (animados por _SkeletonTimeline) ──────────────
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 24, 16, 0),
+          child: _SkeletonTimeline(),
+        ),
+      ],
+    );
+  }
+}
+
+/// Timeline de skeleton — 3 cards animados (misma estructura que los reales)
+class _SkeletonTimeline extends StatefulWidget {
+  const _SkeletonTimeline();
+  @override
+  State<_SkeletonTimeline> createState() => _SkeletonTimelineState();
+}
+
+class _SkeletonTimelineState extends State<_SkeletonTimeline>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(
+      begin: 0.35,
+      end: 0.7,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _opacity,
+      builder: (_, child) => Opacity(opacity: _opacity.value, child: child!),
+      child: Column(
+        children: List.generate(3, (i) {
+          final esUltimo = i == 2;
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 32,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 14,
+                        height: 14,
+                        margin: const EdgeInsets.only(top: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                      ),
+                      if (!esUltimo)
+                        Expanded(
+                          child: Container(
+                            width: 2,
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            color: Colors.grey.shade200,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _SkeletonCard(),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+/// Card skeleton con la misma forma que _CobroCard.
+class _SkeletonCard extends StatelessWidget {
+  const _SkeletonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SkBox(w: 110, h: 15),
+                  const SizedBox(height: 5),
+                  _SkBox(w: 75, h: 11),
+                ],
+              ),
+              _SkBox(w: 70, h: 24, r: 20),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Barra ancha que simula la línea de fecha/descripción
+          LayoutBuilder(builder: (ctx, c) => _SkBox(w: c.maxWidth, h: 12)),
+          const SizedBox(height: 14),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [_SkBox(w: 60, h: 12), _SkBox(w: 90, h: 17)],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Caja gris genérica para skeleton (sin animación propia; la recibe del padre).
+class _SkBox extends StatelessWidget {
+  final double w, h;
+  final double r;
+  const _SkBox({required this.w, required this.h, this.r = 4});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(r),
       ),
     );
   }

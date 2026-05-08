@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/cobro_model.dart';
@@ -7,8 +8,15 @@ class RegistrarPagoScreen extends StatefulWidget {
   final CobroModel cobro;
   /// Si se especifica, pre-llena el monto (útil para cobros parciales).
   final double? montoPagar;
+  /// Saldo a favor disponible — descuenta del monto inicial sugerido.
+  final double saldoFavor;
 
-  const RegistrarPagoScreen({super.key, required this.cobro, this.montoPagar});
+  const RegistrarPagoScreen({
+    super.key,
+    required this.cobro,
+    this.montoPagar,
+    this.saldoFavor = 0.0,
+  });
 
   @override
   State<RegistrarPagoScreen> createState() => _RegistrarPagoScreenState();
@@ -26,8 +34,15 @@ class _RegistrarPagoScreenState extends State<RegistrarPagoScreen> {
   static const _metodos = ['TRANSFERENCIA', 'EFECTIVO', 'CHEQUE', 'OTRO'];
 
   double get _montoPendiente => widget.cobro.montoPendiente;
+  /// Monto que el usuario realmente necesita transferir (pendiente - saldo a favor).
+  double get _montoSugerido =>
+      max(0.0, _montoPendiente - widget.saldoFavor);
+  /// Saldo a favor que se consumirá al verificar (el mínimo entre SF y pendiente).
+  double get _saldoAplicado =>
+      min(widget.saldoFavor, _montoPendiente);
   double get _montoIngresado =>
       double.tryParse(_montoCtrl.text.replaceAll(',', '.')) ?? 0;
+  /// Exceso: lo que sobra respecto al pendiente total (va a saldo a favor).
   double get _exceso =>
       (_montoIngresado - _montoPendiente).clamp(0, double.infinity);
   bool get _hayExceso => _exceso > 0;
@@ -35,7 +50,10 @@ class _RegistrarPagoScreenState extends State<RegistrarPagoScreen> {
   @override
   void initState() {
     super.initState();
-    final inicial = widget.montoPagar ?? widget.cobro.montoPendiente;
+    // Pre-llenar con montoPagar explícito (si viene) o con el monto sugerido
+    // descontando el saldo a favor disponible.
+    final base = widget.montoPagar ?? widget.cobro.montoPendiente;
+    final inicial = max(0.0, base - widget.saldoFavor);
     _montoCtrl.text = inicial.toStringAsFixed(0);
   }
 
@@ -174,6 +192,51 @@ class _RegistrarPagoScreenState extends State<RegistrarPagoScreen> {
                 Text(
                   'Total original: ${_fmt(widget.cobro.montoTotal)} — ya abonado: ${_fmt(widget.cobro.montoPagado)}',
                   style: const TextStyle(color: Colors.orange, fontSize: 11),
+                ),
+              ],
+              if (widget.saldoFavor > 0) ...[
+                const SizedBox(height: 8),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.savings_outlined,
+                            color: Colors.teal, size: 14),
+                        const SizedBox(width: 4),
+                        const Text('Saldo a favor',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.teal)),
+                      ],
+                    ),
+                    Text(
+                      '− ${_fmt(_saldoAplicado)}',
+                      style: const TextStyle(
+                          color: Colors.teal,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Transferencia necesaria',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800)),
+                    Text(
+                      _fmt(_montoSugerido),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary),
+                    ),
+                  ],
                 ),
               ],
             ],
