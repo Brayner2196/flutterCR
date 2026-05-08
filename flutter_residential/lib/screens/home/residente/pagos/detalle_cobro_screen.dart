@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/cobro_model.dart';
+import '../../../../features/pagos/models/cobro_model.dart';
 import 'registrar_abono_screen.dart';
 import 'registrar_pago_screen.dart';
 

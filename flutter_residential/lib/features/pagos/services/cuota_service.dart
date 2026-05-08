@@ -1,6 +1,6 @@
 import 'dart:convert';
-import '../core/constants/api_constants.dart';
-import '../core/network/api_client.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/api_client.dart';
 import '../models/configuracion_cuota_model.dart';
 
 class CuotaService {

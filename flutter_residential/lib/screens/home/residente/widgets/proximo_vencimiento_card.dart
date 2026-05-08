@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/cobro_model.dart';
+import '../../../../features/pagos/models/cobro_model.dart';
 
 /// Card que muestra el próximo cobro por vencer con countdown de días.
 class ProximoVencimientoCard extends StatelessWidget {

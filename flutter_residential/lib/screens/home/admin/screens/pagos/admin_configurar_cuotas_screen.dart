@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/api_constants.dart';
 import '../../../../../core/network/api_client.dart';
-import '../../../../../models/configuracion_cuota_model.dart';
+import '../../../../../features/pagos/models/configuracion_cuota_model.dart';
 import '../../../../../models/tipo_propiedad_nodo.dart';
-import '../../../../../services/cuota_service.dart';
+import '../../../../../features/pagos/services/cuota_service.dart';
 
 typedef _Preset = ({String label, String tipoNombre, double monto, int desde, int hasta});
 

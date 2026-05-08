@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../providers/cobros_provider.dart';
-import '../../../../models/cobro_model.dart';
+import '../../../../features/pagos/providers/cobros_provider.dart';
+import '../../../../features/pagos/models/cobro_model.dart';
 import 'detalle_cobro_screen.dart';
 
 class MisCobrosScreen extends StatefulWidget {

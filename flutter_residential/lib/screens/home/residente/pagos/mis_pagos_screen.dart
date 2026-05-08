@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../models/pago_model.dart';
-import '../../../../providers/pagos_provider.dart';
+import '../../../../features/pagos/models/pago_model.dart';
+import '../../../../features/pagos/providers/pagos_provider.dart';
 
 class MisPagosScreen extends StatefulWidget {
   const MisPagosScreen({super.key});

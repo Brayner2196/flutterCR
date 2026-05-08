@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../models/cobro_model.dart';
-import '../../../../providers/pagos_provider.dart';
+import '../../../../features/pagos/models/cobro_model.dart';
+import '../../../../features/pagos/providers/pagos_provider.dart';
 
 class RegistrarPagoScreen extends StatefulWidget {
   final CobroModel cobro;

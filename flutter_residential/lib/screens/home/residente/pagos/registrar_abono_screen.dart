@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../models/simular_abono_model.dart';
-import '../../../../providers/abono_provider.dart';
-import '../../../../services/abono_service.dart';
+import '../../../../features/pagos/models/simular_abono_model.dart';
+import '../../../../features/pagos/providers/abono_provider.dart';
+import '../../../../features/pagos/services/abono_service.dart';
 
 class RegistrarAbonoScreen extends StatefulWidget {
   final int propiedadId;

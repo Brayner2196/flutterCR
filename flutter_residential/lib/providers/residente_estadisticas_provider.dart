@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/cobro_model.dart';
-import '../models/pago_model.dart';
+import '../features/pagos/models/cobro_model.dart';
+import '../features/pagos/models/pago_model.dart';
 import '../models/residente_estadisticas_model.dart';
-import '../services/abono_service.dart';
-import '../services/cobro_service.dart';
-import '../services/pago_service.dart';
+import '../features/pagos/services/abono_service.dart';
+import '../features/pagos/services/cobro_service.dart';
+import '../features/pagos/services/pago_service.dart';
 
 /// Provider que carga y calcula estadísticas del residente
 /// combinando datos de cobros y pagos existentes.

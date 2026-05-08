@@ -1,6 +1,6 @@
 import 'dart:convert';
-import '../core/constants/api_constants.dart';
-import '../core/network/api_client.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/api_client.dart';
 import '../models/abono_model.dart';
 import '../models/simular_abono_model.dart';
 import '../models/saldo_favor_model.dart';

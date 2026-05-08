@@ -1,5 +1,5 @@
-import 'cobro_model.dart';
-import 'pago_model.dart';
+import '../features/pagos/models/cobro_model.dart';
+import '../features/pagos/models/pago_model.dart';
 
 /// Modelo que agrega estadísticas financieras del residente
 /// calculadas a partir de sus cobros y pagos.

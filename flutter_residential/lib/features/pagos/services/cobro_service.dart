@@ -1,6 +1,6 @@
 import 'dart:convert';
-import '../core/constants/api_constants.dart';
-import '../core/network/api_client.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/api_client.dart';
 import '../models/cobro_model.dart';
 import '../models/estado_cuenta_model.dart';
 import '../models/movimiento_cobro_model.dart';

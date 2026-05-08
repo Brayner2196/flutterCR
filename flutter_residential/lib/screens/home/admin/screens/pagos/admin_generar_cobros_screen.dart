@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../../models/periodo_cobro_model.dart';
-import '../../../../../providers/cobros_provider.dart';
+import '../../../../../features/pagos/models/periodo_cobro_model.dart';
+import '../../../../../features/pagos/providers/cobros_provider.dart';
 
 class AdminGenerarCobrosScreen extends StatefulWidget {
   final PeriodoCobroModel? periodo;

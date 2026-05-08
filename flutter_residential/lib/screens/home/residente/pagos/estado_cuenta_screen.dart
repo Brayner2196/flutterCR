@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../models/cobro_model.dart';
-import '../../../../models/estado_cuenta_model.dart';
-import '../../../../models/movimiento_cobro_model.dart';
-import '../../../../providers/abono_provider.dart';
-import '../../../../providers/cobros_provider.dart';
-import '../../../../services/cobro_service.dart';
+import '../../../../features/pagos/models/cobro_model.dart';
+import '../../../../features/pagos/models/estado_cuenta_model.dart';
+import '../../../../features/pagos/models/movimiento_cobro_model.dart';
+import '../../../../features/pagos/providers/abono_provider.dart';
+import '../../../../features/pagos/providers/cobros_provider.dart';
+import '../../../../features/pagos/services/cobro_service.dart';
 import 'registrar_abono_screen.dart';
 import 'registrar_pago_screen.dart';
 

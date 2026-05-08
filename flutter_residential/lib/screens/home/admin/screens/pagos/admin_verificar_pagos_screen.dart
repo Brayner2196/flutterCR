@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../../models/abono_model.dart';
-import '../../../../../models/pago_model.dart';
-import '../../../../../providers/abono_provider.dart';
-import '../../../../../providers/pagos_provider.dart';
+import '../../../../../features/pagos/models/abono_model.dart';
+import '../../../../../features/pagos/models/pago_model.dart';
+import '../../../../../features/pagos/providers/abono_provider.dart';
+import '../../../../../features/pagos/providers/pagos_provider.dart';
 import '../../../../../shared/theme/app_theme.dart';
 
 class AdminVerificarPagosScreen extends StatefulWidget {
