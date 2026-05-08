@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../features/auth/providers/auth_provider.dart';
 import '../../../providers/residente_estadisticas_provider.dart';
 import 'pagos/estado_cuenta_screen.dart';
 import 'pagos/mis_pagos_screen.dart';
 import 'reservas/mis_reservas_screen.dart';
 import 'pqrs/mis_pqrs_screen.dart';
+import '../../../features/anuncios/screens/residente/mis_anuncios_screen.dart';
+import 'votaciones/mis_votaciones_screen.dart';
 import 'widgets/banner_bienvenida.dart';
 import 'widgets/deuda_resumen_widget.dart';
 
@@ -129,6 +131,26 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const MisPqrsScreen()),
+                  ),
+                ),
+                _tarjeta(
+                  theme: theme,
+                  label: 'Anuncios',
+                  icono: Icons.campaign_outlined,
+                  color: Colors.amber.shade700,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MisAnunciosScreen()),
+                  ),
+                ),
+                _tarjeta(
+                  theme: theme,
+                  label: 'Votaciones',
+                  icono: Icons.how_to_vote_outlined,
+                  color: Colors.teal,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MisVotacionesScreen()),
                   ),
                 ),
               ],

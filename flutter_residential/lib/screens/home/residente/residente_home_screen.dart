@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../features/auth/providers/auth_provider.dart';
 import '../../../providers/propiedad_provider.dart';
 import '../../residente/mi_propiedad_screen.dart';
 import 'residente_dashboard_screen.dart';

@@ -3,9 +3,9 @@ import 'package:flutter_residential/providers/app_provider.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
-import 'providers/auth_provider.dart';
+import 'features/auth/providers/auth_provider.dart';
 import 'providers/cobros_provider.dart';
-import 'providers/dashboard_provider.dart';
+import 'features/dashboard/providers/dashboard_provider.dart';
 import 'providers/pagos_provider.dart';
 import 'providers/pqr_provider.dart';
 import 'providers/propiedad_provider.dart';
@@ -14,7 +14,9 @@ import 'providers/usuario_provider.dart';
 import 'providers/abono_provider.dart';
 import 'providers/residente_estadisticas_provider.dart';
 import 'providers/tenant_provider.dart';
-import 'screens/splash_screen.dart';
+import 'features/anuncios/providers/anuncio_provider.dart';
+import 'providers/votacion_provider.dart';
+import 'features/initialRouterScreen/screens/initial_router_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +42,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ReservaProvider()),
         ChangeNotifierProvider(create: (_) => ResidenteEstadisticasProvider()),
         ChangeNotifierProvider(create: (_) => AbonoProvider()),
+        ChangeNotifierProvider(create: (_) => AnuncioProvider()),
+        ChangeNotifierProvider(create: (_) => VotacionProvider()),
       ],
       child: ToastificationWrapper(
         child: Consumer<AppProvider>(
@@ -50,7 +54,7 @@ class MyApp extends StatelessWidget {
               themeMode: appProvider.themeMode,
               theme: buildAppTheme(brightness: Brightness.light),
               darkTheme: buildAppTheme(brightness: Brightness.dark),
-              home: const SplashScreen(),
+              home: const InitialRouterScreen(),
             );
           },
         ),

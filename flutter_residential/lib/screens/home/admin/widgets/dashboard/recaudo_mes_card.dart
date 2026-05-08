@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../models/dashboard/recaudo_mes.dart';
+import '../../../../../features/dashboard/models/recaudo_mes.dart';
 import 'dashboard_tokens.dart';
 
 class RecaudoMesCard extends StatelessWidget {

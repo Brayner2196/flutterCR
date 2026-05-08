@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../models/dashboard/pagos_por_verificar.dart';
+import '../../../../../features/dashboard/models/pagos_por_verificar.dart';
 import 'dashboard_tokens.dart';
 
 class PagosPorVerificarCard extends StatelessWidget {

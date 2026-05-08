@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../features/auth/providers/auth_provider.dart';
 import '../../../providers/tenant_provider.dart';
 import 'super_admin_dashboard_screen.dart';
 import '../../tenants/tenants_screen.dart';

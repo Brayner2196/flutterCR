@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../models/dashboard/pendientes_hoy.dart';
+import '../../../../../features/dashboard/models/pendientes_hoy.dart';
 import 'dashboard_tokens.dart';
 
 class PendientesHoyCard extends StatelessWidget {

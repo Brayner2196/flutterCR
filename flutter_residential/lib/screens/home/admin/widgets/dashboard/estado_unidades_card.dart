@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../models/dashboard/estado_unidades.dart';
+import '../../../../../features/dashboard/models/estado_unidades.dart';
 import 'dashboard_tokens.dart';
 
 class EstadoUnidadesCard extends StatelessWidget {

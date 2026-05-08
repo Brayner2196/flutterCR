@@ -8,12 +8,14 @@ import 'package:flutter_residential/screens/home/admin/screens/pagos/admin_verif
 import 'package:flutter_residential/screens/home/admin/screens/pqr/admin_pqrs_screen.dart';
 import 'package:flutter_residential/screens/home/admin/screens/reservas/admin_reservas_screen.dart';
 import 'package:flutter_residential/screens/home/admin/screens/usuarios/usuarios_screen.dart';
-import 'package:flutter_residential/screens/home/admin/widgets/kpi/kpi_carousel.dart';
+import 'package:flutter_residential/features/anuncios/screens/admin/admin_anuncios_screen.dart';
+import 'package:flutter_residential/screens/home/admin/screens/votaciones/admin_votaciones_screen.dart';
+import 'package:flutter_residential/features/dashboard/screens/widgets/kpi_carousel.dart';
 import 'package:flutter_residential/screens/home/admin/widgets/quick_access_cards.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
-import '../../../providers/dashboard_provider.dart';
+import '../../../features/auth/providers/auth_provider.dart';
+import '../../../features/dashboard/providers/dashboard_provider.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -160,13 +162,22 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     onTap: () => _abrir(const AdminReporteMorosidadScreen()),
                   ),
                   QuickAccessCardData(
-                    title: 'Crear Anuncio',
+                    title: 'Anuncios',
                     icon: Icons.campaign_outlined,
                     backgroundColor: AppColors.bgYellow,
                     iconBackgroundColor: Colors.white,
                     iconColor: AppColors.yellow,
                     colorText: AppColors.yellow,
-                    onTap: () => setState(() => _tabActual = 1),
+                    onTap: () => _abrir(const AdminAnunciosScreen()),
+                  ),
+                  QuickAccessCardData(
+                    title: 'Votaciones',
+                    icon: Icons.how_to_vote_outlined,
+                    backgroundColor: _bgTeal,
+                    iconBackgroundColor: Colors.white,
+                    iconColor: _teal,
+                    colorText: _teal,
+                    onTap: () => _abrir(const AdminVotacionesScreen()),
                   ),
                 ],
               ),

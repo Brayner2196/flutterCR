@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/providers/auth_provider.dart';
+import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
 import 'package:flutter_residential/screens/home/admin/appBar/app_bar_admin.dart';
 import 'package:flutter_residential/screens/home/admin/bottomNavigationBar/bottom_navigation_bar_admin.dart';
 import 'package:provider/provider.dart';

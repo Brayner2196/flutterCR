@@ -89,4 +89,22 @@ class ApiConstants {
   static const String residenteReservas = '/api/residente/reservas';
   static const String misReservas = '/api/residente/reservas/me';
   static String cancelarReserva(int id) => '/api/residente/reservas/$id/cancelar';
+
+  // Anuncios — admin
+  static const String adminAnuncios = '/api/admin/anuncios';
+  static String estadoAnuncio(int id) => '/api/admin/anuncios/$id/estado';
+  static String vistasAnuncio(int id) => '/api/admin/anuncios/$id/vistas';
+
+  // Anuncios — residente
+  static const String residenteAnuncios = '/api/residente/anuncios';
+  static String marcarAnuncioVisto(int id) => '/api/residente/anuncios/$id/visto';
+
+  // Votaciones — admin
+  static const String adminVotaciones = '/api/admin/votaciones';
+  static String estadoVotacion(int id) => '/api/admin/votaciones/$id/estado';
+  static String resultadosVotacion(int id) => '/api/admin/votaciones/$id/resultados';
+
+  // Votaciones — residente
+  static const String residenteVotaciones = '/api/residente/votaciones';
+  static String votarEnVotacion(int id) => '/api/residente/votaciones/$id/votar';
 }

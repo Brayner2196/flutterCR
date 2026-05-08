@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_residential/providers/app_provider.dart';
 import 'package:flutter_residential/shared/widgets/theme_toggle_switch.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_residential/providers/auth_provider.dart';
+import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
 
 class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget {
   final AuthProvider auth;
