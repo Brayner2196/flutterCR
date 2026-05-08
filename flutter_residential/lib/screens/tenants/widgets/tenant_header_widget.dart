@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 
-/// Header del diseño V1: saludo + KPIs (total, activos, inactivos)
+/// Header rediseñado: banner tipo home residente + KPIs coloreados
 class TenantHeaderWidget extends StatelessWidget {
   final int total;
   final int activos;
@@ -13,114 +13,131 @@ class TenantHeaderWidget extends StatelessWidget {
     required this.total,
     required this.activos,
     required this.inactivos,
-    this.userName = 'Super Admin Bray',
+    this.userName = 'Super Admin',
   });
+
+  String get _primerNombre => userName.trim().split(' ').first;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Hola, $userName',
-            style: TextStyle(
-              fontSize: 13,
-              color: cs.onSurfaceVariant,
-              letterSpacing: -0.1,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: cs.outline),
-            ),
-            child: Row(
+          // ── Banner de bienvenida ─────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _Kpi(label: 'Total', value: total.toString()),
-                ),
-                _VDivider(),
-                Expanded(
-                  child: _Kpi(
-                    label: 'Activos',
-                    value: activos.toString(),
-                    dot: AppColors.ok,
+                Text(
+                  'Hola, $_primerNombre 👋',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                    letterSpacing: -0.5,
                   ),
                 ),
-                _VDivider(),
-                Expanded(
-                  child: _Kpi(
-                    label: 'Inactivos',
-                    value: inactivos.toString(),
-                    dot: cs.onSurfaceVariant,
-                  ),
+                const SizedBox(height: 4),
+                Text(
+                  '🏢  Gestiona los conjuntos residenciales registrados.',
+                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                 ),
               ],
             ),
           ),
+
+          // ── Fila de KPIs coloreados ─────────────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: _KpiCard(
+                  label: 'Total',
+                  value: total.toString(),
+                  icon: Icons.apartment_outlined,
+                  color: cs.primary,
+                  bgColor: cs.primary.withValues(alpha: 0.08),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _KpiCard(
+                  label: 'Activos',
+                  value: activos.toString(),
+                  icon: Icons.check_circle_outline,
+                  color: AppColors.ok,
+                  bgColor: AppColors.okSoft,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _KpiCard(
+                  label: 'Inactivos',
+                  value: inactivos.toString(),
+                  icon: Icons.block_outlined,
+                  color: cs.onSurfaceVariant,
+                  bgColor: cs.surfaceContainerHighest,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );
   }
 }
 
-class _VDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Container(
-        width: 1,
-        height: 36,
-        color: Theme.of(context).colorScheme.outlineVariant,
-      );
-}
-
-class _Kpi extends StatelessWidget {
+class _KpiCard extends StatelessWidget {
   final String label;
   final String value;
-  final Color? dot;
-  const _Kpi({required this.label, required this.value, this.dot});
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+
+  const _KpiCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.bgColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (dot != null) ...[
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.6,
-                  color: cs.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
+          Icon(icon, color: color, size: 18),
+          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: cs.onSurface,
-              letterSpacing: -0.8,
+              letterSpacing: 0.3,
+              color: color.withValues(alpha: 0.75),
             ),
           ),
         ],
