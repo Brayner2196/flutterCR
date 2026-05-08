@@ -3,8 +3,9 @@ import 'package:flutter_residential/core/enums/enum_mod_layouts_screen_tenants.d
 import 'package:flutter_residential/screens/tenants/widgets/mod_layout_table.dart';
 import 'package:flutter_residential/screens/tenants/widgets/tenant_form_insert_edit_dialog.dart';
 import 'package:flutter_residential/screens/tenants/widgets/tenant_layout_switcher.dart';
-import 'package:flutter_residential/screens/tenants/widgets/filter_capsula.dart';
 import 'package:flutter_residential/screens/tenants/widgets/tenants_error_view.dart';
+import 'package:flutter_residential/screens/tenants/wizard/tenant_wizard_screen.dart';
+import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../../providers/tenant_provider.dart';
 import '../../models/tenant_response.dart';
@@ -39,7 +40,15 @@ class _TenantsScreenState extends State<TenantsScreen> {
     super.dispose();
   }
 
-  void _abrirFormulario({TenantResponse? tenant}) {
+  /// Crea nuevo → abre wizard multi-paso
+  void _abrirWizardCrear() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const TenantWizardScreen()),
+    );
+  }
+
+  /// Edita existente → sigue usando el dialog compacto
+  void _abrirDialogEditar(TenantResponse tenant) {
     showDialog(
       context: context,
       builder: (_) => TenantFormDialog(tenant: tenant),
@@ -64,7 +73,6 @@ class _TenantsScreenState extends State<TenantsScreen> {
         ],
       ),
     );
-
     if (confirmado == true && mounted) {
       try {
         await context.read<TenantProvider>().activar(tenant.id);
@@ -95,7 +103,6 @@ class _TenantsScreenState extends State<TenantsScreen> {
         ],
       ),
     );
-
     if (confirmado == true && mounted) {
       try {
         await context.read<TenantProvider>().desactivar(tenant.id);
@@ -143,7 +150,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
               onRefresh: () => context.read<TenantProvider>().cargarTodos(),
               child: CustomScrollView(
                 slivers: [
-                  // ─── Header con KPIs ───
+                  // ─── Banner + KPIs ────────────────────────────────────
                   SliverToBoxAdapter(
                     child: TenantHeaderWidget(
                       total: all.length,
@@ -152,7 +159,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                     ),
                   ),
 
-                  // ─── Search + layout switcher ───
+                  // ─── Barra de búsqueda + switcher layout ──────────────
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
@@ -160,13 +167,13 @@ class _TenantsScreenState extends State<TenantsScreen> {
                         children: [
                           Expanded(
                             child: SizedBox(
-                              height: 42,
+                              height: 44,
                               child: TextField(
                                 controller: _searchCtrl,
                                 onChanged: (v) => setState(() => _query = v),
                                 style: const TextStyle(fontSize: 14),
                                 decoration: InputDecoration(
-                                  hintText: 'Buscar tenant, código…',
+                                  hintText: 'Buscar por nombre, código…',
                                   hintStyle: TextStyle(
                                     color: cs.onSurfaceVariant,
                                     fontSize: 14,
@@ -174,9 +181,9 @@ class _TenantsScreenState extends State<TenantsScreen> {
                                   prefixIcon: Icon(Icons.search,
                                       size: 18, color: cs.onSurfaceVariant),
                                   prefixIconConstraints: const BoxConstraints(
-                                      minWidth: 38, minHeight: 38),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 10),
+                                      minWidth: 40, minHeight: 40),
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(vertical: 10),
                                 ),
                               ),
                             ),
@@ -190,7 +197,8 @@ class _TenantsScreenState extends State<TenantsScreen> {
                       ),
                     ),
                   ),
-                  // ─── Filter chips ───
+
+                  // ─── Chips de filtro ──────────────────────────────────
                   SliverToBoxAdapter(
                     child: SizedBox(
                       height: 40,
@@ -198,22 +206,25 @@ class _TenantsScreenState extends State<TenantsScreen> {
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         children: [
-                          FilterCapsula(
+                          _FilterChipCustom(
                             label: 'Todos',
                             count: all.length,
                             selected: _filter == 'todos',
+                            color: cs.primary,
                             onTap: () => setState(() => _filter = 'todos'),
                           ),
-                          FilterCapsula(
+                          _FilterChipCustom(
                             label: 'Activos',
                             count: activos,
                             selected: _filter == 'activos',
+                            color: AppColors.ok,
                             onTap: () => setState(() => _filter = 'activos'),
                           ),
-                          FilterCapsula(
+                          _FilterChipCustom(
                             label: 'Inactivos',
                             count: inactivos,
                             selected: _filter == 'inactivos',
+                            color: cs.onSurfaceVariant,
                             onTap: () => setState(() => _filter = 'inactivos'),
                           ),
                         ],
@@ -221,7 +232,9 @@ class _TenantsScreenState extends State<TenantsScreen> {
                     ),
                   ),
 
-                  // ─── Lista / grid / tabla ───
+                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                  // ─── Lista / grid / tabla ─────────────────────────────
                   if (lista.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
@@ -232,7 +245,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                       child: ModLayoutTable(
                         tenants: lista,
                         usuarios: 9,
-                        onTapTenant: (t) => _abrirFormulario(tenant: t),
+                        onTapTenant: (t) => _abrirDialogEditar(t),
                       ),
                     )
                   else if (_layout == ModosLayouts.grid)
@@ -252,7 +265,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                             return TenantCard(
                               tenant: t,
                               usuariosCount: t.cantidadUsuarios,
-                              onEditar: () => _abrirFormulario(tenant: t),
+                              onEditar: () => _abrirDialogEditar(t),
                               onDesactivar: () => _confirmarDesactivar(t),
                               onActivar: () => _confirmarActivar(t),
                             );
@@ -271,7 +284,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
                           return TenantCard(
                             tenant: t,
                             usuariosCount: t.cantidadUsuarios,
-                            onEditar: () => _abrirFormulario(tenant: t),
+                            onEditar: () => _abrirDialogEditar(t),
                             onDesactivar: () => _confirmarDesactivar(t),
                             onActivar: () => _confirmarActivar(t),
                           );
@@ -281,18 +294,104 @@ class _TenantsScreenState extends State<TenantsScreen> {
                 ],
               ),
             ),
+
+            // ─── FAB nuevo tenant ──────────────────────────────────────
             Positioned(
               bottom: 16,
               right: 16,
               child: FloatingActionButton.extended(
-                onPressed: () => _abrirFormulario(),
-                icon: const Icon(Icons.add),
-                label: const Text('Nuevo Tenant'),
+                onPressed: _abrirWizardCrear,
+                backgroundColor: cs.primary,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.add_business_outlined),
+                label: const Text(
+                  'Nuevo Tenant',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+// ─── Chip de filtro estilizado ────────────────────────────────────────────────
+
+class _FilterChipCustom extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _FilterChipCustom({
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.12) : cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? color.withValues(alpha: 0.5) : cs.outlineVariant,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight:
+                    selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? color : cs.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: selected
+                    ? color.withValues(alpha: 0.15)
+                    : cs.outline.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? color : cs.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
