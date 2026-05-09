@@ -10,7 +10,7 @@ import '../../models/pagos_por_verificar.dart';
 import '../../models/recaudo_mes.dart';
 import '../../models/tendencia.dart';
 import '../../providers/dashboard_provider.dart';
-import '../../../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
+import '../../../home/admin/widgets/dashboard/dashboard_tokens.dart';
 import 'tendencia_recaudo_chart.dart';
 import 'kpi_incidencias_pqr.dart';
 import 'kpi_morosidad.dart';

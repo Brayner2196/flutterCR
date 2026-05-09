@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
+import '../../features/home/admin/widgets/dashboard/dashboard_tokens.dart';
 
 /// Badge reutilizable que muestra el estado con colores codificados.
 /// Funciona para reservas, PQRs y cualquier entidad con estado.

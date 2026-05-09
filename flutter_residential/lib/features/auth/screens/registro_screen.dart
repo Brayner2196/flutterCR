@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
-import '../../../models/tipo_propiedad_nodo.dart';
-import '../../../services/propiedad_service.dart';
+import '../../propiedades/models/tipo_propiedad_nodo.dart';
+import '../../propiedades/services/propiedad_service.dart';
 import '../services/auth_service.dart';
 
 class RegistroScreen extends StatefulWidget {

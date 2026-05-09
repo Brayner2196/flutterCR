@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/pendientes_hoy.dart';
-import '../../../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
+import '../../../home/admin/widgets/dashboard/dashboard_tokens.dart';
 
 /// Widget KPI de incidencias y PQRs pendientes.
 /// Muestra los 3 tipos de pendientes del día (PQRs, comprobantes, reservas).

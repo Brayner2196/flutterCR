@@ -10,11 +10,11 @@ import '../../models/recaudo_mes.dart';
 import '../../models/tendencia.dart';
 import '../../providers/dashboard_provider.dart';
 import 'cartera_vencida_card.dart';
-import '../../../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
-import '../../../../screens/home/admin/widgets/dashboard/estado_unidades_card.dart';
-import '../../../../screens/home/admin/widgets/dashboard/pagos_por_verificar_card.dart';
-import '../../../../screens/home/admin/widgets/dashboard/pendientes_hoy_card.dart';
-import '../../../../screens/home/admin/widgets/dashboard/recaudo_mes_card.dart';
+import '../../../home/admin/widgets/dashboard/dashboard_tokens.dart';
+import '../../../home/admin/widgets/dashboard/estado_unidades_card.dart';
+import '../../../home/admin/widgets/dashboard/pagos_por_verificar_card.dart';
+import '../../../home/admin/widgets/dashboard/pendientes_hoy_card.dart';
+import '../../../home/admin/widgets/dashboard/recaudo_mes_card.dart';
 import 'tendencia_recaudo_chart.dart';
 
 class AdminDashboard extends StatefulWidget {

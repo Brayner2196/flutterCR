@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/app_provider.dart';
+import '../../usuarios/providers/app_provider.dart';
 import 'onboarding_data.dart';
 import 'onboarding_page.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/cartera_vencida.dart';
 import '../../models/estado_unidades.dart';
-import '../../../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
+import '../../../home/admin/widgets/dashboard/dashboard_tokens.dart';
 
 /// Widget KPI de morosidad: muestra % mora, monto total y distribución
 /// de unidades (al día / por vencer / en mora) con barras de progreso.

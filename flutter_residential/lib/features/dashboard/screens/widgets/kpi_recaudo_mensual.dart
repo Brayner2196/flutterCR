@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/recaudo_mes.dart';
-import '../../../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
+import '../../../home/admin/widgets/dashboard/dashboard_tokens.dart';
 
 /// Widget KPI de recaudo mensual con desglose de pagos.
 /// Equivalente visual al mockup: monto total, % meta, variación y breakdown.

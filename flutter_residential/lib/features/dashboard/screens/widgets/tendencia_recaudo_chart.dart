@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../models/tendencia.dart';
-import '../../../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
+import '../../../home/admin/widgets/dashboard/dashboard_tokens.dart';
 
 class TendenciaRecaudoChart extends StatelessWidget {
   final Tendencia data;

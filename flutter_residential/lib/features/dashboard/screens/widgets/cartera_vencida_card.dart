@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/cartera_vencida.dart';
-import '../../../../screens/home/admin/widgets/dashboard/dashboard_tokens.dart';
+import '../../../home/admin/widgets/dashboard/dashboard_tokens.dart';
 
 class CarteraVencidaCard extends StatelessWidget {
   final CarteraVencida data;

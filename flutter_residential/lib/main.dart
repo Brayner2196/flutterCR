@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/providers/app_provider.dart';
+import 'package:flutter_residential/features/usuarios/providers/app_provider.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
@@ -7,15 +7,15 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/pagos/providers/cobros_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
 import 'features/pagos/providers/pagos_provider.dart';
-import 'providers/pqr_provider.dart';
-import 'providers/propiedad_provider.dart';
-import 'providers/reserva_provider.dart';
-import 'providers/usuario_provider.dart';
+import 'features/pqr/providers/pqr_provider.dart';
+import 'features/propiedades/providers/propiedad_provider.dart';
+import 'features/reservas/providers/reserva_provider.dart';
+import 'features/usuarios/providers/usuario_provider.dart';
 import 'features/pagos/providers/abono_provider.dart';
-import 'providers/residente_estadisticas_provider.dart';
-import 'providers/tenant_provider.dart';
+import 'features/usuarios/providers/residente_estadisticas_provider.dart';
+import 'features/tenants/providers/tenant_provider.dart';
 import 'features/anuncios/providers/anuncio_provider.dart';
-import 'providers/votacion_provider.dart';
+import 'features/votaciones/providers/votacion_provider.dart';
 import 'features/initialRouterScreen/screens/initial_router_screen.dart';
 
 void main() async {
