@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/shared/widgets/theme_toggle_switch.dart';
 import 'package:provider/provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../propiedades/providers/propiedad_provider.dart';
@@ -97,7 +98,7 @@ class PerfilResidenteScreen extends StatelessWidget {
                   icono: Icons.dark_mode_rounded,
                   label: 'Tema oscuro',
                   valor: appProvider.themeMode == ThemeMode.dark,
-                  onChanged: (_) => appProvider.toggleTheme(),
+                  onChanged: appProvider.toggleTheme,
                 ),
               ],
             ),
@@ -259,7 +260,7 @@ class _ItemToggle extends StatelessWidget {
   final IconData icono;
   final String label;
   final bool valor;
-  final ValueChanged<bool> onChanged;
+  final VoidCallback onChanged;
 
   const _ItemToggle({
     required this.icono,
@@ -283,7 +284,13 @@ class _ItemToggle extends StatelessWidget {
           Expanded(
             child: Text(label, style: theme.textTheme.bodyMedium),
           ),
-          Switch(value: valor, onChanged: onChanged),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ThemeToggleSwitch(
+                  isDark: valor,
+                  onToggle: onChanged,
+            ),
+          ),
         ],
       ),
     );
