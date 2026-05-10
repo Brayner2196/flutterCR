@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/features/home/residente/app_bar_residente.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -55,71 +56,9 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: Text(
-                  _iniciales(auth.nombre ?? 'Usuario'),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: cs.primary,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  auth.nombreConjunto ?? 'Conjunto Residencial',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    letterSpacing: -0.5,
-                    color: cs.primary,
-                  ),
-                ),
-                Skeletonizer(
-                  enabled: propiedades.cargando,
-                  child: Text(
-                    propiedades.propiedadActual?.pathTexto ??
-                        'Vivienda no seleccionada',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: cs.outlineVariant),
-        ),
-      ),
+      appBar: AppBarResidente(),
       body: IndexedStack(
         index: _tabActual,
         children: [
@@ -165,11 +104,4 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     );
   }
 
-  String _iniciales(String nombre) {
-    final partes = nombre.trim().split(' ');
-    if (partes.length >= 2) {
-      return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
-    }
-    return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
-  }
 }
