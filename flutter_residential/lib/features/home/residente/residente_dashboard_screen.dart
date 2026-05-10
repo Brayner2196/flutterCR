@@ -98,7 +98,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
               ),
             ],
 
-            // ─── KPI: Cumplimiento ──────────────────────────────────────────
             const SizedBox(height: AppSpacing.lg),
 
             // ─── Actividad reciente ─────────────────────────────────────────
@@ -113,7 +112,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
               ultimoPago: stats.estadisticas?.ultimoPago,
               formatMonto: _fmt,
             ),
-
             const SizedBox(height: AppSpacing.lg),
 
             // ─── Accesos rápidos ────────────────────────────────────────────

@@ -50,22 +50,7 @@ class ActivityFeedWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Encabezado ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md, AppSpacing.md, AppSpacing.sm, AppSpacing.sm),
-            child: Row(
-              children: [
-                Icon(Icons.dynamic_feed_rounded, size: 18, color: cs.primary),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Actividad reciente',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
+          
           const Divider(height: 1),
 
           // ── Último pago ──
