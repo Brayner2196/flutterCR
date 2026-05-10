@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import '../../auth/providers/auth_provider.dart';
 import '../../usuarios/providers/residente_estadisticas_provider.dart';
 import '../../anuncios/providers/anuncio_provider.dart';
 import '../../pqr/providers/pqr_provider.dart';
 import '../../votaciones/providers/votacion_provider.dart';
 import '../../pagos/screens/residente/estado_cuenta_screen.dart';
-import '../../pagos/screens/residente/mis_pagos_screen.dart';
 import '../../reservas/screens/residente/mis_reservas_screen.dart';
 import '../../pqr/screens/residente/mis_pqrs_screen.dart';
 import '../../anuncios/screens/residente/mis_anuncios_screen.dart';
 import '../../votaciones/screens/residente/mis_votaciones_screen.dart';
 import 'widgets/deuda_resumen_widget.dart';
-import 'widgets/cumplimiento_card.dart';
 import 'widgets/proximo_vencimiento_card.dart';
 import 'widgets/quick_access_card.dart';
 import 'widgets/activity_feed_widget.dart';
@@ -78,12 +75,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                       onVerEstadoCuenta: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const EstadoCuentaScreen()),
+                          builder: (_) => const EstadoCuentaScreen(),
+                        ),
                       ),
                     )
                   : stats.error != null
-                      ? _buildError(stats, cs)
-                      : _buildPlaceholder(cs),
+                  ? _buildError(stats, cs)
+                  : _buildPlaceholder(cs),
             ),
 
             // ─── KPI: Próximo vencimiento ───────────────────────────────────
@@ -95,49 +93,38 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                 formatMonto: _fmt,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const EstadoCuentaScreen()),
+                  MaterialPageRoute(builder: (_) => const EstadoCuentaScreen()),
                 ),
               ),
             ],
 
             // ─── KPI: Cumplimiento ──────────────────────────────────────────
-            if (stats.estadisticas != null &&
-                stats.estadisticas!.totalCobrosHistoricos > 0) ...[
-              const SizedBox(height: AppSpacing.md),
-              CumplimientoCard(
-                porcentaje: stats.estadisticas!.porcentajeCumplimiento,
-                pagados: stats.estadisticas!.cobrosPagados,
-                total: stats.estadisticas!.totalCobrosHistoricos,
-                totalPagado: stats.estadisticas!.totalPagadoHistorico,
-                formatMonto: _fmt,
-              ),
-            ],
-
-            const SizedBox(height: AppSpacing.lg),
-
-            // ─── Accesos rápidos ────────────────────────────────────────────
-            Text(
-              'Accesos rápidos',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _buildAccesos(context, anuncios, pqrs, votaciones),
-
             const SizedBox(height: AppSpacing.lg),
 
             // ─── Actividad reciente ─────────────────────────────────────────
             Text(
               'Actividad reciente',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             ActivityFeedWidget(
               ultimoPago: stats.estadisticas?.ultimoPago,
               formatMonto: _fmt,
             ),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // ─── Accesos rápidos ────────────────────────────────────────────
+            Text(
+              'Accesos rápidos',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildAccesos(context, anuncios, pqrs, votaciones),
 
             const SizedBox(height: AppSpacing.lg),
           ],
@@ -165,18 +152,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const EstadoCuentaScreen()),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        QuickAccessCard(
-          label: 'Mis Pagos',
-          subtitulo: 'Historial de pagos',
-          icono: Icons.receipt_long_outlined,
-          fg: AppColors.teal,
-          bg: AppColors.bgTeal,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const MisPagosScreen()),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
