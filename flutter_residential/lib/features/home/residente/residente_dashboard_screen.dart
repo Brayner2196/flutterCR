@@ -11,6 +11,7 @@ import '../../anuncios/screens/residente/mis_anuncios_screen.dart';
 import '../../votaciones/screens/residente/mis_votaciones_screen.dart';
 import 'widgets/banner_bienvenida.dart';
 import 'widgets/deuda_resumen_widget.dart';
+import 'package:flutter_residential/shared/theme/app_theme.dart';
 
 class ResidenteDashboardScreen extends StatefulWidget {
   final void Function(int index) onNavegar;
@@ -34,6 +35,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final auth = context.watch<AuthProvider>();
     final stats = context.watch<ResidenteEstadisticasProvider>();
 
@@ -41,14 +43,14 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       onRefresh: () => stats.refrescar(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             BannerBienvenidaResidente(nombreUser: auth.nombre ?? 'Usuario'),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
 
-            // ─── Resumen financiero coloquial ───────────────
+            // ─── Resumen financiero ─────────────────────────
             Skeletonizer(
               enabled: stats.loading,
               child: stats.estadisticas != null
@@ -63,11 +65,11 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                       ),
                     )
                   : stats.error != null
-                      ? _buildError(stats)
-                      : _buildPlaceholder(),
+                      ? _buildError(stats, cs)
+                      : _buildPlaceholder(cs),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
 
             // ─── Accesos rápidos ────────────────────────────
             Text(
@@ -75,7 +77,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -88,14 +90,16 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                   theme: theme,
                   label: 'Mi Propiedad',
                   icono: Icons.home_work_outlined,
-                  color: Colors.green,
+                  fg: AppColors.green,
+                  bg: AppColors.bgGreen,
                   onTap: () => widget.onNavegar(1),
                 ),
                 _tarjeta(
                   theme: theme,
                   label: 'Estado de Cuenta',
                   icono: Icons.account_balance_wallet_outlined,
-                  color: Colors.blue,
+                  fg: AppColors.blue,
+                  bg: AppColors.bgBlue,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -106,7 +110,8 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                   theme: theme,
                   label: 'Mis Pagos',
                   icono: Icons.receipt_long_outlined,
-                  color: Colors.teal,
+                  fg: AppColors.teal,
+                  bg: AppColors.bgTeal,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const MisPagosScreen()),
@@ -116,7 +121,8 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                   theme: theme,
                   label: 'Reservas',
                   icono: Icons.event_outlined,
-                  color: Colors.orange,
+                  fg: AppColors.orange,
+                  bg: AppColors.bgOrange,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -127,7 +133,8 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                   theme: theme,
                   label: 'PQRs',
                   icono: Icons.support_agent_outlined,
-                  color: Colors.purple,
+                  fg: AppColors.purple,
+                  bg: AppColors.bgPurple,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const MisPqrsScreen()),
@@ -137,20 +144,24 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                   theme: theme,
                   label: 'Anuncios',
                   icono: Icons.campaign_outlined,
-                  color: Colors.amber.shade700,
+                  fg: AppColors.yellow,
+                  bg: AppColors.bgYellow,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MisAnunciosScreen()),
+                    MaterialPageRoute(
+                        builder: (_) => const MisAnunciosScreen()),
                   ),
                 ),
                 _tarjeta(
                   theme: theme,
                   label: 'Votaciones',
                   icono: Icons.how_to_vote_outlined,
-                  color: Colors.teal,
+                  fg: AppColors.teal,
+                  bg: AppColors.bgTeal,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MisVotacionesScreen()),
+                    MaterialPageRoute(
+                        builder: (_) => const MisVotacionesScreen()),
                   ),
                 ),
               ],
@@ -161,21 +172,24 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     );
   }
 
-  Widget _buildError(ResidenteEstadisticasProvider stats) {
+  Widget _buildError(ResidenteEstadisticasProvider stats, ColorScheme cs) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.dangerSoft,
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 36),
-          const SizedBox(height: 8),
-          Text(stats.error ?? 'Error al cargar datos',
-              textAlign: TextAlign.center),
-          const SizedBox(height: 8),
+          const Icon(Icons.error_outline, color: AppColors.danger, size: 36),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            stats.error ?? 'Error al cargar datos',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.danger),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: () => stats.refrescar(),
             child: const Text('Reintentar'),
@@ -185,13 +199,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(ColorScheme cs) {
     return Container(
       width: double.infinity,
       height: 160,
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(20),
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
     );
   }
@@ -200,29 +214,31 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     required ThemeData theme,
     required String label,
     required IconData icono,
-    required Color color,
+    required Color fg,
+    required Color bg,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Container(
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          color: bg,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: fg.withValues(alpha: 0.25)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icono, size: 36, color: color),
-            const SizedBox(height: 8),
+            Icon(icono, size: 36, color: fg),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               label,
               style: theme.textTheme.labelLarge?.copyWith(
-                color: color,
+                color: fg,
                 fontWeight: FontWeight.w600,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

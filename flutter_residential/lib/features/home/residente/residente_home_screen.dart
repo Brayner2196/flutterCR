@@ -28,62 +28,59 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: Align(
-          alignment: Alignment.topLeft,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Text(
+                  _iniciales(auth.nombre ?? 'Usuario'),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: cs.primary,
+                  ),
                 ),
-                child: Center(
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  auth.nombreConjunto ?? 'Conjunto Residencial',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    letterSpacing: -0.5,
+                    color: cs.primary,
+                  ),
+                ),
+                Skeletonizer(
+                  enabled: propiedades.cargando,
                   child: Text(
-                    _iniciales(auth.nombre ?? 'Usuario'),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(84, 121, 224, 1),
+                    propiedades.propiedadActual?.pathTexto ??
+                        'Vivienda no seleccionada',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    auth.nombreConjunto ?? 'Conjunto Residencial',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      letterSpacing: -0.5,
-                      color: Color.fromRGBO(84, 121, 224, 1),
-                    ),
-                  ),
-                  Skeletonizer(
-                    enabled: propiedades.cargando,
-                    child: Text(
-                      propiedades.propiedadActual?.pathTexto ??
-                          'Vivienda no seleccionada',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black45,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
@@ -95,7 +92,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
             child: IconButton(
-              icon: const Icon(Icons.logout, color: Colors.redAccent),
+              icon: Icon(Icons.logout, color: cs.error),
               tooltip: 'Cerrar sesión',
               onPressed: () => _confirmarLogout(context),
             ),
@@ -105,7 +102,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: Colors.grey.withValues(alpha: 0.2),
+            color: cs.outlineVariant,
           ),
         ),
       ),
@@ -123,10 +120,12 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
             label: 'Inicio',
           ),
           NavigationDestination(
             icon: Icon(Icons.home_work_outlined),
+            selectedIcon: Icon(Icons.home_work_rounded),
             label: 'Mi Propiedad',
           ),
         ],
