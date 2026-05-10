@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/anuncio_model.dart';
 import '../../providers/anuncio_provider.dart';
+import '../../utils/fecha_relativa.dart';
+import '../../../../shared/theme/app_theme.dart';
+import '../../../../shared/widgets/empty_state_widget.dart';
 import 'detalle_anuncio_screen.dart';
 
 class MisAnunciosScreen extends StatefulWidget {
@@ -23,7 +26,6 @@ class _MisAnunciosScreenState extends State<MisAnunciosScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AnuncioProvider>();
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Anuncios')),
@@ -32,32 +34,27 @@ class _MisAnunciosScreenState extends State<MisAnunciosScreen> {
           : provider.error != null
               ? Center(child: Text(provider.error!))
               : provider.anuncios.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.campaign_outlined, size: 64, color: cs.outline),
-                          const SizedBox(height: 12),
-                          const Text('No hay anuncios activos'),
-                        ],
-                      ),
+                  ? const EmptyStateWidget(
+                      icono: Icons.campaign_outlined,
+                      mensaje: 'No hay anuncios activos',
                     )
                   : RefreshIndicator(
                       onRefresh: () => provider.cargarResidente(),
                       child: ListView.separated(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         itemCount: provider.anuncios.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: AppSpacing.sm + 2),
                         itemBuilder: (_, i) => _AnuncioResidenteCard(
                           anuncio: provider.anuncios[i],
                           onTap: () async {
                             await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => DetalleAnuncioScreen(anuncio: provider.anuncios[i]),
+                                builder: (_) => DetalleAnuncioScreen(
+                                    anuncio: provider.anuncios[i]),
                               ),
                             );
-                            // recarga para actualizar el badge de visto
                             if (mounted) provider.cargarResidente();
                           },
                         ),
@@ -75,75 +72,116 @@ class _AnuncioResidenteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final leido = anuncio.vistoPorMi;
+    final tieneImg =
+        anuncio.imagenUrl != null && anuncio.imagenUrl!.isNotEmpty;
+
+    final tituloStyle = TextStyle(
+      fontSize: 15,
+      fontWeight: leido ? FontWeight.w400 : FontWeight.w700,
+      color: cs.onSurface.withValues(alpha: leido ? 0.6 : 1.0),
+    );
+
+    final contenidoStyle = TextStyle(
+      fontSize: 13,
+      color: cs.onSurfaceVariant.withValues(alpha: leido ? 0.7 : 1.0),
+    );
 
     return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: anuncio.vistoPorMi
-                      ? cs.surfaceContainerHighest
-                      : cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.campaign_outlined,
-                  color: anuncio.vistoPorMi ? cs.outline : cs.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
                             anuncio.titulo,
-                            style: TextStyle(
-                              fontWeight: anuncio.vistoPorMi ? FontWeight.normal : FontWeight.bold,
-                              fontSize: 14,
-                            ),
+                            style: tituloStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (!anuncio.vistoPorMi)
-                          Container(
-                            width: 8, height: 8,
-                            decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
-                          ),
+                        if (!leido) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          const _PildoraNuevo(),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       anuncio.contenido,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      style: contenidoStyle,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
-                      anuncio.vistoPorMi ? 'Visto' : 'Nuevo',
+                      fechaRelativa(anuncio.creadoEn),
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: anuncio.vistoPorMi ? cs.outline : cs.primary,
+                        color: cs.outline,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right),
+              if (tieneImg) ...[
+                const SizedBox(width: AppSpacing.md),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  child: Image.network(
+                    anuncio.imagenUrl!,
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 56,
+                      height: 56,
+                      color: cs.surfaceContainerHighest,
+                      child: Icon(Icons.image_not_supported_outlined,
+                          size: 20, color: cs.outline),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PildoraNuevo extends StatelessWidget {
+  const _PildoraNuevo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.bgBlue,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: const Text(
+        'Nuevo',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.blue,
         ),
       ),
     );

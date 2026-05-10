@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/anuncio_model.dart';
 import '../../providers/anuncio_provider.dart';
+import '../../utils/fecha_relativa.dart';
+import '../../../../shared/theme/app_theme.dart';
+import '../../../../shared/widgets/empty_state_widget.dart';
 
 class AdminVistasAnuncioScreen extends StatefulWidget {
   final AnuncioModel anuncio;
   const AdminVistasAnuncioScreen({super.key, required this.anuncio});
 
   @override
-  State<AdminVistasAnuncioScreen> createState() => _AdminVistasAnuncioScreenState();
+  State<AdminVistasAnuncioScreen> createState() =>
+      _AdminVistasAnuncioScreenState();
 }
 
 class _AdminVistasAnuncioScreenState extends State<AdminVistasAnuncioScreen> {
@@ -27,6 +31,19 @@ class _AdminVistasAnuncioScreenState extends State<AdminVistasAnuncioScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
+  String? _primeraVistaRelativa() {
+    if (_vistas.isEmpty) return null;
+    DateTime? min;
+    for (final v in _vistas) {
+      try {
+        final dt = DateTime.parse(v.vistoEn);
+        if (min == null || dt.isBefore(min)) min = dt;
+      } catch (_) {}
+    }
+    if (min == null) return null;
+    return fechaRelativa(min.toIso8601String());
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -34,80 +51,169 @@ class _AdminVistasAnuncioScreenState extends State<AdminVistasAnuncioScreen> {
       appBar: AppBar(
         title: Text('Vistas — ${widget.anuncio.titulo}'),
       ),
-      body: _loading ? 
-          const Center(child: CircularProgressIndicator())
-          : _vistas.isEmpty ? 
-              Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.visibility_off_outlined, size: 60, color: cs.outline),
-                      const SizedBox(height: 12),
-                      const Text('Nadie ha visto este anuncio aún'),
-                    ],
-                  ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _vistas.isEmpty
+              ? const EmptyStateWidget(
+                  icono: Icons.visibility_off_outlined,
+                  mensaje: 'Nadie ha visto este anuncio aún',
                 )
-              : Column(
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.all(16),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: cs.primary,
-                        borderRadius: BorderRadius.circular(12),
+              : RefreshIndicator(
+                  onRefresh: _cargar,
+                  child: ListView(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    children: [
+                      _KpiCard(
+                        total: _vistas.length,
+                        primeraVistaRel: _primeraVistaRelativa(),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people_outline, color: cs.onPrimaryContainer),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_vistas.length} residente${_vistas.length != 1 ? 's' : ''} han visto este anuncio',
-                            style: TextStyle(
-                              color: cs.onPrimaryContainer,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: _cargar,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _vistas.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (_, i) {
-                            final v = _vistas[i];
-                            final fecha = _formatearFecha(v.vistoEn);
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: cs.primary,
-                                child: Text(
-                                  v.residenteNombre.isNotEmpty ? v.residenteNombre[0].toUpperCase() : '?',
-                                  style: TextStyle(color: cs.onPrimaryContainer),
-                                ),
-                              ),
-                              title: Text(v.residenteNombre),
-                              subtitle: Text('Visto el $fecha'),
-                              trailing: Icon(Icons.check_circle_outline, color: Colors.green),
-                            );
-                          },
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(
+                        'Lista de lecturas',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: cs.outline,
+                          letterSpacing: 0.6,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: AppSpacing.sm),
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          side: BorderSide(color: cs.outlineVariant),
+                        ),
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < _vistas.length; i++) ...[
+                              if (i > 0)
+                                Divider(
+                                    height: 1, color: cs.outlineVariant),
+                              _VistaTile(vista: _vistas[i]),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _BannerNoVistos(),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+                  ),
                 ),
     );
   }
+}
 
-  String _formatearFecha(String iso) {
+class _KpiCard extends StatelessWidget {
+  final int total;
+  final String? primeraVistaRel;
+  const _KpiCard({required this.total, required this.primeraVistaRel});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$total',
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.w800,
+              color: cs.onSurface,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            total == 1
+                ? 'residente vio este anuncio'
+                : 'residentes vieron este anuncio',
+            style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+          ),
+          if (primeraVistaRel != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'primera vista $primeraVistaRel',
+              style: TextStyle(fontSize: 12, color: cs.outline),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _VistaTile extends StatelessWidget {
+  final AnuncioVistaModel vista;
+  const _VistaTile({required this.vista});
+
+  String _formatear(String iso) {
     try {
-      final dt = DateTime.parse(iso);
+      final dt = DateTime.parse(iso).toLocal();
       return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) {
       return iso;
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final inicial = vista.residenteNombre.isNotEmpty
+        ? vista.residenteNombre[0].toUpperCase()
+        : '?';
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: AppColors.bgBlue,
+        child: Text(
+          inicial,
+          style: const TextStyle(
+            color: AppColors.blue,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      title: Text(vista.residenteNombre),
+      subtitle: Text('Visto el ${_formatear(vista.vistoEn)}'),
+      trailing: const Icon(Icons.check_circle_outline, color: AppColors.ok),
+    );
+  }
+}
+
+class _BannerNoVistos extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, color: cs.onSurfaceVariant, size: 18),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'El listado de quienes aún no leyeron estará disponible próximamente',
+              style: TextStyle(
+                fontSize: 12,
+                color: cs.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

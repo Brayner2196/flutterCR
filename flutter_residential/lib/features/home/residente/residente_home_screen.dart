@@ -4,7 +4,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../propiedades/providers/propiedad_provider.dart';
 import '../../propiedades/screens/residente/mi_propiedad_screen.dart';
+import '../../pagos/screens/residente/estado_cuenta_screen.dart';
 import 'residente_dashboard_screen.dart';
+import 'perfil_residente_screen.dart';
 
 class ResidenteHomeScreen extends StatefulWidget {
   const ResidenteHomeScreen({super.key});
@@ -14,7 +16,10 @@ class ResidenteHomeScreen extends StatefulWidget {
 }
 
 class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
+  /// 0=Inicio, 1=Finanzas(push), 2=Mi Propiedad, 3=Perfil
+  /// Finanzas se navega por push y no vive en IndexedStack.
   int _tabActual = 0;
+
   AuthProvider get auth => context.watch<AuthProvider>();
   PropiedadProvider get propiedades => context.watch<PropiedadProvider>();
 
@@ -24,6 +29,28 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PropiedadProvider>().cargarMisPropiedades();
     });
+  }
+
+  void _onTabSelected(int index) {
+    // Finanzas (tab 1) se abre como nueva pantalla para evitar Scaffold anidado
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const EstadoCuentaScreen()),
+      );
+      return;
+    }
+
+    // Mapear índices del nav a índices del IndexedStack (saltando tab 1)
+    final stackIndex = index > 1 ? index - 1 : index;
+    setState(() => _tabActual = stackIndex);
+  }
+
+  /// Convierte el índice del stack (0,1,2) al índice del nav (0,2,3)
+  int get _navIndex {
+    if (_tabActual == 0) return 0;       // Inicio
+    if (_tabActual == 1) return 2;       // Mi Propiedad
+    return 3;                             // Perfil
   }
 
   @override
@@ -88,35 +115,30 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
             bottomRight: Radius.circular(20),
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: IconButton(
-              icon: Icon(Icons.logout, color: cs.error),
-              tooltip: 'Cerrar sesión',
-              onPressed: () => _confirmarLogout(context),
-            ),
-          ),
-        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            color: cs.outlineVariant,
-          ),
+          child: Container(height: 1, color: cs.outlineVariant),
         ),
       ),
       body: IndexedStack(
         index: _tabActual,
         children: [
+          // Stack 0 — Inicio
           ResidenteDashboardScreen(
-              onNavegar: (i) => setState(() => _tabActual = i)),
+            onNavegar: (i) {
+              // onNavegar recibe índices del nav (2 = Mi Propiedad)
+              _onTabSelected(i);
+            },
+          ),
+          // Stack 1 — Mi Propiedad
           const MiPropiedadScreen(),
+          // Stack 2 — Perfil
+          const PerfilResidenteScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _tabActual,
-        onDestinationSelected: (i) => setState(() => _tabActual = i),
+        selectedIndex: _navIndex,
+        onDestinationSelected: _onTabSelected,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -124,36 +146,23 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
             label: 'Inicio',
           ),
           NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet_rounded),
+            label: 'Finanzas',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.home_work_outlined),
             selectedIcon: Icon(Icons.home_work_rounded),
             label: 'Mi Propiedad',
           ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _confirmarLogout(BuildContext context) async {
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Estás seguro de que deseas salir?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Salir'),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Perfil',
           ),
         ],
       ),
     );
-    if (confirmado == true && context.mounted) {
-      await context.read<AuthProvider>().logout();
-    }
   }
 
   String _iniciales(String nombre) {

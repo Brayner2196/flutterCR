@@ -3,14 +3,20 @@ import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../usuarios/providers/residente_estadisticas_provider.dart';
+import '../../anuncios/providers/anuncio_provider.dart';
+import '../../pqr/providers/pqr_provider.dart';
+import '../../votaciones/providers/votacion_provider.dart';
 import '../../pagos/screens/residente/estado_cuenta_screen.dart';
 import '../../pagos/screens/residente/mis_pagos_screen.dart';
 import '../../reservas/screens/residente/mis_reservas_screen.dart';
 import '../../pqr/screens/residente/mis_pqrs_screen.dart';
 import '../../anuncios/screens/residente/mis_anuncios_screen.dart';
 import '../../votaciones/screens/residente/mis_votaciones_screen.dart';
-import 'widgets/banner_bienvenida.dart';
 import 'widgets/deuda_resumen_widget.dart';
+import 'widgets/cumplimiento_card.dart';
+import 'widgets/proximo_vencimiento_card.dart';
+import 'widgets/quick_access_card.dart';
+import 'widgets/activity_feed_widget.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 
 class ResidenteDashboardScreen extends StatefulWidget {
@@ -28,7 +34,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Cargar estadísticas financieras
       context.read<ResidenteEstadisticasProvider>().cargar();
+      // Cargar datos para el feed y badges
+      context.read<AnuncioProvider>().cargarResidente();
+      context.read<PqrProvider>().cargarMisPqrs();
+      context.read<VotacionProvider>().cargarResidente();
     });
   }
 
@@ -36,21 +47,27 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final auth = context.watch<AuthProvider>();
     final stats = context.watch<ResidenteEstadisticasProvider>();
+    final anuncios = context.watch<AnuncioProvider>();
+    final pqrs = context.watch<PqrProvider>();
+    final votaciones = context.watch<VotacionProvider>();
 
     return RefreshIndicator(
-      onRefresh: () => stats.refrescar(),
+      onRefresh: () async {
+        await Future.wait([
+          stats.refrescar(),
+          anuncios.cargarResidente(),
+          pqrs.cargarMisPqrs(),
+          votaciones.cargarResidente(),
+        ]);
+      },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            BannerBienvenidaResidente(nombreUser: auth.nombre ?? 'Usuario'),
-            const SizedBox(height: AppSpacing.md),
-
-            // ─── Resumen financiero ─────────────────────────
+            // ─── Tu situación financiera ────────────────────────────────────
             Skeletonizer(
               enabled: stats.loading,
               child: stats.estadisticas != null
@@ -69,108 +86,172 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                       : _buildPlaceholder(cs),
             ),
 
+            // ─── KPI: Próximo vencimiento ───────────────────────────────────
+            if (stats.estadisticas?.proximoVencimiento != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              ProximoVencimientoCard(
+                cobro: stats.estadisticas!.proximoVencimiento!,
+                diasRestantes: stats.estadisticas!.diasParaVencimiento,
+                formatMonto: _fmt,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const EstadoCuentaScreen()),
+                ),
+              ),
+            ],
+
+            // ─── KPI: Cumplimiento ──────────────────────────────────────────
+            if (stats.estadisticas != null &&
+                stats.estadisticas!.totalCobrosHistoricos > 0) ...[
+              const SizedBox(height: AppSpacing.md),
+              CumplimientoCard(
+                porcentaje: stats.estadisticas!.porcentajeCumplimiento,
+                pagados: stats.estadisticas!.cobrosPagados,
+                total: stats.estadisticas!.totalCobrosHistoricos,
+                totalPagado: stats.estadisticas!.totalPagadoHistorico,
+                formatMonto: _fmt,
+              ),
+            ],
+
             const SizedBox(height: AppSpacing.lg),
 
-            // ─── Accesos rápidos ────────────────────────────
+            // ─── Accesos rápidos ────────────────────────────────────────────
             Text(
               'Accesos rápidos',
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: AppSpacing.md),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.2,
-              children: [
-                _tarjeta(
-                  theme: theme,
-                  label: 'Mi Propiedad',
-                  icono: Icons.home_work_outlined,
-                  fg: AppColors.green,
-                  bg: AppColors.bgGreen,
-                  onTap: () => widget.onNavegar(1),
-                ),
-                _tarjeta(
-                  theme: theme,
-                  label: 'Estado de Cuenta',
-                  icono: Icons.account_balance_wallet_outlined,
-                  fg: AppColors.blue,
-                  bg: AppColors.bgBlue,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const EstadoCuentaScreen()),
-                  ),
-                ),
-                _tarjeta(
-                  theme: theme,
-                  label: 'Mis Pagos',
-                  icono: Icons.receipt_long_outlined,
-                  fg: AppColors.teal,
-                  bg: AppColors.bgTeal,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MisPagosScreen()),
-                  ),
-                ),
-                _tarjeta(
-                  theme: theme,
-                  label: 'Reservas',
-                  icono: Icons.event_outlined,
-                  fg: AppColors.orange,
-                  bg: AppColors.bgOrange,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const MisReservasScreen()),
-                  ),
-                ),
-                _tarjeta(
-                  theme: theme,
-                  label: 'PQRs',
-                  icono: Icons.support_agent_outlined,
-                  fg: AppColors.purple,
-                  bg: AppColors.bgPurple,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MisPqrsScreen()),
-                  ),
-                ),
-                _tarjeta(
-                  theme: theme,
-                  label: 'Anuncios',
-                  icono: Icons.campaign_outlined,
-                  fg: AppColors.yellow,
-                  bg: AppColors.bgYellow,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const MisAnunciosScreen()),
-                  ),
-                ),
-                _tarjeta(
-                  theme: theme,
-                  label: 'Votaciones',
-                  icono: Icons.how_to_vote_outlined,
-                  fg: AppColors.teal,
-                  bg: AppColors.bgTeal,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const MisVotacionesScreen()),
-                  ),
-                ),
-              ],
+            const SizedBox(height: AppSpacing.sm),
+            _buildAccesos(context, anuncios, pqrs, votaciones),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // ─── Actividad reciente ─────────────────────────────────────────
+            Text(
+              'Actividad reciente',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: AppSpacing.sm),
+            ActivityFeedWidget(
+              ultimoPago: stats.estadisticas?.ultimoPago,
+              formatMonto: _fmt,
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),
     );
   }
+
+  // ─── Accesos rápidos ──────────────────────────────────────────────────────
+
+  Widget _buildAccesos(
+    BuildContext context,
+    AnuncioProvider anuncios,
+    PqrProvider pqrs,
+    VotacionProvider votaciones,
+  ) {
+    return Column(
+      children: [
+        QuickAccessCard(
+          label: 'Estado de Cuenta',
+          subtitulo: 'Ver cobros y deuda',
+          icono: Icons.account_balance_wallet_outlined,
+          fg: AppColors.blue,
+          bg: AppColors.bgBlue,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const EstadoCuentaScreen()),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        QuickAccessCard(
+          label: 'Mis Pagos',
+          subtitulo: 'Historial de pagos',
+          icono: Icons.receipt_long_outlined,
+          fg: AppColors.teal,
+          bg: AppColors.bgTeal,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MisPagosScreen()),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        QuickAccessCard(
+          label: 'Reservas',
+          subtitulo: 'Áreas comunes',
+          icono: Icons.event_outlined,
+          fg: AppColors.orange,
+          bg: AppColors.bgOrange,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MisReservasScreen()),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        QuickAccessCard(
+          label: 'PQRs',
+          subtitulo: pqrs.cantidadPendientes > 0
+              ? '${pqrs.cantidadPendientes} pendiente${pqrs.cantidadPendientes == 1 ? '' : 's'}'
+              : 'Sin pendientes',
+          icono: Icons.support_agent_outlined,
+          fg: AppColors.purple,
+          bg: AppColors.bgPurple,
+          badge: pqrs.cantidadPendientes > 0 ? pqrs.cantidadPendientes : null,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MisPqrsScreen()),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        QuickAccessCard(
+          label: 'Anuncios',
+          subtitulo: anuncios.noVistos > 0
+              ? '${anuncios.noVistos} nuevo${anuncios.noVistos == 1 ? '' : 's'}'
+              : 'Sin novedades',
+          icono: Icons.campaign_outlined,
+          fg: AppColors.yellow,
+          bg: AppColors.bgYellow,
+          badge: anuncios.noVistos > 0 ? anuncios.noVistos : null,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MisAnunciosScreen()),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        QuickAccessCard(
+          label: 'Votaciones',
+          subtitulo: votaciones.pendientesDeVotar > 0
+              ? '${votaciones.pendientesDeVotar} ${votaciones.pendientesDeVotar == 1 ? 'votación abierta' : 'votaciones abiertas'}'
+              : 'Sin votaciones activas',
+          icono: Icons.how_to_vote_outlined,
+          fg: AppColors.green,
+          bg: AppColors.bgGreen,
+          badge: votaciones.pendientesDeVotar > 0
+              ? votaciones.pendientesDeVotar
+              : null,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MisVotacionesScreen()),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        QuickAccessCard(
+          label: 'Mi Propiedad',
+          subtitulo: 'Ver detalles de tu unidad',
+          icono: Icons.home_work_outlined,
+          fg: AppColors.blue,
+          bg: AppColors.bgBlue,
+          onTap: () => widget.onNavegar(2),
+        ),
+      ],
+    );
+  }
+
+  // ─── Error / placeholder ──────────────────────────────────────────────────
 
   Widget _buildError(ResidenteEstadisticasProvider stats, ColorScheme cs) {
     return Container(
@@ -206,42 +287,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       decoration: BoxDecoration(
         color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppRadius.xl),
-      ),
-    );
-  }
-
-  Widget _tarjeta({
-    required ThemeData theme,
-    required String label,
-    required IconData icono,
-    required Color fg,
-    required Color bg,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: fg.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icono, size: 36, color: fg),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: fg,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
       ),
     );
   }

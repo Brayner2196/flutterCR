@@ -43,3 +43,29 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Claude / Agents
+.claude/
+.agents/
+skills-lock.json
+
+# Credenciales y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+key.properties
+secrets.dart
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_app_id_file.json
+**/service-account*.json
+**/serviceAccount*.json
+**/credentials*.json
+android/key.properties
+android/app/upload-keystore.jks
+android/app/release-keystore.jks

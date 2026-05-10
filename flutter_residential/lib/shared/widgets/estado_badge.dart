@@ -30,9 +30,11 @@ class EstadoBadge extends StatelessWidget {
   (Color, Color) _colores(ColorScheme cs) {
     switch (estado) {
       case 'PENDIENTE':
+      case 'INACTIVO':
         return (DashboardTokens.bgYellow, DashboardTokens.fgYellow);
       case 'APROBADA':
       case 'RESUELTO':
+      case 'ACTIVO':
         return (DashboardTokens.bgGreen, DashboardTokens.fgGreen);
       case 'EN_PROCESO':
         return (DashboardTokens.bgOrange, DashboardTokens.fgOrange);
@@ -40,6 +42,7 @@ class EstadoBadge extends StatelessWidget {
       case 'CANCELADA':
       case 'CERRADO':
         return (DashboardTokens.bgRed, DashboardTokens.fgRed);
+      case 'ARCHIVADO':
       default:
         return (cs.surfaceContainerHighest, cs.onSurfaceVariant);
     }

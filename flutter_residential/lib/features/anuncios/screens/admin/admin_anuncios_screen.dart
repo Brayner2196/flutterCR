@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/anuncio_provider.dart';
 import '../../models/anuncio_model.dart';
+import '../../utils/fecha_relativa.dart';
+import '../../../../shared/theme/app_theme.dart';
+import '../../../../shared/widgets/empty_state_widget.dart';
+import '../../../../shared/widgets/estado_badge.dart';
 import 'admin_crear_anuncio_screen.dart';
 import 'admin_vistas_anuncio_screen.dart';
 
@@ -27,6 +31,10 @@ class _AdminAnunciosScreenState extends State<AdminAnunciosScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final provider = context.watch<AnuncioProvider>();
+    final maxVistas = provider.anuncios.fold<int>(
+      0,
+      (m, a) => a.totalVistas > m ? a.totalVistas : m,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -48,15 +56,22 @@ class _AdminAnunciosScreenState extends State<AdminAnunciosScreen> {
                 : provider.error != null
                     ? Center(child: Text(provider.error!))
                     : provider.anuncios.isEmpty
-                        ? const Center(child: Text('No hay anuncios'))
+                        ? const EmptyStateWidget(
+                            icono: Icons.campaign_outlined,
+                            mensaje: 'No hay anuncios',
+                          )
                         : RefreshIndicator(
-                            onRefresh: () => provider.cargarAdmin(estado: _filtroEstado),
+                            onRefresh: () =>
+                                provider.cargarAdmin(estado: _filtroEstado),
                             child: ListView.separated(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(AppSpacing.md),
                               itemCount: provider.anuncios.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 10),
-                              itemBuilder: (_, i) =>
-                                  _AnuncioAdminCard(anuncio: provider.anuncios[i]),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: AppSpacing.sm + 2),
+                              itemBuilder: (_, i) => _AnuncioAdminCard(
+                                anuncio: provider.anuncios[i],
+                                maxVistas: maxVistas,
+                              ),
                             ),
                           ),
           ),
@@ -77,9 +92,10 @@ class _AdminAnunciosScreenState extends State<AdminAnunciosScreen> {
       height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding:
+            const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
         itemCount: estados.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) => ChoiceChip(
           label: Text(labels[i]),
           selected: _filtroEstado == estados[i],
@@ -97,85 +113,144 @@ class _AdminAnunciosScreenState extends State<AdminAnunciosScreen> {
       context,
       MaterialPageRoute(builder: (_) => const AdminCrearAnuncioScreen()),
     );
-    if (mounted) context.read<AnuncioProvider>().cargarAdmin(estado: _filtroEstado);
+    if (!context.mounted) return;
+    context.read<AnuncioProvider>().cargarAdmin(estado: _filtroEstado);
   }
 }
 
 class _AnuncioAdminCard extends StatelessWidget {
   final AnuncioModel anuncio;
-  const _AnuncioAdminCard({required this.anuncio});
+  final int maxVistas;
+  const _AnuncioAdminCard({required this.anuncio, required this.maxVistas});
+
+  String _labelEstado(String e) {
+    switch (e) {
+      case 'ACTIVO':
+        return 'Activo';
+      case 'INACTIVO':
+        return 'Inactivo';
+      case 'ARCHIVADO':
+        return 'Archivado';
+      default:
+        return e;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final provider = context.read<AnuncioProvider>();
+    final fraccion =
+        maxVistas == 0 ? 0.0 : (anuncio.totalVistas / maxVistas).clamp(0.0, 1.0);
 
-    Color estadoColor = switch (anuncio.estado) {
-      'ACTIVO' => Colors.green,
-      'INACTIVO' => Colors.orange,
-      _ => Colors.grey,
-    };
-
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => AdminVistasAnuncioScreen(anuncio: anuncio)),
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        side: BorderSide(color: cs.outlineVariant),
       ),
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(
-            color: estadoColor,
-            width: 0.4
-          )
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => AdminVistasAnuncioScreen(anuncio: anuncio)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(anuncio.titulo,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: estadoColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                    child: Text(
+                      anuncio.titulo,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 15),
                     ),
-                    child: Text(anuncio.estado,
-                        style: TextStyle(color: estadoColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  EstadoBadge(
+                    estado: anuncio.estado,
+                    label: _labelEstado(anuncio.estado),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(anuncio.contenido,
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.xs + 2),
+              Text(
+                anuncio.contenido,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+              ),
+              const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
-                  Icon(Icons.visibility_outlined, size: 16),
-                  const SizedBox(width: 4),
-                  Text('${anuncio.totalVistas} vistas',
-                      style: TextStyle(fontSize: 12)),
-                  const Spacer(),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest,
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.sm),
+                          ),
+                        ),
+                        FractionallySizedBox(
+                          widthFactor: fraccion,
+                          child: Container(
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: AppColors.green,
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.sm),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    '${anuncio.totalVistas} vistas',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${fechaRelativa(anuncio.creadoEn)} · ${anuncio.creadoPorNombre ?? 'admin'}',
+                      style: TextStyle(fontSize: 11, color: cs.outline),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   PopupMenuButton<String>(
                     onSelected: (v) => _accion(context, v, provider),
                     itemBuilder: (_) => [
                       if (anuncio.estado != 'ACTIVO')
-                        const PopupMenuItem(value: 'ACTIVO', child: Text('Activar')),
+                        const PopupMenuItem(
+                            value: 'ACTIVO', child: Text('Activar')),
                       if (anuncio.estado != 'INACTIVO')
-                        const PopupMenuItem(value: 'INACTIVO', child: Text('Desactivar')),
+                        const PopupMenuItem(
+                            value: 'INACTIVO', child: Text('Desactivar')),
                       if (anuncio.estado != 'ARCHIVADO')
-                        const PopupMenuItem(value: 'ARCHIVADO', child: Text('Archivar')),
-                      const PopupMenuItem(value: 'EDITAR', child: Text('Editar')),
+                        const PopupMenuItem(
+                            value: 'ARCHIVADO', child: Text('Archivar')),
+                      const PopupMenuItem(
+                          value: 'EDITAR', child: Text('Editar')),
                       const PopupMenuItem(
                           value: 'ELIMINAR',
-                          child: Text('Eliminar', style: TextStyle(color: Colors.red))),
+                          child: Text('Eliminar',
+                              style: TextStyle(color: Colors.red))),
                     ],
                   ),
                 ],
@@ -187,15 +262,19 @@ class _AnuncioAdminCard extends StatelessWidget {
     );
   }
 
-  Future<void> _accion(BuildContext context, String accion, AnuncioProvider provider) async {
+  Future<void> _accion(
+      BuildContext context, String accion, AnuncioProvider provider) async {
     if (accion == 'ELIMINAR') {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Eliminar anuncio'),
-          content: const Text('¿Estás seguro? Esta acción no se puede deshacer.'),
+          content: const Text(
+              '¿Estás seguro? Esta acción no se puede deshacer.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar')),
             FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -207,7 +286,9 @@ class _AnuncioAdminCard extends StatelessWidget {
     } else if (accion == 'EDITAR') {
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => AdminCrearAnuncioScreen(anuncioEditar: anuncio)),
+        MaterialPageRoute(
+            builder: (_) =>
+                AdminCrearAnuncioScreen(anuncioEditar: anuncio)),
       );
     } else {
       await provider.cambiarEstado(anuncio.id, accion);
