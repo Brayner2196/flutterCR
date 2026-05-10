@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/usuarios/screens/admin/usuarios_screen.dart';
-import 'package:flutter_residential/screens/home/admin/widget_edificio_grafico.dart/isometric_progress_ring.dart';
+import 'package:flutter_residential/widget_edificio_grafico.dart/isometric_progress_ring.dart';
 
 class BottomNavigationBarAdmin extends StatelessWidget {
   final int tabActual;
