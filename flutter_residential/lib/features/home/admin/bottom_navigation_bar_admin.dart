@@ -16,19 +16,31 @@ class BottomNavigationBarAdmin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onBg = colorScheme.onPrimaryContainer;
+
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: NavigationBarTheme(
         data: NavigationBarThemeData(
           indicatorColor: Colors.transparent,
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return IconThemeData(color: onBg, size: 24);
+            }
+            return IconThemeData(color: onBg.withValues(alpha: 0.6), size: 22);
+          }),
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return TextStyle(
-                color: colorScheme.onPrimaryContainer,
+                color: onBg,
                 fontWeight: FontWeight.bold,
+                fontSize: 12,
               );
             }
-            return null; // usa el estilo del tema por defecto
+            return TextStyle(
+              color: onBg.withValues(alpha: 0.6),
+              fontSize: 12,
+            );
           }),
         ),
         child: NavigationBar(
@@ -55,7 +67,7 @@ class BottomNavigationBarAdmin extends StatelessWidget {
                             percentage: 0.60,
                             size: 200,
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           IsometricProgressRing(
                             percentage: 0.25,
                             size: 300,
@@ -71,25 +83,22 @@ class BottomNavigationBarAdmin extends StatelessWidget {
           labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
           destinations: [
             NavigationDestination(
-              icon: Icon(
-                Icons.home_outlined,
-                color: colorScheme.onPrimaryContainer,
-              ),
+              icon: Icon(Icons.home_outlined,
+                  color: onBg.withValues(alpha: 0.6)),
+              selectedIcon: Icon(Icons.home_rounded, color: onBg),
               label: 'Inicio',
             ),
             NavigationDestination(
-              icon: Icon(
-                Icons.people_outline,
-                color: colorScheme.onPrimaryContainer,
-              ),
+              icon: Icon(Icons.people_outline,
+                  color: onBg.withValues(alpha: 0.6)),
+              selectedIcon: Icon(Icons.people_rounded, color: onBg),
               label: 'Usuarios',
             ),
             NavigationDestination(
-              icon: Icon(
-                Icons.business_rounded,
-                color: colorScheme.onPrimaryContainer,
-              ),
-              label: 'edificios',
+              icon: Icon(Icons.business_outlined,
+                  color: onBg.withValues(alpha: 0.6)),
+              selectedIcon: Icon(Icons.business_rounded, color: onBg),
+              label: 'Edificios',
             ),
           ],
         ),
