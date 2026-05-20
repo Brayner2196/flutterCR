@@ -5,6 +5,7 @@ class TipoPropiedadNodo {
   final int? parentId;
   final int orden;
   final bool activo;
+  final bool esFacturable;
   final List<TipoPropiedadNodo> hijos;
 
   TipoPropiedadNodo({
@@ -14,6 +15,7 @@ class TipoPropiedadNodo {
     this.parentId,
     this.orden = 0,
     this.activo = true,
+    this.esFacturable = false,
     this.hijos = const [],
   });
 
@@ -25,6 +27,7 @@ class TipoPropiedadNodo {
       parentId: json['parentId'],
       orden: json['orden'] ?? 0,
       activo: json['activo'] ?? true,
+      esFacturable: json['esFacturable'] ?? false,
       hijos: (json['hijos'] as List<dynamic>? ?? [])
           .map((h) => TipoPropiedadNodo.fromJson(h as Map<String, dynamic>))
           .toList(),
@@ -35,6 +38,7 @@ class TipoPropiedadNodo {
         'nombre': nombre,
         if (descripcion != null) 'descripcion': descripcion,
         'orden': orden,
+        'esFacturable': esFacturable,
         'hijos': hijos.map((h) => h.toJson()).toList(),
       };
 

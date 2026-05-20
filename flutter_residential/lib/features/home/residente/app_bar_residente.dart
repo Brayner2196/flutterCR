@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
-import 'package:flutter_residential/features/home/residente/perfil_residente_screen.dart';
+import 'package:flutter_residential/features/home/residente/screens/perfil_residente_screen.dart';
 import 'package:flutter_residential/features/propiedades/providers/propiedad_provider.dart';
+import 'package:flutter_residential/shared/utils/texto_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -30,7 +31,7 @@ class AppBarResidente extends StatelessWidget implements PreferredSizeWidget {
             ),
             child: Center(
               child: Text(
-                _iniciales(auth.nombre ?? 'Usuario'),
+                TextoUtils.getIniciales(auth.nombre ?? 'Usuario'),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -69,13 +70,5 @@ class AppBarResidente extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
     );
-  }
-
-  String _iniciales(String nombre) {
-    final partes = nombre.trim().split(' ');
-    if (partes.length >= 2) {
-      return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
-    }
-    return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
   }
 }

@@ -15,7 +15,6 @@ class _AdminCrearAnuncioScreenState extends State<AdminCrearAnuncioScreen> {
   final _formKey = GlobalKey<FormState>();
   final _tituloCtrl = TextEditingController();
   final _contenidoCtrl = TextEditingController();
-  final _imagenCtrl = TextEditingController();
   bool _guardando = false;
 
   bool get _esEdicion => widget.anuncioEditar != null;
@@ -27,7 +26,6 @@ class _AdminCrearAnuncioScreenState extends State<AdminCrearAnuncioScreen> {
       final a = widget.anuncioEditar!;
       _tituloCtrl.text = a.titulo;
       _contenidoCtrl.text = a.contenido;
-      _imagenCtrl.text = a.imagenUrl ?? '';
     }
   }
 
@@ -35,7 +33,6 @@ class _AdminCrearAnuncioScreenState extends State<AdminCrearAnuncioScreen> {
   void dispose() {
     _tituloCtrl.dispose();
     _contenidoCtrl.dispose();
-    _imagenCtrl.dispose();
     super.dispose();
   }
 
@@ -75,16 +72,6 @@ class _AdminCrearAnuncioScreenState extends State<AdminCrearAnuncioScreen> {
                 maxLength: 4000,
                 validator: (v) => (v == null || v.isEmpty) ? 'El contenido es obligatorio' : null,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _imagenCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'URL de imagen (opcional)',
-                  hintText: 'https://...',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.image_outlined),
-                ),
-              ),
               const SizedBox(height: 28),
               FilledButton.icon(
                 onPressed: _guardando ? null : _guardar,
@@ -109,7 +96,6 @@ class _AdminCrearAnuncioScreenState extends State<AdminCrearAnuncioScreen> {
       final body = {
         'titulo': _tituloCtrl.text.trim(),
         'contenido': _contenidoCtrl.text.trim(),
-        if (_imagenCtrl.text.isNotEmpty) 'imagenUrl': _imagenCtrl.text.trim(),
       };
       final provider = context.read<AnuncioProvider>();
       if (_esEdicion) {

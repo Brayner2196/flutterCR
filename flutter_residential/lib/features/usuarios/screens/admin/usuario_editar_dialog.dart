@@ -23,13 +23,20 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
   late String _estado;
   bool _guardando = false;
 
-  static const _roles = ['TENANT_ADMIN','RESIDENTE', 'PISCINERO'];
+  static const _roles = [
+    'TENANT_ADMIN', 'PROPIETARIO', 'INQUILINO',
+    'VIGILANTE', 'PORTERO', 'PISCINERO', 'CONTADOR',
+  ];
   static const _estados = ['PENDIENTE', 'ACTIVO', 'INACTIVO'];
 
   static const _etiquetasRol = {
     'TENANT_ADMIN': 'Administrador',
-    'RESIDENTE': 'Residente',
+    'PROPIETARIO': 'Propietario',
+    'INQUILINO': 'Inquilino',
+    'VIGILANTE': 'Vigilante',
+    'PORTERO': 'Portero',
     'PISCINERO': 'Piscinero',
+    'CONTADOR': 'Contador',
   };
 
   static const _etiquetasEstado = {

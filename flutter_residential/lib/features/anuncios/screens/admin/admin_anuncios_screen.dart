@@ -39,13 +39,6 @@ class _AdminAnunciosScreenState extends State<AdminAnunciosScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Anuncios'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Crear anuncio',
-            onPressed: () => _irACrear(context),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -229,7 +222,7 @@ class _AnuncioAdminCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       '${fechaRelativa(anuncio.creadoEn)} · ${anuncio.creadoPorNombre ?? 'admin'}',
-                      style: TextStyle(fontSize: 11, color: cs.outline),
+                      style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),

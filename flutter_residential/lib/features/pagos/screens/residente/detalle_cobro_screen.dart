@@ -1,11 +1,92 @@
 import 'package:flutter/material.dart';
 import '../../models/cobro_model.dart';
+import '../../services/mercado_pago_service.dart';
+import 'mercado_pago_webview_screen.dart';
 import 'registrar_abono_screen.dart';
 import 'registrar_pago_screen.dart';
 
-class DetalleCobroScreen extends StatelessWidget {
+class DetalleCobroScreen extends StatefulWidget {
   final CobroModel cobro;
   const DetalleCobroScreen({super.key, required this.cobro});
+
+  @override
+  State<DetalleCobroScreen> createState() => _DetalleCobroScreenState();
+}
+
+class _DetalleCobroScreenState extends State<DetalleCobroScreen> {
+  bool _loadingMp = false;
+
+  CobroModel get cobro => widget.cobro;
+
+  // ─── Acción: Pagar con MercadoPago ───────────────────────────────────────
+
+  Future<void> _pagarConMercadoPago() async {
+    setState(() => _loadingMp = true);
+    try {
+      final url = await MercadoPagoService.obtenerCheckoutUrl(cobro.id);
+
+      if (!mounted) return;
+      final resultado = await Navigator.push<ResultadoPagoMP>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MercadoPagoWebViewScreen(
+            checkoutUrl: url,
+            tituloCobro: cobro.anio != null
+                ? '${cobro.concepto} ${cobro.mes}/${cobro.anio}'
+                : cobro.concepto,
+          ),
+        ),
+      );
+
+      if (!mounted) return;
+      _manejarResultadoPago(resultado);
+    } catch (e) {
+      if (mounted) {
+        _mostrarError(e.toString().replaceFirst('Exception: ', ''));
+      }
+    } finally {
+      if (mounted) setState(() => _loadingMp = false);
+    }
+  }
+
+  void _manejarResultadoPago(ResultadoPagoMP? resultado) {
+    switch (resultado) {
+      case ResultadoPagoMP.exito:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Pago realizado con éxito!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        Navigator.of(context).pop(true); // Regresa y refresca la lista
+        break;
+      case ResultadoPagoMP.pendiente:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pago pendiente de confirmación'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        Navigator.of(context).pop(true);
+        break;
+      case ResultadoPagoMP.fallo:
+        _mostrarError('El pago no pudo procesarse. Podés intentarlo nuevamente.');
+        break;
+      case ResultadoPagoMP.cancelado:
+      case null:
+        break; // El usuario canceló, no hacemos nada
+    }
+  }
+
+  void _mostrarError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+    );
+  }
+
+  // ─── UI ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +107,10 @@ class DetalleCobroScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _seccion('Información del cobro', [
             _fila('Propiedad', cobro.propiedadIdentificador),
-            _fila('Período', '${cobro.mes}/${cobro.anio}'),
+            if (cobro.anio != null)
+              _fila('Período', '${cobro.mes}/${cobro.anio}')
+            else
+              _fila('Tipo', 'Cobro especial'),
             _fila('Concepto', cobro.concepto),
             if (cobro.descripcion != null)
               _fila('Descripción', cobro.descripcion!),
@@ -53,37 +137,73 @@ class DetalleCobroScreen extends StatelessWidget {
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => RegistrarAbonoScreen(
-                                    propiedadId: cobro.propiedadId,
-                                    propiedadNombre: cobro.propiedadIdentificador,
-                                  )),
-                        ),
-                        icon: const Icon(Icons.savings_outlined),
-                        label: const Text('Abonar'),
-                      ),
-                    ),
-                    if (cobro.esPendiente || cobro.esVencido) ...[
-                      const SizedBox(width: 12),
-                      Expanded(
+                    // ── Pagar con MercadoPago (pago online) ────────────────
+                    if (cobro.esPendiente || cobro.esVencido || cobro.esParcial)
+                      SizedBox(
+                        width: double.infinity,
                         child: FilledButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    RegistrarPagoScreen(cobro: cobro)),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF009EE3), // color MP
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
-                          icon: const Icon(Icons.payment),
-                          label: const Text('Pagar total'),
+                          onPressed: _loadingMp ? null : _pagarConMercadoPago,
+                          icon: _loadingMp
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.payment),
+                          label: Text(
+                            _loadingMp
+                                ? 'Generando pago...'
+                                : 'Pagar con MercadoPago',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
                         ),
                       ),
-                    ],
+                    if (cobro.esPendiente || cobro.esVencido || cobro.esParcial)
+                      const SizedBox(height: 8),
+                    // ── Opciones manuales ──────────────────────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => RegistrarAbonoScreen(
+                                        propiedadId: cobro.propiedadId,
+                                        propiedadNombre:
+                                            cobro.propiedadIdentificador,
+                                      )),
+                            ),
+                            icon: const Icon(Icons.savings_outlined),
+                            label: const Text('Abonar'),
+                          ),
+                        ),
+                        if (cobro.esPendiente || cobro.esVencido) ...[
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        RegistrarPagoScreen(cobro: cobro)),
+                              ),
+                              icon: const Icon(Icons.receipt_long_outlined),
+                              label: const Text('Comprobante'),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -91,6 +211,8 @@ class DetalleCobroScreen extends StatelessWidget {
           : null,
     );
   }
+
+  // ─── Widgets helper ──────────────────────────────────────────────────────
 
   Widget _estadoBadge(Color color) => Container(
         width: double.infinity,
@@ -165,8 +287,7 @@ class DetalleCobroScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12)),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  vertical: 8, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               child: Column(children: hijos),
             ),
           ),
@@ -174,14 +295,13 @@ class DetalleCobroScreen extends StatelessWidget {
       );
 
   Widget _fila(String label, String valor,
-      {Color? color, bool bold = false}) =>
+          {Color? color, bool bold = false}) =>
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style: const TextStyle(color: Colors.grey)),
+            Text(label, style: const TextStyle(color: Colors.grey)),
             Text(valor,
                 style: TextStyle(
                     fontWeight:
@@ -191,5 +311,6 @@ class DetalleCobroScreen extends StatelessWidget {
         ),
       );
 
-  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  String _fmt(double v) =>
+      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 }

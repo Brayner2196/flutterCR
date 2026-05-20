@@ -44,7 +44,6 @@ class _DetalleAnuncioScreenState extends State<DetalleAnuncioScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final a = widget.anuncio;
-    final tieneImg = a.imagenUrl != null && a.imagenUrl!.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -65,31 +64,17 @@ class _DetalleAnuncioScreenState extends State<DetalleAnuncioScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (tieneImg)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  child: Image.network(
-                    a.imagenUrl!,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
             Text(
               a.titulo,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              '${a.creadoPorNombre ?? 'Administración'} · ${fechaRelativa(a.creadoEn)}',
-              style: TextStyle(fontSize: 12, color: cs.outline),
+              '${a.creadoPorNombre ?? 'Administración'}  ·  ${fechaRelativa(a.creadoEn)}',
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.md),
-            Divider(color: cs.outlineVariant, height: 1),
+            Divider(color: cs.onSurfaceVariant, height: 1),
             const SizedBox(height: AppSpacing.md),
             Text(
               a.contenido,

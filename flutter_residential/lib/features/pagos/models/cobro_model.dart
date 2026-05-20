@@ -1,12 +1,10 @@
 class CobroModel {
   final int id;
-  final int periodoId;
-  final int anio;
-  final int mes;
+  final int? periodoId;
+  final int? anio;
+  final int? mes;
   final int propiedadId;
   final String propiedadIdentificador;
-  final int? usuarioId;
-  final String usuarioNombre;
   final String concepto;
   final String? descripcion;
   final double montoBase;
@@ -21,13 +19,11 @@ class CobroModel {
 
   const CobroModel({
     required this.id,
-    required this.periodoId,
-    required this.anio,
-    required this.mes,
+    this.periodoId,
+    this.anio,
+    this.mes,
     required this.propiedadId,
     required this.propiedadIdentificador,
-    this.usuarioId,
-    required this.usuarioNombre,
     required this.concepto,
     this.descripcion,
     required this.montoBase,
@@ -43,13 +39,11 @@ class CobroModel {
 
   factory CobroModel.fromJson(Map<String, dynamic> json) => CobroModel(
         id: json['id'] as int,
-        periodoId: json['periodoId'] as int,
-        anio: json['anio'] as int,
-        mes: json['mes'] as int,
+        periodoId: json['periodoId'] as int?,
+        anio: json['anio'] as int?,
+        mes: json['mes'] as int?,
         propiedadId: json['propiedadId'] as int,
         propiedadIdentificador: json['propiedadIdentificador'] as String? ?? '',
-        usuarioId: json['usuarioId'] as int?,
-        usuarioNombre: json['usuarioNombre'] as String? ?? 'N/A',
         concepto: json['concepto'] as String,
         descripcion: json['descripcion'] as String?,
         montoBase: (json['montoBase'] as num).toDouble(),

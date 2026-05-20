@@ -2,7 +2,6 @@ class AnuncioModel {
   final int id;
   final String titulo;
   final String contenido;
-  final String? imagenUrl;
   final String estado;
   final int creadoPor;
   final String? creadoPorNombre;
@@ -16,7 +15,6 @@ class AnuncioModel {
     required this.id,
     required this.titulo,
     required this.contenido,
-    this.imagenUrl,
     required this.estado,
     required this.creadoPor,
     this.creadoPorNombre,
@@ -31,7 +29,6 @@ class AnuncioModel {
         id: json['id'],
         titulo: json['titulo'] ?? '',
         contenido: json['contenido'] ?? '',
-        imagenUrl: json['imagenUrl'],
         estado: json['estado'] ?? 'ACTIVO',
         creadoPor: json['creadoPor'] ?? 0,
         creadoPorNombre: json['creadoPorNombre'],
@@ -46,7 +43,6 @@ class AnuncioModel {
         id: id,
         titulo: titulo,
         contenido: contenido,
-        imagenUrl: imagenUrl,
         estado: estado,
         creadoPor: creadoPor,
         creadoPorNombre: creadoPorNombre,

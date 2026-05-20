@@ -51,9 +51,10 @@ class UsuarioProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> aprobar(int id) async {
+  Future<void> aprobar(int id, {String rolDestino = 'PROPIETARIO'}) async {
     try {
-      final actualizado = await UsuarioService.aprobar(id);
+      final actualizado =
+          await UsuarioService.aprobar(id, rolDestino: rolDestino);
       _reemplazar(actualizado);
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');

@@ -5,6 +5,7 @@ class TipoNodoEditable {
   final TextEditingController nombreCtrl = TextEditingController();
   final TextEditingController descCtrl = TextEditingController();
   final List<TipoNodoEditable> hijos = [];
+  bool esFacturable = false;
 
   void dispose() {
     nombreCtrl.dispose();
@@ -267,18 +268,82 @@ class _TipoNodoWidget extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  TextField(
-                    controller: nodo.descCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Descripción (opcional)',
-                      hintText: 'Descripción o hint para el registro',
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: nodo.descCtrl,
+                          decoration: InputDecoration(
+                            labelText: 'Descripción (opcional)',
+                            hintText: 'Descripción o hint para el registro',
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: () {
+                          nodo.esFacturable = !nodo.esFacturable;
+                          onCambio();
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: nodo.esFacturable
+                                ? Colors.teal.withValues(alpha: 0.15)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: nodo.esFacturable
+                                  ? Colors.teal
+                                  : Theme.of(context).colorScheme.outline,
+                              width: nodo.esFacturable ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                nodo.esFacturable
+                                    ? Icons.receipt_long
+                                    : Icons.receipt_long_outlined,
+                                size: 14,
+                                color: nodo.esFacturable
+                                    ? Colors.teal
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Facturable',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: nodo.esFacturable
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: nodo.esFacturable
+                                      ? Colors.teal
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

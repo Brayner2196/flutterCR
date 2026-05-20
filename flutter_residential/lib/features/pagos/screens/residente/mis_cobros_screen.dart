@@ -254,7 +254,9 @@ class _CobroTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${_adapterMesText(cobro.mes)}/${cobro.anio} · ${cobro.propiedadIdentificador}',
+              cobro.anio != null
+                  ? '${_adapterMesText(cobro.mes!)}/${cobro.anio} · ${cobro.propiedadIdentificador}'
+                  : 'Cobro especial · ${cobro.propiedadIdentificador}',
               style: const TextStyle(fontSize: 12),
             ),
             Row(

@@ -300,6 +300,7 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
                 controller: _observacionesCtrl,
                 minLines: 2,
                 maxLines: 4,
+                maxLength: 500,
                 decoration: const InputDecoration(
                   hintText: 'Agrega alguna nota o detalle adicional',
                   border: OutlineInputBorder(),

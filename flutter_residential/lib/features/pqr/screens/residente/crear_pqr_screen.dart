@@ -133,9 +133,12 @@ class _CrearPqrScreenState extends State<CrearPqrScreen> {
                   hintText: 'Resumen breve de tu solicitud',
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'El asunto es obligatorio'
-                    : null,
+                maxLength: 200,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'El asunto es obligatorio';
+                  if (v.trim().length > 200) return 'Máximo 200 caracteres';
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
 
@@ -153,14 +156,17 @@ class _CrearPqrScreenState extends State<CrearPqrScreen> {
                 controller: _descripcionCtrl,
                 minLines: 4,
                 maxLines: 8,
+                maxLength: 500,
                 decoration: const InputDecoration(
                   hintText: 'Describe en detalle tu solicitud...',
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'La descripcion es obligatoria'
-                    : null,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'La descripcion es obligatoria';
+                  if (v.trim().length > 500) return 'Máximo 500 caracteres';
+                  return null;
+                },
               ),
               const SizedBox(height: 32),
 

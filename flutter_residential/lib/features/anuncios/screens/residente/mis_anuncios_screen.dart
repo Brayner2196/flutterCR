@@ -73,8 +73,6 @@ class _AnuncioResidenteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final leido = anuncio.vistoPorMi;
-    final tieneImg =
-        anuncio.imagenUrl != null && anuncio.imagenUrl!.isNotEmpty;
 
     final tituloStyle = TextStyle(
       fontSize: 15,
@@ -132,31 +130,12 @@ class _AnuncioResidenteCard extends StatelessWidget {
                       fechaRelativa(anuncio.creadoEn),
                       style: TextStyle(
                         fontSize: 11,
-                        color: cs.outline,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (tieneImg) ...[
-                const SizedBox(width: AppSpacing.md),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  child: Image.network(
-                    anuncio.imagenUrl!,
-                    width: 56,
-                    height: 56,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 56,
-                      height: 56,
-                      color: cs.surfaceContainerHighest,
-                      child: Icon(Icons.image_not_supported_outlined,
-                          size: 20, color: cs.outline),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),

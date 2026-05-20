@@ -134,7 +134,7 @@ class _MorosoTile extends StatelessWidget {
         title: Text(cobro.propiedadIdentificador,
             style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
-            cobro.usuarioNombre,
+            cobro.concepto,
             style: const TextStyle(fontSize: 12)),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,

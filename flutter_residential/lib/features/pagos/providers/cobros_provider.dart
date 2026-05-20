@@ -99,6 +99,12 @@ class CobrosProvider extends ChangeNotifier {
     return nuevos;
   }
 
+  Future<CobroModel> crearCobroEspecial(Map<String, dynamic> data) async {
+    final nuevo = await CobroService.crearCobroEspecial(data);
+    notifyListeners();
+    return nuevo;
+  }
+
   Future<CobroModel> exonerar(int id, String nota) async {
     final actualizado = await CobroService.exonerar(id, nota);
     final idx = _cobros.indexWhere((c) => c.id == actualizado.id);

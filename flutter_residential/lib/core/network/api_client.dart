@@ -8,6 +8,16 @@ import '../storage/token_storage.dart';
 class ApiClient {
   static const _timeout = Duration(seconds: 15);
 
+  /// Stream que emite un evento cuando el servidor responde 401 (token expirado).
+  static final _sessionExpiredController = StreamController<void>.broadcast();
+  static Stream<void> get sessionExpiredStream => _sessionExpiredController.stream;
+
+  static void _checkUnauthorized(http.Response res) {
+    if (res.statusCode == 401) {
+      _sessionExpiredController.add(null);
+    }
+  }
+
   static Future<Map<String, String>> _headers({bool requiresAuth = true}) async {
     final headers = {'Content-Type': 'application/json'};
     if (requiresAuth) {
@@ -28,7 +38,9 @@ class ApiClient {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers(requiresAuth: requiresAuth);
     try {
-      return await http.get(uri, headers: headers).timeout(_timeout);
+      final res = await http.get(uri, headers: headers).timeout(_timeout);
+      _checkUnauthorized(res);
+      return res;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
@@ -44,9 +56,11 @@ class ApiClient {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers(requiresAuth: requiresAuth);
     try {
-      return await http
+      final res = await http
           .post(uri, headers: headers, body: jsonEncode(body))
           .timeout(_timeout);
+      _checkUnauthorized(res);
+      return res;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
@@ -58,9 +72,11 @@ class ApiClient {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers();
     try {
-      return await http
+      final res = await http
           .put(uri, headers: headers, body: jsonEncode(body))
           .timeout(_timeout);
+      _checkUnauthorized(res);
+      return res;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
@@ -72,7 +88,9 @@ class ApiClient {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers();
     try {
-      return await http.delete(uri, headers: headers).timeout(_timeout);
+      final res = await http.delete(uri, headers: headers).timeout(_timeout);
+      _checkUnauthorized(res);
+      return res;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
@@ -80,11 +98,18 @@ class ApiClient {
     }
   }
 
-  static Future<http.Response> patch(String path) async {
+  static Future<http.Response> patch(String path,
+      [Map<String, dynamic>? body]) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     final headers = await _headers();
     try {
-      return await http.patch(uri, headers: headers).timeout(_timeout);
+      final res = await http
+          .patch(uri,
+              headers: headers,
+              body: body != null ? jsonEncode(body) : null)
+          .timeout(_timeout);
+      _checkUnauthorized(res);
+      return res;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {

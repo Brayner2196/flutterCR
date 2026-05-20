@@ -42,50 +42,51 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mis Reservas')),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _irACrear(),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Nueva Reserva'),
       ),
-      body: RefreshIndicator(
-        onRefresh: () => context.read<ReservaProvider>().cargarMisReservas(),
-        child: Column(
-          children: [
-            FiltroChips(
-              opciones: _filtros,
-              valorActual: _filtro,
-              onSeleccionar: (v) => setState(() => _filtro = v),
-            ),
-            if (p.error != null && p.reservas.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Text(p.error!, style: TextStyle(color: cs.error)),
-                ),
-              )
-            else if (p.loading && p.reservas.isEmpty)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
-            else if (reservasFiltradas.isEmpty)
-              Expanded(
-                child: EmptyStateWidget(
-                  icono: Icons.event_busy_outlined,
-                  mensaje: 'No tienes reservas',
-                  textoBoton: 'Nueva Reserva',
-                  onBoton: () => _irACrear(),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.separated(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: reservasFiltradas.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (_, i) => _ReservaTile(
-                    reserva: reservasFiltradas[i],
-                    onTap: () => _irADetalle(reservasFiltradas[i]),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () => context.read<ReservaProvider>().cargarMisReservas(),
+          child: Column(
+            children: [
+              FiltroChips(
+                opciones: _filtros,
+                valorActual: _filtro,
+                onSeleccionar: (v) => setState(() => _filtro = v),
+              ),
+              if (p.error != null && p.reservas.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Text(p.error!, style: TextStyle(color: cs.error)),
+                  ),
+                )
+              else if (p.loading && p.reservas.isEmpty)
+                const Expanded(child: Center(child: CircularProgressIndicator()))
+              else if (reservasFiltradas.isEmpty)
+                Expanded(
+                  child: EmptyStateWidget(
+                    icono: Icons.event_busy_outlined,
+                    mensaje: 'No tienes reservas',
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView.separated(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: reservasFiltradas.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (_, i) => _ReservaTile(
+                      reserva: reservasFiltradas[i],
+                      onTap: () => _irADetalle(reservasFiltradas[i]),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

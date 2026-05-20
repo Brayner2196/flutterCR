@@ -71,9 +71,9 @@ class _AdminVistasAnuncioScreenState extends State<AdminVistasAnuncioScreen> {
                       Text(
                         'Lista de lecturas',
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: cs.outline,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: cs.onSurfaceVariant,
                           letterSpacing: 0.6,
                         ),
                       ),
@@ -136,13 +136,13 @@ class _KpiCard extends StatelessWidget {
             total == 1
                 ? 'residente vio este anuncio'
                 : 'residentes vieron este anuncio',
-            style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurfaceVariant),
           ),
           if (primeraVistaRel != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
               'primera vista $primeraVistaRel',
-              style: TextStyle(fontSize: 12, color: cs.outline),
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
           ],
         ],

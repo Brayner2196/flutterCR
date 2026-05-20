@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../features/dashboard/providers/dashboard_provider.dart';
+import '../../../../features/usuarios/providers/residente_estadisticas_provider.dart';
 import '../../models/cobro_model.dart';
 import '../../models/estado_cuenta_model.dart';
 import '../../models/movimiento_cobro_model.dart';
 import '../../providers/abono_provider.dart';
 import '../../providers/cobros_provider.dart';
 import '../../services/cobro_service.dart';
-import 'registrar_abono_screen.dart';
-import 'registrar_pago_screen.dart';
+import '../../services/mercado_pago_service.dart';
+import 'mercado_pago_webview_screen.dart';
 
 class EstadoCuentaScreen extends StatefulWidget {
   const EstadoCuentaScreen({super.key});
@@ -80,11 +82,44 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Estadísticas de balance (pendiente/vencido)
       context.read<CobrosProvider>().cargarEstadoCuenta();
-      // Historial completo para la línea de tiempo
       _cargarHistorial();
     });
+  }
+
+  /// Llamado por _CobroCard cuando un pago MP fue exitoso/pendiente.
+  /// Actualiza solo el cobro afectado en la lista local y refresca el
+  /// balance header en paralelo — sin recargar toda la lista.
+  void _alPagoExitoso(CobroModel? cobroActualizado) {
+    if (!mounted) return;
+
+    // 1. Balance header + Situación financiera home — solo endpoints de residente
+    // NOTA: NO llamar DashboardProvider.refrescar() aquí porque apunta a
+    //       /api/admin/dashboard que requiere rol TENANT_ADMIN (403 para residentes).
+    context.read<CobrosProvider>().cargarEstadoCuenta();
+    context.read<ResidenteEstadisticasProvider>().refrescar();
+
+    // 2. Saldo a favor (puede haber cambiado si hubo exceso)
+    if (_historial.isNotEmpty) {
+      context.read<AbonoProvider>().cargarSaldoFavor(_historial.first.propiedadId);
+    }
+
+    // 3. Actualizar solo el cobro puntual en la lista local
+    if (cobroActualizado != null) {
+      setState(() {
+        final idx = _historial.indexWhere((c) => c.id == cobroActualizado.id);
+        if (idx != -1) {
+          _historial[idx] = cobroActualizado;
+        } else {
+          // El cobro no estaba en la lista (ej: nuevo estado PAGADO)
+          // Recargar completo para asegurar consistencia
+          _cargarHistorial();
+        }
+      });
+    } else {
+      // Fallback: recargar toda la lista si no se pudo obtener el cobro
+      _cargarHistorial();
+    }
   }
 
   Future<void> _cargarHistorial() async {
@@ -106,8 +141,14 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
 
       final h = mapa.values.toList()
         ..sort((a, b) {
-          if (b.anio != a.anio) return b.anio - a.anio;
-          return b.mes - a.mes;
+          // Cobros especiales (sin período) al frente, luego por período desc
+          if (a.anio == null && b.anio != null) return -1;
+          if (a.anio != null && b.anio == null) return 1;
+          if (a.anio == null && b.anio == null) {
+            return b.fechaGeneracion.compareTo(a.fechaGeneracion);
+          }
+          if (b.anio != a.anio) return b.anio! - a.anio!;
+          return b.mes! - a.mes!;
         });
 
       if (!mounted) return;
@@ -126,15 +167,19 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   // ─── Filtros helpers ───────────────────────────────────────────────────────
 
   List<int> get _aniosDisponibles {
-    final anios = _historial.map((c) => c.anio).toSet().toList();
+    final anios = _historial
+        .map((c) => c.anio)
+        .whereType<int>()
+        .toSet()
+        .toList();
     anios.sort((a, b) => b - a);
     return anios;
   }
 
   List<int> get _mesesDisponibles {
     final meses = _historial
-        .where((c) => _anioFiltro == null || c.anio == _anioFiltro)
-        .map((c) => c.mes)
+        .where((c) => (_anioFiltro == null || c.anio == _anioFiltro) && c.mes != null)
+        .map((c) => c.mes!)
         .toSet()
         .toList();
     meses.sort();
@@ -142,6 +187,11 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   }
 
   List<CobroModel> get _cobrosFiltrados => _historial.where((c) {
+    // Cobros especiales (sin período) pasan siempre los filtros de año/mes
+    if (c.anio == null) {
+      if (_estadoFiltro != null && c.estado != _estadoFiltro) return false;
+      return true;
+    }
     if (_anioFiltro != null && c.anio != _anioFiltro) return false;
     if (_mesFiltro != null && c.mes != _mesFiltro) return false;
     if (_estadoFiltro != null && c.estado != _estadoFiltro) return false;
@@ -270,14 +320,16 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         // Mes
         _FiltroChip<int?>(
           label: _mesFiltro != null
-              ? _nombresMes[_mesFiltro! - 1]
+              ? ((_mesFiltro! >= 1 && _mesFiltro! <= 12) ? _nombresMes[_mesFiltro! - 1] : 'Mes $_mesFiltro')
               : 'Todos los meses',
           isActive: _mesFiltro != null,
           opciones: [
             const DropdownMenuItem(value: null, child: Text('Todos los meses')),
             ..._mesesDisponibles.map(
-              (m) =>
-                  DropdownMenuItem(value: m, child: Text(_nombresMes[m - 1])),
+              (m) => DropdownMenuItem(
+                value: m,
+                child: Text((m >= 1 && m <= 12) ? _nombresMes[m - 1] : 'Mes $m'),
+              ),
             ),
           ],
           value: _mesFiltro,
@@ -324,22 +376,31 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
 
   // ─── Timeline ─────────────────────────────────────────────────────────────
 
+  static const _etiquetasConcepto = {
+    'MULTA': 'Multa',
+    'SANCION': 'Sanción',
+    'PARQUEADERO': 'Parqueadero',
+    'ZONA_COMUN': 'Zona común',
+    'OTRO': 'Cobro especial',
+    'ADMINISTRACION': 'Administración',
+  };
+
   List<Widget> _buildTimeline(List<CobroModel> cobros) {
     return List.generate(cobros.length, (i) {
       final cobro = cobros[i];
       final esUltimo = i == cobros.length - 1;
-      // Cobros con pago parcial van a registrar abono con el saldo pendiente
-      final esAbono = cobro.esParcial;
+      final esEspecial = cobro.anio == null;
       return _TimelineItem(
         cobro: cobro,
         esUltimo: esUltimo,
         formatMonto: _fmt,
-        nombreMes: _nombresMes[cobro.mes - 1],
-        abrevMes: _abrevMes[cobro.mes - 1],
-        onLiquidar: esAbono
-            ? () => _irARegistrarAbono(cobro)
-            : () => _irARegistrarPago(cobro),
-        esAbono: esAbono,
+        nombreMes: esEspecial
+            ? (_etiquetasConcepto[cobro.concepto] ?? cobro.concepto)
+            : _nombresMes[cobro.mes! - 1],
+        abrevMes: esEspecial
+            ? cobro.concepto.substring(0, cobro.concepto.length.clamp(0, 3))
+            : _abrevMes[cobro.mes! - 1],
+        onPagoExitoso: _alPagoExitoso,
       );
     });
   }
@@ -364,43 +425,6 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         ),
       ),
     );
-  }
-
-  // ─── Navegación ───────────────────────────────────────────────────────────
-
-  Future<void> _irARegistrarPago(CobroModel cobro) async {
-    final saldoFavor = context.read<AbonoProvider>().saldoFavor?.saldo ?? 0.0;
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            RegistrarPagoScreen(cobro: cobro, saldoFavor: saldoFavor),
-      ),
-    );
-    if (result == true && mounted) {
-      context.read<CobrosProvider>().cargarEstadoCuenta();
-      _cargarHistorial();
-    }
-  }
-
-  Future<void> _irARegistrarAbono(CobroModel cobro) async {
-    // Para cobros parciales usamos RegistrarPagoScreen con cobroId explícito,
-    // así el backend aplica el pago al cobro correcto en vez de FIFO.
-    final saldoFavor = context.read<AbonoProvider>().saldoFavor?.saldo ?? 0.0;
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RegistrarPagoScreen(
-          cobro: cobro,
-          montoPagar: cobro.montoPendiente,
-          saldoFavor: saldoFavor,
-        ),
-      ),
-    );
-    if (result == true && mounted) {
-      context.read<CobrosProvider>().cargarEstadoCuenta();
-      _cargarHistorial();
-    }
   }
 
   String _fmt(double v) =>
@@ -624,8 +648,7 @@ class _TimelineItem extends StatelessWidget {
   final String Function(double) formatMonto;
   final String nombreMes;
   final String abrevMes;
-  final VoidCallback onLiquidar;
-  final bool esAbono;
+  final void Function(CobroModel?)? onPagoExitoso;
 
   const _TimelineItem({
     required this.cobro,
@@ -633,8 +656,7 @@ class _TimelineItem extends StatelessWidget {
     required this.formatMonto,
     required this.nombreMes,
     required this.abrevMes,
-    required this.onLiquidar,
-    this.esAbono = false,
+    this.onPagoExitoso,
   });
 
   Color get _dotColor {
@@ -692,8 +714,7 @@ class _TimelineItem extends StatelessWidget {
                 formatMonto: formatMonto,
                 nombreMes: nombreMes,
                 abrevMes: abrevMes,
-                onLiquidar: onLiquidar,
-                esAbono: esAbono,
+                onPagoExitoso: onPagoExitoso,
               ),
             ),
           ),
@@ -710,16 +731,16 @@ class _CobroCard extends StatefulWidget {
   final String Function(double) formatMonto;
   final String nombreMes;
   final String abrevMes;
-  final VoidCallback onLiquidar;
-  final bool esAbono;
+  /// Notifica al padre con el cobro actualizado tras un pago exitoso/pendiente.
+  /// null si no se pudo obtener el cobro actualizado (fallback a recarga total).
+  final void Function(CobroModel?)? onPagoExitoso;
 
   const _CobroCard({
     required this.cobro,
     required this.formatMonto,
     required this.nombreMes,
     required this.abrevMes,
-    required this.onLiquidar,
-    this.esAbono = false,
+    this.onPagoExitoso,
   });
 
   @override
@@ -729,9 +750,410 @@ class _CobroCard extends StatefulWidget {
 class _CobroCardState extends State<_CobroCard> {
   bool _expandido = false;
   bool _cargando = false;
+  bool _loadingMp = false;
   List<MovimientoCobroModel>? _movimientos;
 
   CobroModel get cobro => widget.cobro;
+
+  // ─── MercadoPago ─────────────────────────────────────────────────────────
+
+  Future<void> _pagarConMercadoPago() async {
+    setState(() => _loadingMp = true);
+    try {
+      final url = await MercadoPagoService.obtenerCheckoutUrl(cobro.id);
+      await _abrirWebViewYNotificar(url);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loadingMp = false);
+    }
+  }
+
+  void _mostrarOpcionesPago() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              cobro.esParcial
+                  ? 'Pagar saldo restante'
+                  : cobro.anio == null
+                      ? 'Pagar ${widget.nombreMes}'
+                      : 'Elige cómo pagar',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            Text(
+              cobro.anio == null && cobro.descripcion != null
+                  ? cobro.descripcion!
+                  : 'Pendiente: ${widget.formatMonto(cobro.montoPendiente)}',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+            ),
+            if (cobro.anio == null) ...[
+              const SizedBox(height: 2),
+              Text(
+                'Pendiente: ${widget.formatMonto(cobro.montoPendiente)}',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              ),
+            ],
+            if (cobro.esParcial)
+              Text(
+                'de ${widget.formatMonto(cobro.montoTotal)} total',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+              ),
+            const SizedBox(height: 24),
+
+            // Botón "Pagar un valor diferente" (estilo abono)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  side: BorderSide(color: Colors.grey.shade400),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _mostrarPagoValorDiferente();
+                },
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text(
+                  'Pagar un valor diferente',
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Botón grande "Pagar ($monto)" — acción principal
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF009EE3),
+                  padding: const EdgeInsets.symmetric(vertical: 17),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _pagarConMercadoPago();
+                },
+                child: Text(
+                  'Pagar (${widget.formatMonto(cobro.montoPendiente)})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Abre un segundo BottomSheet para que el usuario ingrese un monto distinto.
+  /// Funciona como un abono: si excede el pendiente, el sobrante queda como saldo a favor.
+  void _mostrarPagoValorDiferente() {
+    final saldoFavor =
+        context.read<AbonoProvider>().saldoFavor?.saldo ?? 0.0;
+    final montoCtrl = TextEditingController(
+      text: cobro.montoPendiente.toStringAsFixed(0),
+    );
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setInnerState) {
+          final montoIngresado =
+              double.tryParse(montoCtrl.text.replaceAll(',', '.')) ?? 0.0;
+          final exceso =
+              (montoIngresado - cobro.montoPendiente).clamp(0.0, double.infinity);
+          final hayExceso = exceso > 0;
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 16,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Pagar un valor diferente',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    'Pendiente: ${widget.formatMonto(cobro.montoPendiente)}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Saldo a favor disponible
+                  if (saldoFavor > 0) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.teal.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.savings_outlined,
+                              color: Colors.teal, size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Saldo a favor disponible: ${widget.formatMonto(saldoFavor)}',
+                            style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.teal,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // Campo de monto
+                  TextFormField(
+                    controller: montoCtrl,
+                    autofocus: true,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Monto a pagar',
+                      prefixText: '\$ ',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (_) => setInnerState(() {}),
+                    validator: (v) {
+                      final n =
+                          double.tryParse((v ?? '').replaceAll(',', '.'));
+                      if (n == null || n <= 0) return 'Ingresa un monto válido';
+                      return null;
+                    },
+                  ),
+
+                  // Banner de exceso → saldo a favor
+                  if (hayExceso) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.teal.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.savings_outlined,
+                              color: Colors.teal, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade700),
+                                children: [
+                                  const TextSpan(text: 'El exceso de '),
+                                  TextSpan(
+                                    text: widget.formatMonto(exceso),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal),
+                                  ),
+                                  const TextSpan(
+                                      text:
+                                          ' quedará como saldo a favor al confirmarse el pago.'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  // Botón pagar con Mercado Pago
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF009EE3),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (!formKey.currentState!.validate()) return;
+                        final monto = double.parse(
+                            montoCtrl.text.replaceAll(',', '.'));
+                        Navigator.pop(ctx);
+                        _pagarConMercadoPagoMonto(monto);
+                      },
+                      icon: const Icon(Icons.open_in_browser),
+                      label: const Text(
+                        'Pagar con Mercado Pago',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Pago con monto personalizado — misma lógica que _pagarConMercadoPago
+  /// pero envía el monto al backend para crear una preferencia parcial.
+  Future<void> _pagarConMercadoPagoMonto(double monto) async {
+    setState(() => _loadingMp = true);
+    try {
+      final url = await MercadoPagoService.obtenerCheckoutUrl(
+        cobro.id,
+        monto: monto,
+      );
+      await _abrirWebViewYNotificar(url);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loadingMp = false);
+    }
+  }
+
+  /// Lógica compartida: abre la WebView de MP, interpreta el resultado
+  /// y notifica al padre con el cobro actualizado (o null en error).
+  Future<void> _abrirWebViewYNotificar(String url) async {
+    if (!mounted) return;
+    final resultado = await Navigator.push<ResultadoPagoMP>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MercadoPagoWebViewScreen(
+          checkoutUrl: url,
+          tituloCobro: cobro.anio != null
+              ? '${cobro.concepto} ${widget.nombreMes}/${cobro.anio}'
+              : cobro.concepto,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+
+    switch (resultado) {
+      case ResultadoPagoMP.exito:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Pago realizado con éxito!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        await _notificarPagoExitoso();
+        break;
+      case ResultadoPagoMP.pendiente:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pago pendiente de confirmación'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        await _notificarPagoExitoso();
+        break;
+      case ResultadoPagoMP.fallo:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El pago no pudo procesarse. Podés intentarlo nuevamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        break;
+      case ResultadoPagoMP.cancelado:
+      case null:
+        break;
+    }
+  }
+
+  /// Obtiene el cobro actualizado del backend y notifica al padre.
+  /// Si la petición falla, notifica con null para que el padre haga fallback.
+  Future<void> _notificarPagoExitoso() async {
+    try {
+      final cobroActualizado = await CobroService.getCobro(cobro.id);
+      if (mounted) widget.onPagoExitoso?.call(cobroActualizado);
+    } catch (_) {
+      if (mounted) widget.onPagoExitoso?.call(null);
+    }
+  }
 
   bool get _estaActivo =>
       cobro.esPendiente || cobro.esVencido || cobro.esParcial;
@@ -799,6 +1221,10 @@ class _CobroCardState extends State<_CobroCard> {
   }
 
   String get _periodoTexto {
+    if (cobro.anio == null) {
+      // Cobro especial — mostrar rango emisión → límite
+      return 'Emitido: ${_formatFecha(cobro.fechaGeneracion)}  ·  Límite: ${_formatFecha(cobro.fechaLimitePago)}';
+    }
     final inicio = '01 ${widget.abrevMes}';
     final fin = _formatFechaLimite(cobro.fechaLimitePago, widget.abrevMes);
     return '$inicio - $fin';
@@ -865,12 +1291,40 @@ class _CobroCardState extends State<_CobroCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '${widget.nombreMes} ${cobro.anio}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                cobro.anio != null
+                                    ? '${widget.nombreMes} ${cobro.anio}'
+                                    : widget.nombreMes,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              if (cobro.anio == null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                        color: Colors.amber
+                                            .withValues(alpha: 0.45)),
+                                  ),
+                                  child: Text(
+                                    'Especial',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.amber.shade800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                           Text(
                             _periodoTexto,
@@ -1098,7 +1552,9 @@ class _CobroCardState extends State<_CobroCard> {
                 ),
               ),
               child: TextButton(
-                onPressed: widget.onLiquidar,
+                // Todos los cobros activos (pendiente, vencido, parcial)
+                // muestran el bottom sheet con opciones de pago.
+                onPressed: _loadingMp ? null : _mostrarOpcionesPago,
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: const RoundedRectangleBorder(
@@ -1108,14 +1564,23 @@ class _CobroCardState extends State<_CobroCard> {
                     ),
                   ),
                 ),
-                child: Text(
-                  widget.esAbono ? 'Abonar saldo restante' : 'Pagar Ahora',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
+                child: _loadingMp
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        cobro.esParcial ? 'Pagar saldo restante' : 'Pagar Ahora',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
               ),
             ),
         ],
@@ -1412,44 +1877,44 @@ class _SkeletonTimelineState extends State<_SkeletonTimeline>
       child: Column(
         children: List.generate(3, (i) {
           final esUltimo = i == 2;
-          return IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 32,
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 14,
-                        height: 14,
-                        margin: const EdgeInsets.only(top: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
+          return Stack(
+            children: [
+              if (!esUltimo)
+                Positioned(
+                  left: 15,
+                  top: 30,
+                  bottom: 0,
+                  child: Container(
+                    width: 2,
+                    color: Colors.grey.shade200,
+                  ),
+                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 32,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      margin: const EdgeInsets.only(top: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
                       ),
-                      if (!esUltimo)
-                        Expanded(
-                          child: Container(
-                            width: 2,
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            color: Colors.grey.shade200,
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _SkeletonCard(),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _SkeletonCard(),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           );
         }),
       ),

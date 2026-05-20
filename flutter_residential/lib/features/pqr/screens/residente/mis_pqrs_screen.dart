@@ -42,9 +42,11 @@ class _MisPqrsScreenState extends State<MisPqrsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mis PQRs')),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _irACrear(),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Nueva PQR'),
+        
       ),
       body: RefreshIndicator(
         onRefresh: () => context.read<PqrProvider>().cargarMisPqrs(),
@@ -68,8 +70,6 @@ class _MisPqrsScreenState extends State<MisPqrsScreen> {
                 child: EmptyStateWidget(
                   icono: Icons.support_agent_outlined,
                   mensaje: 'No tienes solicitudes',
-                  textoBoton: 'Nueva Solicitud',
-                  onBoton: () => _irACrear(),
                 ),
               )
             else

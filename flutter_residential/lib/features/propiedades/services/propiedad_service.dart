@@ -1,104 +1,70 @@
 import 'dart:convert';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/services/base_api_service.dart';
 import '../models/tipo_propiedad_nodo.dart';
 import '../../usuarios/models/usuario_propiedad_response.dart';
 
 class PropiedadService {
   /// Tipos de propiedad del conjunto (público, para el registro)
   static Future<List<TipoPropiedadNodo>> getTiposArbol(String codigo) async {
-    final response = await ApiClient.get(
+    final res = await ApiClient.get(
       '${ApiConstants.authTiposPropiedad}?codigo=$codigo',
       requiresAuth: false,
     );
-    final body = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      return (body as List)
-          .map((e) => TipoPropiedadNodo.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    throw Exception(body['message'] ?? 'Error al obtener tipos de propiedad');
+    return BaseApiService.parseList(
+        res, TipoPropiedadNodo.fromJson, 'Error al obtener tipos de propiedad');
   }
 
   /// Tipos de propiedad del tenant (admin autenticado)
   static Future<List<TipoPropiedadNodo>> getTiposArbolAdmin() async {
-    final response = await ApiClient.get(ApiConstants.tiposPropiedad);
-    final body = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      return (body as List)
-          .map((e) => TipoPropiedadNodo.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    throw Exception(body['message'] ?? 'Error al obtener tipos de propiedad');
+    final res = await ApiClient.get(ApiConstants.tiposPropiedad);
+    return BaseApiService.parseList(
+        res, TipoPropiedadNodo.fromJson, 'Error al obtener tipos de propiedad');
   }
 
   /// Mis propiedades del residente autenticado
   static Future<List<UsuarioPropiedadResponse>> getMisPropiedades() async {
-    final response = await ApiClient.get(ApiConstants.misPropiedades);
-    final body = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      return (body as List)
-          .map((e) =>
-              UsuarioPropiedadResponse.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    throw Exception(body['message'] ?? 'Error al obtener propiedades');
+    final res = await ApiClient.get(ApiConstants.misPropiedades);
+    return BaseApiService.parseList(
+        res, UsuarioPropiedadResponse.fromJson, 'Error al obtener propiedades');
   }
 
   /// Propiedades de un residente específico (admin)
-  static Future<List<UsuarioPropiedadResponse>> getPropiedadesDeUsuario(
-      int usuarioId) async {
-    final response =
-        await ApiClient.get(ApiConstants.propiedadesDeUsuario(usuarioId));
-    final body = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      return (body as List)
-          .map((e) =>
-              UsuarioPropiedadResponse.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    throw Exception(
-        body['message'] ?? 'Error al obtener propiedades del usuario');
+  static Future<List<UsuarioPropiedadResponse>> getPropiedadesDeUsuario(int usuarioId) async {
+    final res = await ApiClient.get(ApiConstants.propiedadesDeUsuario(usuarioId));
+    return BaseApiService.parseList(
+        res, UsuarioPropiedadResponse.fromJson, 'Error al obtener propiedades del usuario');
   }
 
   /// Actualizar estado de una propiedad (admin)
-  static Future<void> actualizarEstadoPropiedad(
-      int propiedadId, String estado) async {
-    final response = await ApiClient.patch(
-      '${ApiConstants.propiedadEstado(propiedadId)}?estado=$estado',
-    );
-    if (response.statusCode != 200) {
-      final body = jsonDecode(response.body);
-      throw Exception(body['message'] ?? 'Error al actualizar estado');
-    }
+  static Future<void> actualizarEstadoPropiedad(int propiedadId, String estado) async {
+    final res = await ApiClient.patch(
+        '${ApiConstants.propiedadEstado(propiedadId)}?estado=$estado');
+    BaseApiService.assertSuccess(res, fallbackMsg: 'Error al actualizar estado');
   }
 
   /// Marcar propiedad como principal del residente (admin)
-  static Future<void> marcarComoPrincipal(
-      int propiedadId, int usuarioId) async {
-    final response = await ApiClient.patch(
-      ApiConstants.marcarPropiedadPrincipal(propiedadId, usuarioId),
-    );
-    if (response.statusCode != 204 && response.statusCode != 200) {
-      final body = jsonDecode(response.body);
-      throw Exception(body['message'] ?? 'Error al marcar como principal');
-    }
+  static Future<void> marcarComoPrincipal(int propiedadId, int usuarioId) async {
+    final res = await ApiClient.patch(
+        ApiConstants.marcarPropiedadPrincipal(propiedadId, usuarioId));
+    BaseApiService.assertSuccess(res,
+        successCodes: [200, 204], fallbackMsg: 'Error al marcar como principal');
   }
 
   /// Crear propiedad por path (admin) — retorna el ID de la propiedad hoja
-  static Future<int> crearPropiedad(
-      List<Map<String, dynamic>> path) async {
-    final response = await ApiClient.post(
+  static Future<int> crearPropiedad(List<Map<String, dynamic>> path) async {
+    final res = await ApiClient.post(
       ApiConstants.propiedades,
       {'propiedadPath': path},
       requiresAuth: true,
     );
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final body = jsonDecode(response.body);
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      final body = jsonDecode(res.body);
       return body['id'] as int;
     }
-    final body = jsonDecode(response.body);
-    throw Exception(body['message'] ?? 'Error al crear propiedad');
+    BaseApiService.assertSuccess(res, fallbackMsg: 'Error al crear propiedad');
+    throw Exception('Error al crear propiedad'); // unreachable
   }
 
   /// Crear tipo de propiedad (admin)
@@ -106,76 +72,69 @@ class PropiedadService {
     required String nombre,
     String? descripcion,
     int? parentId,
+    bool esFacturable = false,
   }) async {
-    final response = await ApiClient.post(
+    final res = await ApiClient.post(
       ApiConstants.tiposPropiedad,
       {
         'nombre': nombre,
         if (descripcion != null) 'descripcion': descripcion,
         if (parentId != null) 'parentId': parentId,
+        'esFacturable': esFacturable,
       },
       requiresAuth: true,
     );
-    if (response.statusCode != 201 && response.statusCode != 200) {
-      final body = jsonDecode(response.body);
-      throw Exception(body['message'] ?? 'Error al crear tipo');
-    }
+    BaseApiService.assertSuccess(res,
+        successCodes: [200, 201], fallbackMsg: 'Error al crear tipo');
   }
 
   /// Actualizar tipo de propiedad (admin)
   static Future<void> actualizarTipo(int id,
-      {required String nombre, String? descripcion}) async {
-    final response = await ApiClient.put(
+      {required String nombre, String? descripcion, bool esFacturable = false}) async {
+    final res = await ApiClient.put(
       '${ApiConstants.tiposPropiedad}/$id',
-      {'nombre': nombre, if (descripcion != null) 'descripcion': descripcion},
+      {
+        'nombre': nombre,
+        if (descripcion != null) 'descripcion': descripcion,
+        'esFacturable': esFacturable,
+      },
     );
-    if (response.statusCode != 200) {
-      final body = jsonDecode(response.body);
-      throw Exception(body['message'] ?? 'Error al actualizar tipo');
-    }
+    BaseApiService.assertSuccess(res, fallbackMsg: 'Error al actualizar tipo');
   }
 
   /// Desactivar tipo de propiedad (admin)
   static Future<void> desactivarTipo(int id) async {
-    final response =
-        await ApiClient.delete('${ApiConstants.tiposPropiedad}/$id');
-    if (response.statusCode != 204 && response.statusCode != 200) {
-      final body = jsonDecode(response.body);
-      throw Exception(body['message'] ?? 'Error al desactivar tipo');
-    }
+    final res = await ApiClient.delete('${ApiConstants.tiposPropiedad}/$id');
+    BaseApiService.assertSuccess(res,
+        successCodes: [200, 204], fallbackMsg: 'Error al desactivar tipo');
   }
 
   /// Listar todas las propiedades (admin)
   static Future<List<Map<String, dynamic>>> listarPropiedades() async {
-    final response = await ApiClient.get(ApiConstants.propiedades);
-    final body = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      return (body as List).cast<Map<String, dynamic>>();
+    final res = await ApiClient.get(ApiConstants.propiedades);
+    if (res.statusCode == 200) {
+      return (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
     }
-    throw Exception(body['message'] ?? 'Error al listar propiedades');
+    BaseApiService.assertSuccess(res, fallbackMsg: 'Error al listar propiedades');
+    return [];
   }
 
   /// Asignar residente a propiedad (admin)
   static Future<void> asignarUsuario(int propiedadId, int usuarioId) async {
-    final response = await ApiClient.post(
+    final res = await ApiClient.post(
       '${ApiConstants.propiedades}/$propiedadId/usuarios/$usuarioId',
       {},
       requiresAuth: true,
     );
-    if (response.statusCode != 204) {
-      final body = jsonDecode(response.body);
-      throw Exception(body['message'] ?? 'Error al asignar usuario');
-    }
+    BaseApiService.assertSuccess(res,
+        successCodes: [204, 200], fallbackMsg: 'Error al asignar usuario');
   }
 
   /// Quitar residente de propiedad (admin)
   static Future<void> quitarUsuario(int propiedadId, int usuarioId) async {
-    final response = await ApiClient.delete(
-      '${ApiConstants.propiedades}/$propiedadId/usuarios/$usuarioId',
-    );
-    if (response.statusCode != 204) {
-      final body = jsonDecode(response.body);
-      throw Exception(body['message'] ?? 'Error al quitar usuario');
-    }
+    final res = await ApiClient.delete(
+        '${ApiConstants.propiedades}/$propiedadId/usuarios/$usuarioId');
+    BaseApiService.assertSuccess(res,
+        successCodes: [204], fallbackMsg: 'Error al quitar usuario');
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../../propiedades/models/tipo_propiedad_nodo.dart';
@@ -20,7 +21,7 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
   final _passwordCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
 
-  String _rol = 'RESIDENTE';
+  String _rol = 'PROPIETARIO';
   bool _verPassword = false;
   bool _guardando = false;
 
@@ -29,9 +30,9 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
   final List<TextEditingController> _pathCtrlList = [];
 
   static const _roles = [
-    'RESIDENTE',
+    'PROPIETARIO',
+    'INQUILINO',
     'TENANT_ADMIN',
-    'RESIDENTE_PENDIENTE',
     'VIGILANTE',
     'PORTERO',
     'PISCINERO',
@@ -39,9 +40,9 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
   ];
 
   static const _etiquetasRol = {
-    'RESIDENTE': 'Residente',
+    'PROPIETARIO': 'Propietario',
+    'INQUILINO': 'Inquilino',
     'TENANT_ADMIN': 'Administrador',
-    'RESIDENTE_PENDIENTE': 'Residente Pendiente',
     'VIGILANTE': 'Vigilante',
     'PORTERO': 'Portero',
     'PISCINERO': 'Piscinero',
@@ -127,17 +128,8 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
         if (propiedadPath.isNotEmpty) 'propiedadPath': propiedadPath,
       });
       if (!mounted) return;
-      toastification.show(
-        context: context,
-        type: ToastificationType.success,
-        style: ToastificationStyle.flatColored,
-        title: const Text('Usuario creado'),
-        description:
-            Text('${_nombreCtrl.text.trim()} fue creado correctamente.'),
-        alignment: Alignment.topRight,
-        autoCloseDuration: const Duration(seconds: 4),
-        showProgressBar: true,
-        closeOnClick: true,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuario creado correctamente'),backgroundColor: AppColors.ok,),
       );
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -189,12 +181,7 @@ class _UsuarioCrearDialogState extends State<UsuarioCrearDialog> {
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    visualDensity: VisualDensity.compact,
-                  ),
+                  )
                 ],
               ),
 

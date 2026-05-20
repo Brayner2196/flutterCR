@@ -6,7 +6,9 @@ import 'steps/tenant_wizard_step_basico.dart';
 import 'steps/tenant_wizard_step_schema.dart';
 import 'steps/tenant_wizard_step_admin.dart';
 import 'steps/tenant_wizard_step_propiedades.dart';
+import 'steps/tenant_wizard_step_pasarelas.dart';
 import 'steps/tenant_wizard_step_resumen.dart';
+import '../../../features/pagos/models/pasarela_disponible_model.dart';
 
 /// Pantallas del wizard
 class _WizardStep {
@@ -43,6 +45,11 @@ const _pasos = [
     icono: Icons.home_work_outlined,
   ),
   _WizardStep(
+    titulo: 'Pasarelas de pago',
+    subtitulo: 'Configura los métodos de pago (opcional)',
+    icono: Icons.payments_outlined,
+  ),
+  _WizardStep(
     titulo: 'Resumen',
     subtitulo: 'Confirma los datos antes de crear',
     icono: Icons.check_circle_outline,
@@ -77,6 +84,13 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
     'tiposPropiedad': <TipoNodoEditable>[],
   };
 
+  // Pasarelas inicializadas con las 3 opciones disponibles
+  late final List<PasarelaWizardData> _pasarelas = [
+    PasarelaWizardData(tipo: TipoPasarela.mercadoPago, prioridad: 1),
+    PasarelaWizardData(tipo: TipoPasarela.wompi,       prioridad: 2),
+    PasarelaWizardData(tipo: TipoPasarela.bold,        prioridad: 3),
+  ];
+
   // ── Controladores de texto compartidos ─────────────────────────────────
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _codigoCtrl;
@@ -105,6 +119,7 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
     _schemaCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    for (final p in _pasarelas) p.dispose();
     super.dispose();
   }
 
@@ -152,6 +167,7 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
               'nombre': n.nombreCtrl.text.trim(),
               if (n.descCtrl.text.trim().isNotEmpty)
                 'descripcion': n.descCtrl.text.trim(),
+              'esFacturable': n.esFacturable,
               'hijos': _buildTiposJson(n.hijos),
             })
         .toList();
@@ -161,6 +177,12 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
     setState(() => _creando = true);
     final tiposJson =
         _buildTiposJson(_datos['tiposPropiedad'] as List<TipoNodoEditable>);
+
+    // Solo incluir pasarelas que el usuario habilitó
+    final pasarelasJson = _pasarelas
+        .where((p) => p.habilitada)
+        .map((p) => p.toJson())
+        .toList();
 
     try {
       await context.read<TenantProvider>().crear({
@@ -172,6 +194,7 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
         if (_direccionCtrl.text.trim().isNotEmpty)
           'direccion': _direccionCtrl.text.trim(),
         if (tiposJson.isNotEmpty) 'tiposPropiedad': tiposJson,
+        if (pasarelasJson.isNotEmpty) 'pasarelas': pasarelasJson,
       });
 
       if (mounted) {
@@ -274,14 +297,18 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
                   tiposRaiz: _datos['tiposPropiedad'] as List<TipoNodoEditable>,
                   onCambio: () => setState(() {}),
                 ),
+                TenantWizardStepPasarelas(
+                  pasarelas: _pasarelas,
+                  onCambio: () => setState(() {}),
+                ),
                 TenantWizardStepResumen(
                   nombreCtrl: _nombreCtrl,
                   codigoCtrl: _codigoCtrl,
                   direccionCtrl: _direccionCtrl,
                   schemaCtrl: _schemaCtrl,
                   emailCtrl: _emailCtrl,
-                  tiposPropiedad:
-                      _datos['tiposPropiedad'] as List<TipoNodoEditable>,
+                  tiposPropiedad: _datos['tiposPropiedad'] as List<TipoNodoEditable>,
+                  pasarelas: _pasarelas,
                 ),
               ],
             ),

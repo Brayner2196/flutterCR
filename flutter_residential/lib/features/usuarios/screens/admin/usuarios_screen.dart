@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
-import 'package:flutter_residential/features/home/admin/app_bar_admin.dart';
-import 'package:flutter_residential/features/home/admin/bottom_navigation_bar_admin.dart';
 import 'package:provider/provider.dart';
 import '../../providers/usuario_provider.dart';
 import '../../models/usuario_response.dart';
 import '../../../../shared/widgets/pill_tab_bar.dart';
-import 'usuario_crear_dialog.dart';
 import '../widgets/usuario_card.dart';
 import '../widgets/usuario_detalle_sheet.dart';
 
@@ -21,7 +17,6 @@ class _UsuariosScreenState extends State<UsuariosScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedTab = 0;
-  int _tabActual = 1;
   String _busqueda = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -51,183 +46,157 @@ class _UsuariosScreenState extends State<UsuariosScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) =>
-          UsuarioDetalleSheet(usuario: usuario, mostrarAcciones: conAcciones),
+      builder: (_) => UsuarioDetalleSheet(
+        usuario: usuario,
+        mostrarAcciones: conAcciones,
+        esAdmin: true,
+      ),
     );
-  }
-
-  void _abrirCrear() {
-    showDialog(context: context, builder: (_) => const UsuarioCrearDialog());
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final cs = Theme.of(context).colorScheme;
-    
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBarAdmin(auth: auth, cs: cs, habilitarlogout: false,),
-      body: Stack(
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: Column(
         children: [
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(Icons.search, color: Colors.grey.shade600),
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (value) =>
-                              setState(() => _busqueda = value.trim().toLowerCase()),
-                          decoration: const InputDecoration(
-                            hintText: 'Buscar usuarios...',
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_busqueda.isNotEmpty)
-                        IconButton(
-                          icon: Icon(Icons.close, color: Colors.grey.shade600),
-                          tooltip: 'Limpiar búsqueda',
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _busqueda = '');
-                          },
-                        ),
-                    ],
+                ],
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(Icons.search, color: Colors.grey.shade600),
                   ),
-                ),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) => setState(
+                        () => _busqueda = value.trim().toLowerCase(),
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar usuarios...',
+                        border: OutlineInputBorder(borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                  if (_busqueda.isNotEmpty)
+                    IconButton(
+                      icon: Icon(Icons.close, color: Colors.grey.shade600),
+                      tooltip: 'Limpiar búsqueda',
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _busqueda = '');
+                      },
+                    ),
+                ],
               ),
-              Consumer<UsuarioProvider>(
-                builder: (_, provider, __) => PillTabBar(
-                  tabs: [
-                    PillTabItem(
-                      label: 'Todos',
-                      count: provider.usuarios.isNotEmpty
-                          ? provider.usuarios.length
-                          : null,
-                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
-                      backgroundColor: Colors.grey.shade400,
-                    ),
-                    PillTabItem(
-                      label: 'Activos',
-                      count: provider.activos.isNotEmpty
-                          ? provider.activos.length
-                          : null,
-                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
-                      backgroundColor: Colors.grey.shade400,
-                    ),
-                    PillTabItem(
-                      label: 'Pendientes',
-                      count: provider.pendientes.isNotEmpty
-                          ? provider.pendientes.length
-                          : null,
-                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
-                      backgroundColor: Colors.grey.shade400,
-                    ),
-                    PillTabItem(
-                      label: 'Inactivos',
-                      count: provider.inactivos.isNotEmpty
-                          ? provider.inactivos.length
-                          : null,
-                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
-                      backgroundColor: Colors.grey.shade400,
-                    ),
-                    PillTabItem(
-                      label: 'Rechazados',
-                      count: provider.rechazados.isNotEmpty
-                          ? provider.rechazados.length
-                          : null,
-                      selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
-                      backgroundColor: Colors.grey.shade400,
-                    ),
-                  ],
-                  selectedIndex: _selectedTab,
-                  onTabSelected: (i) {
-                    _tabController.animateTo(i);
-                    setState(() => _selectedTab = i);
-                  },
+            ),
+          ),
+          Consumer<UsuarioProvider>(
+            builder: (_, provider, __) => PillTabBar(
+              tabs: [
+                PillTabItem(
+                  label: 'Todos',
+                  count: provider.usuarios.isNotEmpty
+                      ? provider.usuarios.length
+                      : null,
+                  selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                  backgroundColor: Colors.grey.shade400,
                 ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _TabLista(
-                      selector: (p) => p.usuarios,
-                      busqueda: _busqueda,
-                      onTap: (u) => _abrirDetalle(u),
-                      emptyMessage: 'No hay usuarios registrados',
-                    ),
-                    _TabLista(
-                      selector: (p) => p.activos,
-                      busqueda: _busqueda,
-                      onTap: (u) => _abrirDetalle(u),
-                      emptyMessage: 'No hay usuarios aprobados',
-                    ),
-                    _TabLista(
-                      selector: (p) => p.pendientes,
-                      busqueda: _busqueda,
-                      onTap: (u) => _abrirDetalle(u, conAcciones: true),
-                      emptyMessage: 'No hay solicitudes pendientes',
-                      emptyIcon: Icons.check_circle_outline,
-                    ),
-                    _TabLista(
-                      selector: (p) => p.inactivos,
-                      busqueda: _busqueda,
-                      onTap: (u) => _abrirDetalle(u),
-                      emptyMessage: 'No hay usuarios inactivos',
-                      emptyIcon: Icons.person_off_outlined,
-                    ),
-                    _TabLista(
-                      selector: (p) => p.rechazados,
-                      busqueda: _busqueda,
-                      onTap: (u) => _abrirDetalle(u),
-                      emptyMessage: 'No hay usuarios rechazados',
-                      emptyIcon: Icons.block_outlined,
-                    ),
-                  ],
+                PillTabItem(
+                  label: 'Activos',
+                  count: provider.activos.isNotEmpty
+                      ? provider.activos.length
+                      : null,
+                  selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                  backgroundColor: Colors.grey.shade400,
                 ),
-              ),
-            ],
+                PillTabItem(
+                  label: 'Pendientes',
+                  count: provider.pendientes.isNotEmpty
+                      ? provider.pendientes.length
+                      : null,
+                  selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                  backgroundColor: Colors.grey.shade400,
+                ),
+                PillTabItem(
+                  label: 'Inactivos',
+                  count: provider.inactivos.isNotEmpty
+                      ? provider.inactivos.length
+                      : null,
+                  selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                  backgroundColor: Colors.grey.shade400,
+                ),
+                PillTabItem(
+                  label: 'Rechazados',
+                  count: provider.rechazados.isNotEmpty
+                      ? provider.rechazados.length
+                      : null,
+                  selectBackgroundColor: Color.fromRGBO(18, 47, 85, 1),
+                  backgroundColor: Colors.grey.shade400,
+                ),
+              ],
+              selectedIndex: _selectedTab,
+              onTabSelected: (i) {
+                _tabController.animateTo(i);
+                setState(() => _selectedTab = i);
+              },
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _TabLista(
+                  selector: (p) => p.usuarios,
+                  busqueda: _busqueda,
+                  onTap: (u) => _abrirDetalle(u),
+                  emptyMessage: 'No hay usuarios registrados',
+                ),
+                _TabLista(
+                  selector: (p) => p.activos,
+                  busqueda: _busqueda,
+                  onTap: (u) => _abrirDetalle(u),
+                  emptyMessage: 'No hay usuarios aprobados',
+                ),
+                _TabLista(
+                  selector: (p) => p.pendientes,
+                  busqueda: _busqueda,
+                  onTap: (u) => _abrirDetalle(u, conAcciones: true),
+                  emptyMessage: 'No hay solicitudes pendientes',
+                  emptyIcon: Icons.check_circle_outline,
+                ),
+                _TabLista(
+                  selector: (p) => p.inactivos,
+                  busqueda: _busqueda,
+                  onTap: (u) => _abrirDetalle(u),
+                  emptyMessage: 'No hay usuarios inactivos',
+                  emptyIcon: Icons.person_off_outlined,
+                ),
+                _TabLista(
+                  selector: (p) => p.rechazados,
+                  busqueda: _busqueda,
+                  onTap: (u) => _abrirDetalle(u),
+                  emptyMessage: 'No hay usuarios rechazados',
+                  emptyIcon: Icons.block_outlined,
+                ),
+              ],
+            ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _abrirCrear,
-        tooltip: 'Crear usuario',
-        child: const Icon(
-          Icons.person_add_outlined,
-          color: Colors.white,
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBarAdmin(
-        tabActual: _tabActual,
-        onTabChanged: (i) => setState(() => _tabActual = i),
-        colorScheme: Theme.of(context).colorScheme,
       ),
     );
   }
@@ -269,8 +238,8 @@ class _TabLista extends StatelessWidget {
         final lista = busqueda.isEmpty
             ? base
             : base
-                .where((u) => u.nombre.toLowerCase().contains(busqueda))
-                .toList();
+                  .where((u) => u.nombre.toLowerCase().contains(busqueda))
+                  .toList();
 
         if (lista.isEmpty) {
           return _EmptyView(mensaje: emptyMessage, icono: emptyIcon);

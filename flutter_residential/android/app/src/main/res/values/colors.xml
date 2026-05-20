@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color del círculo de fondo del icono de notificación FCM -->
+    <color name="notification_color">#005F8F</color>
+</resources>

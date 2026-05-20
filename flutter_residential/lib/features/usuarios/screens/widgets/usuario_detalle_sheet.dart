@@ -5,16 +5,20 @@ import '../../models/usuario_response.dart';
 import '../../models/usuario_propiedad_response.dart';
 import '../../../propiedades/models/tipo_propiedad_nodo.dart';
 import '../../providers/usuario_provider.dart';
+import '../../services/usuario_service.dart';
 import '../../../propiedades/services/propiedad_service.dart';
+import '../../../pagos/screens/admin/admin_ver_como_residente_screen.dart';
 
 class UsuarioDetalleSheet extends StatelessWidget {
   final UsuarioResponse usuario;
   final bool mostrarAcciones;
+  final bool esAdmin;
 
   const UsuarioDetalleSheet({
     super.key,
     required this.usuario,
     this.mostrarAcciones = false,
+    this.esAdmin = false,
   });
 
   @override
@@ -68,11 +72,11 @@ class UsuarioDetalleSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Center(
-                      child: Text(
-                        usuario.nombre,
+                      child: _TextoDesplazable(
+                        texto: usuario.nombre,
                         style: theme.textTheme.titleLarge
                             ?.copyWith(fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
+                        centered: true,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -80,6 +84,14 @@ class UsuarioDetalleSheet extends StatelessWidget {
                     if (mostrarAcciones) ...[_BotonesAprobacion(usuario: usuario)],
 
                     const SizedBox(height: 24),
+
+                    if (esAdmin) ...[
+                      _AdminControlesSection(
+                        usuario: usuario,
+                        onCambiado: () => context.read<UsuarioProvider>().cargarTodos(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
                     _seccion(theme, 'Información general', [
                       _fila(theme, 'Rol', _etiquetaRol(usuario.rol)),
@@ -89,15 +101,17 @@ class UsuarioDetalleSheet extends StatelessWidget {
 
                       const SizedBox(height: 16),
                       _seccion(theme, 'Datos de contacto', [
-                          _fila(theme, 'Correo Electrónico', usuario.email),
+                          _fila(theme, 'Correo Electrónico', usuario.email, scrollable: true),
                         if (usuario.telefono != null)
                           _fila(theme, 'Teléfono', usuario.telefono!),
                       ]),
                     
 
-                    if (usuario.rol == 'RESIDENTE') ...[  
+                    if (usuario.rol == 'PROPIETARIO' || usuario.rol == 'INQUILINO') ...[
                       const SizedBox(height: 16),
                       _PropiedadesSection(usuario: usuario),
+                      const SizedBox(height: 16),
+                      _BotonVerComoResidente(usuario: usuario),
                     ],
 
                     const SizedBox(height: 24),
@@ -134,7 +148,10 @@ class UsuarioDetalleSheet extends StatelessWidget {
     );
   }
 
-  Widget _fila(ThemeData theme, String label, String valor) {
+  Widget _fila(ThemeData theme, String label, String valor,
+      {bool scrollable = false}) {
+    final valorStyle =
+        theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -146,11 +163,20 @@ class UsuarioDetalleSheet extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          Text(
-            valor,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
-          ),
+          const SizedBox(width: 12),
+          if (scrollable)
+            Flexible(
+              child: _TextoDesplazable(texto: valor, style: valorStyle),
+            )
+          else
+            Flexible(
+              child: Text(
+                valor,
+                style: valorStyle,
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
         ],
       ),
     );
@@ -162,8 +188,20 @@ class UsuarioDetalleSheet extends StatelessWidget {
         return 'Super Admin';
       case 'TENANT_ADMIN':
         return 'Administrador';
-      case 'RESIDENTE':
-        return 'Residente';
+      case 'PROPIETARIO':
+        return 'Propietario';
+      case 'INQUILINO':
+        return 'Inquilino';
+      case 'PROPIETARIO_PENDIENTE':
+        return 'Pendiente de aprobación';
+      case 'VIGILANTE':
+        return 'Vigilante';
+      case 'PORTERO':
+        return 'Portero';
+      case 'PISCINERO':
+        return 'Piscinero';
+      case 'CONTADOR':
+        return 'Contador';
       default:
         return rol;
     }
@@ -827,6 +865,314 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
   }
 }
 
+// ── Admin: toggle activo + cambio de rol ─────────────────────────────────────
+
+class _AdminControlesSection extends StatefulWidget {
+  final UsuarioResponse usuario;
+  final VoidCallback onCambiado;
+
+  const _AdminControlesSection({required this.usuario, required this.onCambiado});
+
+  @override
+  State<_AdminControlesSection> createState() => _AdminControlesSectionState();
+}
+
+class _AdminControlesSectionState extends State<_AdminControlesSection> {
+  late bool _activo;
+  late String _rolActual;
+  bool _cargando = false;
+
+  static const _rolesDisponibles = [
+    'PROPIETARIO',
+    'INQUILINO',
+    'VIGILANTE',
+    'PORTERO',
+    'PISCINERO',
+    'CONTADOR',
+    'TENANT_ADMIN',
+  ];
+
+  static const _rolesLabel = {
+    'PROPIETARIO': 'Propietario',
+    'INQUILINO': 'Inquilino',
+    'VIGILANTE': 'Vigilante',
+    'PORTERO': 'Portero',
+    'PISCINERO': 'Piscinero',
+    'CONTADOR': 'Contador',
+    'TENANT_ADMIN': 'Administrador',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _activo = widget.usuario.activo;
+    _rolActual = widget.usuario.rol;
+  }
+
+  Future<void> _toggleActivo(bool nuevo) async {
+    setState(() => _cargando = true);
+    try {
+      if (nuevo) {
+        await UsuarioService.activar(widget.usuario.id);
+      } else {
+        await UsuarioService.desactivar(widget.usuario.id);
+      }
+      setState(() => _activo = nuevo);
+      widget.onCambiado();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString().replaceFirst('Exception: ', '')),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  Future<void> _cambiarRol(String nuevoRol) async {
+    if (nuevoRol == _rolActual) return;
+    setState(() => _cargando = true);
+    try {
+      await UsuarioService.cambiarRol(widget.usuario.id, nuevoRol);
+      setState(() => _rolActual = nuevoRol);
+      widget.onCambiado();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Rol cambiado a ${_rolesLabel[nuevoRol] ?? nuevoRol}'),
+        backgroundColor: Colors.teal,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString().replaceFirst('Exception: ', '')),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
+    // Sólo mostrar roles válidos; si el rol actual no está en la lista, lo incluimos
+    final rolesOpciones = _rolesDisponibles.contains(_rolActual)
+        ? _rolesDisponibles
+        : [_rolActual, ..._rolesDisponibles];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Control de acceso',
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: cs.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              // Toggle activo
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                title: Text(
+                  _activo ? 'Cuenta activa' : 'Cuenta desactivada',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: _activo ? null : cs.error,
+                  ),
+                ),
+                subtitle: Text(
+                  _activo
+                      ? 'El usuario puede iniciar sesión'
+                      : 'El usuario no puede iniciar sesión',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                secondary: Icon(
+                  _activo ? Icons.lock_open_outlined : Icons.lock_outlined,
+                  color: _activo ? Colors.green : cs.error,
+                ),
+                value: _activo,
+                onChanged: _cargando ? null : _toggleActivo,
+              ),
+
+              Divider(height: 1, indent: 16, endIndent: 16, color: cs.outlineVariant),
+
+              // Selector de rol
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Icon(Icons.badge_outlined, color: cs.onSurfaceVariant, size: 22),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: rolesOpciones.contains(_rolActual) ? _rolActual : null,
+                        decoration: InputDecoration(
+                          labelText: 'Rol del usuario',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          isDense: true,
+                        ),
+                        items: rolesOpciones
+                            .map((r) => DropdownMenuItem(
+                                  value: r,
+                                  child: Text(_rolesLabel[r] ?? r,
+                                      style: const TextStyle(fontSize: 14)),
+                                ))
+                            .toList(),
+                        onChanged: _cargando
+                            ? null
+                            : (v) {
+                                if (v != null) _cambiarRol(v);
+                              },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (_cargando)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: LinearProgressIndicator(),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Texto con desplazamiento automático (marquee) ────────────────────────────
+
+class _TextoDesplazable extends StatefulWidget {
+  final String texto;
+  final TextStyle? style;
+  final bool centered;
+
+  const _TextoDesplazable({
+    required this.texto,
+    this.style,
+    this.centered = false,
+  });
+
+  @override
+  State<_TextoDesplazable> createState() => _TextoDesplazableState();
+}
+
+class _TextoDesplazableState extends State<_TextoDesplazable> {
+  late final ScrollController _ctrl;
+  bool _corriendo = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loop());
+  }
+
+  @override
+  void dispose() {
+    _corriendo = false;
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loop() async {
+    _corriendo = true;
+    // Espera inicial para que el layout se estabilice
+    await Future.delayed(const Duration(milliseconds: 1500));
+    while (_corriendo && mounted) {
+      if (!_ctrl.hasClients) break;
+      final max = _ctrl.position.maxScrollExtent;
+      if (max <= 0) break; // No hay overflow: detiene el loop
+
+      // Duración proporcional a la distancia (≈20 ms/px)
+      final ms = (max * 20).clamp(800, 6000).toInt();
+      await _ctrl.animateTo(
+        max,
+        duration: Duration(milliseconds: ms),
+        curve: Curves.linear,
+      );
+      if (!_corriendo || !mounted) break;
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!_corriendo || !mounted) break;
+      await _ctrl.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+      );
+      if (!_corriendo || !mounted) break;
+      await Future.delayed(const Duration(milliseconds: 1500));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      controller: _ctrl,
+      physics: const NeverScrollableScrollPhysics(),
+      child: Text(
+        widget.texto,
+        style: widget.style,
+        textAlign: widget.centered ? TextAlign.center : TextAlign.end,
+        softWrap: false,
+      ),
+    );
+  }
+}
+
+// ── Botón: ver como residente ─────────────────────────────────────────────────
+
+class _BotonVerComoResidente extends StatelessWidget {
+  final UsuarioResponse usuario;
+  const _BotonVerComoResidente({required this.usuario});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.visibility_outlined),
+        label: const Text('Ver como residente'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.orange.shade700,
+          side: BorderSide(color: Colors.orange.shade300),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => AdminVerComoResidenteScreen(
+                usuarioId: usuario.id,
+                usuarioNombre: usuario.nombre,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 // ── Botones de aprobación ─────────────────────────────────────────────────────
 
 class _BotonesAprobacion extends StatefulWidget {
@@ -886,6 +1232,49 @@ class _BotonesAprobacionState extends State<_BotonesAprobacion> {
     }
   }
 
+  Future<void> _mostrarMenuAprobacion(BuildContext context) async {
+    final provider = context.read<UsuarioProvider>();
+    final rolSeleccionado = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Aprobar como...'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.vpn_key_outlined),
+              title: const Text('Propietario'),
+              subtitle: const Text('Puede gestionar inquilinos de su unidad'),
+              onTap: () => Navigator.of(ctx).pop('PROPIETARIO'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Inquilino'),
+              subtitle: const Text('Acceso según permisos otorgados por el propietario'),
+              onTap: () => Navigator.of(ctx).pop('INQUILINO'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    );
+
+    if (rolSeleccionado == null) return;
+
+    await _accion(
+      fn: () => provider.aprobar(widget.usuario.id, rolDestino: rolSeleccionado),
+      successTitulo: 'Usuario aprobado',
+      successDescripcion:
+          '${widget.usuario.nombre} fue aprobado como $rolSeleccionado.',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.read<UsuarioProvider>();
@@ -911,14 +1300,7 @@ class _BotonesAprobacionState extends State<_BotonesAprobacion> {
         const SizedBox(width: 12),
         Expanded(
           child: FilledButton.icon(
-            onPressed: _cargando
-                ? null
-                : () => _accion(
-                      fn: () => provider.aprobar(widget.usuario.id),
-                      successTitulo: 'Usuario aprobado',
-                      successDescripcion:
-                          '${widget.usuario.nombre} fue aprobado correctamente.',
-                    ),
+            onPressed: _cargando ? null : () => _mostrarMenuAprobacion(context),
             icon: _cargando
                 ? const SizedBox(
                     width: 16,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/services/notificacion_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../models/login_response.dart';
 import '../models/multi_tenant_response.dart';
@@ -33,7 +34,11 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoggedIn => _status == AuthStatus.autenticado;
   bool get isAdmin => _rol == 'TENANT_ADMIN';
   bool get isSuperAdmin => _rol == 'SUPER_ADMIN';
-  bool get isResidente => _rol == 'RESIDENTE';
+  bool get isPropietario => _rol == 'PROPIETARIO';
+  bool get isInquilino => _rol == 'INQUILINO';
+
+  /// Verdadero si el usuario tiene acceso al área de residente (PROPIETARIO o INQUILINO)
+  bool get isAreaResidente => isPropietario || isInquilino;
 
   /// Al iniciar la app: intenta restaurar sesión guardada
   Future<void> cargarSesionGuardada() async {
@@ -130,7 +135,25 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Llamado automáticamente cuando el servidor devuelve 401 (token expirado).
+  Future<void> sesionExpirada() async {
+    await TokenStorage.borrarSesion();
+    _token = null;
+    _email = null;
+    _rol = null;
+    _tenantId = null;
+    _nombreConjunto = null;
+    _nombre = null;
+    _multiTenantPendiente = null;
+    _passwordTemporal = null;
+    _error = null;
+    _status = AuthStatus.noAutenticado;
+    notifyListeners();
+  }
+
   Future<void> logout() async {
+    // Eliminar token FCM antes de limpiar la sesión
+    await NotificacionService().eliminarTokenDelBackend();
     await TokenStorage.borrarSesion();
     _token = null;
     _email = null;
@@ -162,5 +185,8 @@ class AuthProvider extends ChangeNotifier {
     _nombre = response.nombre;
     _status = AuthStatus.autenticado;
     notifyListeners();
+
+    // Registrar token FCM tras sesión exitosa (no bloquea si falla)
+    NotificacionService().registrarTokenEnBackend();
   }
 }

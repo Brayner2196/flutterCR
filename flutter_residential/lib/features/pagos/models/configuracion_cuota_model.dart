@@ -7,6 +7,8 @@ class ConfiguracionCuotaModel {
   final double monto;
   final String periodicidad;
   final String fechaVigenciaDesde;
+  /// Null = vigente indefinidamente.
+  final String? fechaVigenciaHasta;
   final bool activo;
 
   const ConfiguracionCuotaModel({
@@ -18,6 +20,7 @@ class ConfiguracionCuotaModel {
     required this.monto,
     required this.periodicidad,
     required this.fechaVigenciaDesde,
+    this.fechaVigenciaHasta,
     required this.activo,
   });
 
@@ -31,6 +34,7 @@ class ConfiguracionCuotaModel {
         monto: (json['monto'] as num).toDouble(),
         periodicidad: json['periodicidad'] as String,
         fechaVigenciaDesde: json['fechaVigenciaDesde'] as String,
+        fechaVigenciaHasta: json['fechaVigenciaHasta'] as String?,
         activo: json['activo'] as bool,
       );
 
@@ -42,5 +46,6 @@ class ConfiguracionCuotaModel {
         'monto': monto,
         'periodicidad': periodicidad,
         'fechaVigenciaDesde': fechaVigenciaDesde,
+        if (fechaVigenciaHasta != null) 'fechaVigenciaHasta': fechaVigenciaHasta,
       };
 }

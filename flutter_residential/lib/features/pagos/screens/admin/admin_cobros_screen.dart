@@ -4,7 +4,9 @@ import '../../providers/cobros_provider.dart';
 import '../../models/cobro_model.dart';
 import '../../models/periodo_cobro_model.dart';
 import '../../../../shared/theme/app_theme.dart';
+import 'admin_cobro_especial_screen.dart';
 import 'admin_configurar_cuotas_screen.dart';
+import 'admin_configurar_mora_screen.dart';
 import 'admin_generar_cobros_screen.dart';
 
 class AdminCobrosScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class AdminCobrosScreen extends StatefulWidget {
 
 class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
   PeriodoCobroModel? _periodoSeleccionado;
+  String? _estadoFiltro; // null = todos
 
   @override
   void initState() {
@@ -24,6 +27,9 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
       context.read<CobrosProvider>().cargarPeriodos();
     });
   }
+
+  String _fmt(double v) =>
+      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 
   Future<void> _confirmarCerrarPeriodo() async {
     final p = _periodoSeleccionado;
@@ -137,6 +143,15 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
         title: const Text('Cobros'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.gavel_outlined),
+            tooltip: 'Configurar mora',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const AdminConfigurarMoraScreen()),
+            ),
+          ),
+          IconButton(
             icon: const Icon(Icons.tune),
             tooltip: 'Configurar cuotas',
             onPressed: () => Navigator.push(
@@ -156,6 +171,20 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
               onPressed: _confirmarCerrarPeriodo,
             ),
           IconButton(
+            icon: const Icon(Icons.receipt_long_outlined),
+            tooltip: 'Cobro especial',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const AdminCobroEspecialScreen()),
+            ).then((result) {
+              if (result == true && mounted && _periodoSeleccionado != null) {
+                context.read<CobrosProvider>().cargarCobrosAdmin(
+                    periodoId: _periodoSeleccionado!.id);
+              }
+            }),
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Generar cobros',
             onPressed: () => Navigator.push(
@@ -171,6 +200,8 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
           : Column(
               children: [
                 if (provider.periodos.isNotEmpty) _selectorPeriodo(provider),
+                if (_periodoSeleccionado != null && provider.cobros.isNotEmpty)
+                  _resumenYFiltros(provider),
                 Expanded(child: _listaCobros(provider)),
               ],
             ),
@@ -193,21 +224,166 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
         items: provider.periodos
             .map((p) => DropdownMenuItem(
                 value: p,
-                child: Text(
-                    '${p.nombreMes} — ${p.estado}',
-                    style: TextStyle(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: p.estaAbierto ? AppColors.ok : cs.onSurfaceVariant.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(p.nombreMes,
+                          style: TextStyle(color: cs.onSurface)),
+                    ),
+                    Text(
+                      p.estaAbierto ? 'ABIERTO' : 'CERRADO',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
                         color: p.estaAbierto
                             ? AppColors.ok
-                            : cs.onSurface))))
+                            : cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                )))
             .toList(),
         onChanged: (p) {
-          setState(() => _periodoSeleccionado = p);
+          setState(() {
+            _periodoSeleccionado = p;
+            _estadoFiltro = null;
+          });
           if (p != null) {
             context
                 .read<CobrosProvider>()
                 .cargarCobrosAdmin(periodoId: p.id);
           }
         },
+      ),
+    );
+  }
+
+  Widget _resumenYFiltros(CobrosProvider provider) {
+    final cs = Theme.of(context).colorScheme;
+    final cobros = provider.cobros;
+    final totalEsperado = cobros.fold<double>(0, (s, c) => s + c.montoTotal);
+    final totalRecaudado = cobros.fold<double>(0, (s, c) => s + c.montoPagado);
+    final pct = totalEsperado > 0 ? totalRecaudado / totalEsperado : 0.0;
+    final colorPct = pct >= 0.9
+        ? AppColors.ok
+        : pct >= 0.6
+            ? AppColors.warning
+            : AppColors.danger;
+
+    final counts = <String, int>{};
+    for (final c in cobros) {
+      counts[c.estado] = (counts[c.estado] ?? 0) + 1;
+    }
+
+    return Container(
+      color: cs.surfaceContainerLow,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _fmt(totalRecaudado),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    Text(
+                      'de ${_fmt(totalEsperado)} esperado',
+                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colorPct.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${(pct * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: colorPct,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: pct.clamp(0.0, 1.0),
+              backgroundColor: cs.surfaceContainerHighest,
+              color: colorPct,
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _filtroChip('Todos', cobros.length, null, cs.primary),
+                if (counts['PENDIENTE'] != null)
+                  _filtroChip('Pendiente', counts['PENDIENTE']!, 'PENDIENTE', AppColors.warning),
+                if (counts['VENCIDO'] != null)
+                  _filtroChip('Vencido', counts['VENCIDO']!, 'VENCIDO', AppColors.danger),
+                if (counts['PAGADO'] != null)
+                  _filtroChip('Pagado', counts['PAGADO']!, 'PAGADO', AppColors.ok),
+                if (counts['PARCIAL'] != null)
+                  _filtroChip('Parcial', counts['PARCIAL']!, 'PARCIAL', AppColors.orange),
+                if (counts['EXONERADO'] != null)
+                  _filtroChip('Exonerado', counts['EXONERADO']!, 'EXONERADO', AppColors.purple),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _filtroChip(String label, int count, String? estado, Color color) {
+    final selected = _estadoFiltro == estado;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: ChoiceChip(
+        label: Text('$label  $count'),
+        selected: selected,
+        onSelected: (_) => setState(() => _estadoFiltro = estado),
+        selectedColor: color.withValues(alpha: 0.15),
+        backgroundColor: Colors.transparent,
+        labelStyle: TextStyle(
+          color: selected ? color : Theme.of(context).colorScheme.onSurfaceVariant,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          fontSize: 12,
+        ),
+        side: BorderSide(
+          color: selected ? color : Theme.of(context).colorScheme.outlineVariant,
+          width: selected ? 1.5 : 1,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }
@@ -252,11 +428,35 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
         ),
       );
     }
+
+    final cobros = _estadoFiltro == null
+        ? provider.cobros
+        : provider.cobros.where((c) => c.estado == _estadoFiltro).toList();
+
+    if (cobros.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.filter_list_off, size: 40, color: cs.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text('Sin cobros con estado "$_estadoFiltro"',
+                style: TextStyle(color: cs.onSurfaceVariant)),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => setState(() => _estadoFiltro = null),
+              child: const Text('Quitar filtro'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(12),
-      itemCount: provider.cobros.length,
+      itemCount: cobros.length,
       itemBuilder: (_, i) => _CobroAdminTile(
-        cobro: provider.cobros[i],
+        cobro: cobros[i],
         onExonerar: _exonerarCobro,
       ),
     );
@@ -296,7 +496,7 @@ class _CobroAdminTile extends StatelessWidget {
                 style: TextStyle(
                     fontWeight: FontWeight.w600, color: cs.onSurface)),
             subtitle: Text(
-                '${cobro.usuarioNombre} · ${cobro.concepto}',
+                cobro.concepto,
                 style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,

@@ -86,6 +86,7 @@ class _AdminCrearVotacionScreenState extends State<AdminCrearVotacionScreen> {
                     border: OutlineInputBorder(),
                     alignLabelWithHint: true),
                 maxLines: 3,
+                maxLength: 1000,
               ),
               const SizedBox(height: 16),
               const Text('Tipo de respuesta', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -127,6 +128,7 @@ class _AdminCrearVotacionScreenState extends State<AdminCrearVotacionScreen> {
                           decoration: InputDecoration(
                               labelText: 'Opción ${entry.key + 1}',
                               border: const OutlineInputBorder()),
+                          maxLength: 300,
                           validator: (v) => (v == null || v.isEmpty) ? 'Escribe la opción' : null,
                         ),
                       ),

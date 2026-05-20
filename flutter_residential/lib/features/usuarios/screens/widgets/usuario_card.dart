@@ -178,20 +178,14 @@ class UsuarioCard extends StatelessWidget {
   }
 
   String _ubicacion() {
-    final partes = <String>[];
-    if (usuario.torre != null && usuario.torre!.isNotEmpty) {
-      partes.add(usuario.torre!);
-    }
-    if (usuario.apto != null && usuario.apto!.isNotEmpty) {
-      partes.add('Apto ${usuario.apto}');
-    }
-    return partes.isNotEmpty ? partes.join(' • ') : usuario.email;
+    return usuario.email;
   }
 
   String _etiquetaRol(String rol) {
     switch (rol) {
       case 'TENANT_ADMIN': return 'Administrador';
-      case 'RESIDENTE': return 'Residente';
+      case 'PROPIETARIO': return 'Propietario';
+      case 'INQUILINO': return 'Inquilino';
       case 'PISCINERO': return 'Piscinero';
       case 'VIGILANTE': return 'Vigilante';
       case 'PORTERO': return 'Portero';
@@ -202,8 +196,9 @@ class UsuarioCard extends StatelessWidget {
   Color _colorRol(String rol, ThemeData theme) {
     switch (rol) {
       case 'TENANT_ADMIN': return const Color(0xFF2563EB);
-      case 'RESIDENTE': return const Color(0xFF16A34A);
-      case 'PISCINERO': return const Color(0xFF0891B2);
+      case 'PROPIETARIO': return const Color(0xFF16A34A);
+      case 'INQUILINO': return const Color(0xFF0891B2);
+      case 'PISCINERO': return const Color(0xFF9333EA);
       case 'VIGILANTE': return const Color(0xFF6B7280);
       case 'PORTERO': return const Color(0xFF7C3AED);
       default: return theme.colorScheme.primary;

@@ -26,7 +26,9 @@ class InitialRouterScreen extends StatelessWidget {
         if (auth.isLoggedIn) {
           if (auth.isSuperAdmin) return const SuperAdminHomeScreen();
           if (auth.isAdmin) return const AdminHomeScreen();
-          return const ResidenteHomeScreen();
+          if (auth.isAreaResidente) return const ResidenteHomeScreen();// Los inquilinos ven la misma pantalla que los propietarios, solo que con menos opciones
+          // Fallback por si llega un rol desconocido
+          return const LoginScreen();
         }
 
         if (app.haVistoOnboarding == false) {
