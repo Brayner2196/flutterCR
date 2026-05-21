@@ -57,4 +57,14 @@ class PasarelaService {
       requiresAuth: true,
     );
   }
+
+  /// Confirma un pago de Wompi desde la app consultando la transacción en la API de Wompi.
+  /// Se llama cuando el WebView intercepta la URL de éxito antes de que llegue el webhook.
+  static Future<void> confirmarPagoWompi(String transactionId) async {
+    await ApiClient.post(
+      ApiConstants.wompiConfirmarPago(transactionId),
+      {},
+      requiresAuth: true,
+    );
+  }
 }

@@ -10,6 +10,7 @@ import '../../providers/cobros_provider.dart';
 import '../../models/pasarela_disponible_model.dart';
 import '../../services/cobro_service.dart';
 import '../../services/pasarela_service.dart';
+import '../../widgets/pasarela_logo_widget.dart';
 import 'mercado_pago_webview_screen.dart';
 
 class EstadoCuentaScreen extends StatefulWidget {
@@ -834,12 +835,7 @@ class _CobroCardState extends State<_CobroCard> {
             const SizedBox(height: 4),
             ...pasarelas.map((p) => ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor:
-                        _colorPasarela(p.tipo).withOpacity(0.12),
-                    child: Icon(_iconoPasarela(p.tipo),
-                        color: _colorPasarela(p.tipo), size: 22),
-                  ),
+                  leading: PasarelaLogoWidget(tipo: p.tipo, size: 44),
                   title: Text(p.nombre,
                       style:
                           const TextStyle(fontWeight: FontWeight.w600)),
@@ -1779,8 +1775,8 @@ class _FilaMovimiento extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(_tipoIcon, size: 13, color: Colors.grey.shade500),
-                    const SizedBox(width: 4),
+                    MetodoPagoIcon(metodoPago: mov.metodoPago, size: 20),
+                    const SizedBox(width: 6),
                     Text(
                       mov.esPago ? 'Pago' : 'Abono',
                       style: TextStyle(
@@ -1791,7 +1787,7 @@ class _FilaMovimiento extends StatelessWidget {
                     ),
                     if (mov.metodoPago != null) ...[
                       Text(
-                        ' · ${mov.metodoPago}',
+                        ' · ${MetodoPagoIcon.nombreLegible(mov.metodoPago)}',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade500,

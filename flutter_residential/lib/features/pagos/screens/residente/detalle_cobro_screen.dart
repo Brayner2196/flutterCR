@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/cobro_model.dart';
 import '../../models/pasarela_disponible_model.dart';
 import '../../services/pasarela_service.dart';
+import '../../widgets/pasarela_logo_widget.dart';
 import 'mercado_pago_webview_screen.dart';
 import 'registrar_abono_screen.dart';
 import 'registrar_pago_screen.dart';
@@ -70,18 +71,14 @@ class _DetalleCobroScreenState extends State<DetalleCobroScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             ...pasarelas.map((p) => ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor:
-                        _colorPasarela(p.tipo).withValues(alpha: 0.1),
-                    child: Icon(_iconoPasarela(p.tipo),
-                        color: _colorPasarela(p.tipo)),
-                  ),
-                  title: Text(p.nombre),
+                  leading: PasarelaLogoWidget(tipo: p.tipo, size: 44),
+                  title: Text(p.nombre,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle:
-                      p.prioridad == 1 ? const Text('Recomendado') : null,
-                  trailing: p.prioridad == 1
-                      ? const Icon(Icons.star, color: Colors.amber, size: 18)
-                      : null,
+                      p.prioridad == 1 ? const Text('Recomendado',
+                          style: TextStyle(color: Colors.teal, fontSize: 12))
+                          : null,
+                  trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.pop(context, p.tipo),
                 )),
           ],

@@ -64,8 +64,9 @@ class ApiConstants {
   static const String misPagos = '/api/residente/pagos';
   static String movimientosCobro(int id) => '/api/residente/cobros/$id/movimientos';
 
-  // Confirmación de pago MercadoPago desde WebView (endpoint unificado en PasarelaController)
+  // Confirmación de pagos desde WebView (endpoints en PasarelaController)
   static String mpConfirmarPago(String paymentId) => '/api/pago/confirmar/mp/$paymentId';
+  static String wompiConfirmarPago(String txId) => '/api/pago/confirmar/wompi/$txId';
 
   // Pasarelas de pago (multi-pasarela unificado)
   static const String pasarelasDisponibles = '/api/residente/pago/pasarelas';

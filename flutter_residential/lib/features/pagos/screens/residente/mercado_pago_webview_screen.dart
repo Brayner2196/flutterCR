@@ -93,8 +93,9 @@ class _MercadoPagoWebViewScreenState extends State<MercadoPagoWebViewScreen> {
   }
 
   /// Confirma en el backend y hace pop.
-  /// Solo llama al endpoint de confirmar para MercadoPago;
-  /// Wompi/Bold se confirman automáticamente vía webhook.
+  /// - MercadoPago: extrae payment_id de la URL y llama al endpoint MP.
+  /// - Wompi: extrae el id de transacción de la URL y llama al endpoint Wompi.
+  /// - Bold: el webhook lo registra en background; solo se hace pop.
   Future<void> _procesarExito(String url) async {
     if (_procesando) return;
     _procesando = true;
@@ -106,6 +107,15 @@ class _MercadoPagoWebViewScreenState extends State<MercadoPagoWebViewScreen> {
           await PasarelaService.confirmarPagoMP(paymentId);
         } catch (e) {
           debugPrint('WebView MP: error confirmando pago → $e');
+        }
+      }
+    } else if (widget.tipoPasarela == TipoPasarela.wompi) {
+      final transactionId = Uri.parse(url).queryParameters['id'];
+      if (transactionId != null && transactionId.isNotEmpty) {
+        try {
+          await PasarelaService.confirmarPagoWompi(transactionId);
+        } catch (e) {
+          debugPrint('WebView Wompi: error confirmando pago → $e');
         }
       }
     }
