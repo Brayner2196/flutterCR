@@ -44,7 +44,15 @@ class TokenStorage {
     };
   }
 
+  /// Borra cada clave en paralelo (más rápido que deleteAll() en Android KeyStore).
   static Future<void> borrarSesion() async {
-    await _storage.deleteAll();
+    await Future.wait([
+      _storage.delete(key: _keyToken),
+      _storage.delete(key: _keyEmail),
+      _storage.delete(key: _keyRol),
+      _storage.delete(key: _keyTenantId),
+      _storage.delete(key: _keyNombreConjunto),
+      _storage.delete(key: _keyNombre),
+    ]);
   }
 }

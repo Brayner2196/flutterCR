@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/services/notificacion_service.dart';
 import '../../../core/storage/token_storage.dart';
@@ -152,9 +153,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    // Eliminar token FCM antes de limpiar la sesión
-    await NotificacionService().eliminarTokenDelBackend();
-    await TokenStorage.borrarSesion();
+    // Limpiar estado en memoria y navegar al login INMEDIATAMENTE.
+    // El cleanup pesado (HTTP + storage) corre en background para no bloquear la UI.
     _token = null;
     _email = null;
     _rol = null;
@@ -165,7 +165,11 @@ class AuthProvider extends ChangeNotifier {
     _passwordTemporal = null;
     _error = null;
     _status = AuthStatus.noAutenticado;
-    notifyListeners();
+    notifyListeners(); // ← El router lleva al login al instante
+
+    // Cleanup en background: si falla no afecta al usuario
+    NotificacionService().eliminarTokenDelBackend(); // fire-and-forget (HTTP)
+    unawaited(TokenStorage.borrarSesion());
   }
 
   Future<void> _aplicarSesion(LoginResponse response) async {
