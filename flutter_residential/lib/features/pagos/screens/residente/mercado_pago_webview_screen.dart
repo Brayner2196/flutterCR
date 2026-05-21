@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../../services/mercado_pago_service.dart';
+import '../../models/pasarela_disponible_model.dart';
+import '../../services/pasarela_service.dart';
 
 enum ResultadoPagoMP { exito, fallo, pendiente, cancelado }
 
+/// WebView genérico de pago. Funciona para MercadoPago, Wompi y Bold.
+/// Solo llama al endpoint de confirmación cuando [tipoPasarela] es MP,
+/// ya que Wompi/Bold se confirman automáticamente vía webhook.
 class MercadoPagoWebViewScreen extends StatefulWidget {
   final String checkoutUrl;
   final String tituloCobro;
+  final TipoPasarela tipoPasarela;
 
   const MercadoPagoWebViewScreen({
     super.key,
     required this.checkoutUrl,
     required this.tituloCobro,
+    this.tipoPasarela = TipoPasarela.mercadoPago,
   });
 
   @override
@@ -86,19 +92,21 @@ class _MercadoPagoWebViewScreenState extends State<MercadoPagoWebViewScreen> {
     return NavigationDecision.navigate;
   }
 
-  /// Extrae el payment_id de la URL de retorno de MP, confirma en el backend
-  /// y hace pop. Espera la confirmación para evitar que _notificarPagoExitoso
-  /// consulte el cobro antes de que el backend lo haya guardado (race condition).
+  /// Confirma en el backend y hace pop.
+  /// Solo llama al endpoint de confirmar para MercadoPago;
+  /// Wompi/Bold se confirman automáticamente vía webhook.
   Future<void> _procesarExito(String url) async {
     if (_procesando) return;
     _procesando = true;
 
-    final paymentId = _extraerPaymentId(url);
-    if (paymentId != null) {
-      try {
-        await MercadoPagoService.confirmarPago(paymentId);
-      } catch (e) {
-        debugPrint('WebView MP: error confirmando pago → $e');
+    if (widget.tipoPasarela == TipoPasarela.mercadoPago) {
+      final paymentId = _extraerPaymentId(url);
+      if (paymentId != null) {
+        try {
+          await PasarelaService.confirmarPagoMP(paymentId);
+        } catch (e) {
+          debugPrint('WebView MP: error confirmando pago → $e');
+        }
       }
     }
 
@@ -108,14 +116,18 @@ class _MercadoPagoWebViewScreenState extends State<MercadoPagoWebViewScreen> {
   Future<void> _procesarPendiente(String url) async {
     if (_procesando) return;
     _procesando = true;
-    final paymentId = _extraerPaymentId(url);
-    if (paymentId != null) {
-      try {
-        await MercadoPagoService.confirmarPago(paymentId);
-      } catch (e) {
-        debugPrint('WebView MP: error confirmando pendiente → $e');
+
+    if (widget.tipoPasarela == TipoPasarela.mercadoPago) {
+      final paymentId = _extraerPaymentId(url);
+      if (paymentId != null) {
+        try {
+          await PasarelaService.confirmarPagoMP(paymentId);
+        } catch (e) {
+          debugPrint('WebView MP: error confirmando pendiente → $e');
+        }
       }
     }
+
     if (mounted) Navigator.of(context).pop(ResultadoPagoMP.pendiente);
   }
 

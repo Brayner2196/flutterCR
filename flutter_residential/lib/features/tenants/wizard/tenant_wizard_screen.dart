@@ -205,7 +205,7 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
               children: [
                 const Icon(Icons.check_circle_outline, color: Colors.white),
                 const SizedBox(width: 10),
-                Text('Tenant "${_nombreCtrl.text.trim()}" creado exitosamente'),
+                const Text('Tenant creado exitosamente'),
               ],
             ),
             backgroundColor: AppColors.ok,

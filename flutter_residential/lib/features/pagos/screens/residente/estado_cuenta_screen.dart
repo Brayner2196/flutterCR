@@ -7,8 +7,9 @@ import '../../models/estado_cuenta_model.dart';
 import '../../models/movimiento_cobro_model.dart';
 import '../../providers/abono_provider.dart';
 import '../../providers/cobros_provider.dart';
+import '../../models/pasarela_disponible_model.dart';
 import '../../services/cobro_service.dart';
-import '../../services/mercado_pago_service.dart';
+import '../../services/pasarela_service.dart';
 import 'mercado_pago_webview_screen.dart';
 
 class EstadoCuentaScreen extends StatefulWidget {
@@ -755,13 +756,38 @@ class _CobroCardState extends State<_CobroCard> {
 
   CobroModel get cobro => widget.cobro;
 
-  // ─── MercadoPago ─────────────────────────────────────────────────────────
+  // ─── Pago multi-pasarela ──────────────────────────────────────────────────
 
-  Future<void> _pagarConMercadoPago() async {
+  /// Inicia el pago consultando las pasarelas disponibles del tenant.
+  /// Si hay una sola → va directo. Si hay varias → muestra selector.
+  Future<void> _iniciarPago({double? monto}) async {
     setState(() => _loadingMp = true);
     try {
-      final url = await MercadoPagoService.obtenerCheckoutUrl(cobro.id);
-      await _abrirWebViewYNotificar(url);
+      final pasarelas = await PasarelaService.obtenerDisponibles();
+      if (pasarelas.isEmpty) {
+        throw Exception('No hay métodos de pago configurados para este conjunto');
+      }
+
+      TipoPasarela? pasarelaElegida;
+      if (pasarelas.length == 1) {
+        pasarelaElegida = pasarelas.first.tipo;
+      } else {
+        // Pausar loading mientras el usuario elige
+        setState(() => _loadingMp = false);
+        if (!mounted) return;
+        pasarelaElegida = await _mostrarSelectorPasarela(pasarelas);
+        if (pasarelaElegida == null || !mounted) return;
+        setState(() => _loadingMp = true);
+      }
+
+      final checkout = await PasarelaService.crearCheckout(
+        cobro.id,
+        pasarelaElegida,
+        monto: monto,
+      );
+
+      await _abrirWebViewYNotificar(checkout.checkoutUrl,
+          tipoPasarela: checkout.tipoPasarela);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -773,6 +799,83 @@ class _CobroCardState extends State<_CobroCard> {
       }
     } finally {
       if (mounted) setState(() => _loadingMp = false);
+    }
+  }
+
+  /// Muestra un bottom sheet para elegir entre varias pasarelas disponibles.
+  Future<TipoPasarela?> _mostrarSelectorPasarela(
+      List<PasarelaDisponibleModel> pasarelas) {
+    return showModalBottomSheet<TipoPasarela>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Elige método de pago',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 4),
+            ...pasarelas.map((p) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor:
+                        _colorPasarela(p.tipo).withOpacity(0.12),
+                    child: Icon(_iconoPasarela(p.tipo),
+                        color: _colorPasarela(p.tipo), size: 22),
+                  ),
+                  title: Text(p.nombre,
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: p.prioridad == 1
+                      ? const Text('Recomendado',
+                          style: TextStyle(
+                              color: Colors.teal, fontSize: 12))
+                      : null,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.pop(ctx, p.tipo),
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _iconoPasarela(TipoPasarela tipo) {
+    switch (tipo) {
+      case TipoPasarela.mercadoPago:
+        return Icons.account_balance_wallet_outlined;
+      case TipoPasarela.wompi:
+        return Icons.credit_card_outlined;
+      case TipoPasarela.bold:
+        return Icons.payments_outlined;
+    }
+  }
+
+  Color _colorPasarela(TipoPasarela tipo) {
+    switch (tipo) {
+      case TipoPasarela.mercadoPago:
+        return const Color(0xFF009EE3);
+      case TipoPasarela.wompi:
+        return Colors.purple;
+      case TipoPasarela.bold:
+        return Colors.green;
     }
   }
 
@@ -863,7 +966,7 @@ class _CobroCardState extends State<_CobroCard> {
                 ),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  _pagarConMercadoPago();
+                  _iniciarPago();
                 },
                 child: Text(
                   'Pagar (${widget.formatMonto(cobro.montoPendiente)})',
@@ -1048,11 +1151,11 @@ class _CobroCardState extends State<_CobroCard> {
                         final monto = double.parse(
                             montoCtrl.text.replaceAll(',', '.'));
                         Navigator.pop(ctx);
-                        _pagarConMercadoPagoMonto(monto);
+                        _iniciarPago(monto: monto);
                       },
                       icon: const Icon(Icons.open_in_browser),
                       label: const Text(
-                        'Pagar con Mercado Pago',
+                        'Continuar al pago',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 15),
                       ),
@@ -1067,39 +1170,18 @@ class _CobroCardState extends State<_CobroCard> {
     );
   }
 
-  /// Pago con monto personalizado — misma lógica que _pagarConMercadoPago
-  /// pero envía el monto al backend para crear una preferencia parcial.
-  Future<void> _pagarConMercadoPagoMonto(double monto) async {
-    setState(() => _loadingMp = true);
-    try {
-      final url = await MercadoPagoService.obtenerCheckoutUrl(
-        cobro.id,
-        monto: monto,
-      );
-      await _abrirWebViewYNotificar(url);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loadingMp = false);
-    }
-  }
-
-  /// Lógica compartida: abre la WebView de MP, interpreta el resultado
-  /// y notifica al padre con el cobro actualizado (o null en error).
-  Future<void> _abrirWebViewYNotificar(String url) async {
+  /// Abre la WebView del pago, interpreta el resultado y notifica al padre.
+  Future<void> _abrirWebViewYNotificar(
+    String url, {
+    TipoPasarela tipoPasarela = TipoPasarela.mercadoPago,
+  }) async {
     if (!mounted) return;
     final resultado = await Navigator.push<ResultadoPagoMP>(
       context,
       MaterialPageRoute(
         builder: (_) => MercadoPagoWebViewScreen(
           checkoutUrl: url,
+          tipoPasarela: tipoPasarela,
           tituloCobro: cobro.anio != null
               ? '${cobro.concepto} ${widget.nombreMes}/${cobro.anio}'
               : cobro.concepto,

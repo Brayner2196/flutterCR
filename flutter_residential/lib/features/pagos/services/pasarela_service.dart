@@ -3,8 +3,8 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
 import '../models/pasarela_disponible_model.dart';
 
-/// Servicio genérico de pasarelas de pago.
-/// Reemplaza gradualmente a MercadoPagoService para los flujos nuevos.
+/// Servicio unificado de pasarelas de pago.
+/// Todas las credenciales se leen de BD encriptada por tenant (no hay variables de entorno).
 class PasarelaService {
   /// Obtiene las pasarelas activas del tenant del residente autenticado.
   static Future<List<PasarelaDisponibleModel>> obtenerDisponibles() async {
@@ -48,12 +48,13 @@ class PasarelaService {
     throw Exception(errorBody['message'] ?? 'Error al iniciar el pago');
   }
 
-  /// Confirma un pago de MercadoPago desde la app (back_url).
+  /// Confirma un pago de MercadoPago desde la app (interceptado en el WebView).
+  /// Requiere auth para que el backend pueda resolver la config del tenant desde el JWT.
   static Future<void> confirmarPagoMP(String paymentId) async {
     await ApiClient.post(
       ApiConstants.mpConfirmarPago(paymentId),
       {},
-      requiresAuth: false,
+      requiresAuth: true,
     );
   }
 }

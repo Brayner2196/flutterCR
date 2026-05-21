@@ -1,9 +1,9 @@
 class ApiConstants {
   /// Base URL for the API
   //static const String baseUrl = 'http://localhost:8080';
-  static const String baseUrl = 'http://10.0.2.2:8080'; // Para emulador Android
+  //static const String baseUrl = 'http://10.0.2.2:8080'; // Para emulador Android
   //static const String baseUrl = 'https://backendcr-production-991c.up.railway.app'; // Para emulador Android
-  //static const String baseUrl = 'https://cr-dev.up.railway.app'; // Para emulador Android
+  static const String baseUrl = 'https://cr-dev.up.railway.app'; // Para emulador Android
   
 
   // Auth
@@ -64,9 +64,8 @@ class ApiConstants {
   static const String misPagos = '/api/residente/pagos';
   static String movimientosCobro(int id) => '/api/residente/cobros/$id/movimientos';
 
-  // MercadoPago (backward compatible)
-  static String mpPreferencia(int cobroId) => '/api/residente/mp/preferencia/$cobroId';
-  static String mpConfirmarPago(String paymentId) => '/api/mp/confirmar/$paymentId';
+  // Confirmación de pago MercadoPago desde WebView (endpoint unificado en PasarelaController)
+  static String mpConfirmarPago(String paymentId) => '/api/pago/confirmar/mp/$paymentId';
 
   // Pasarelas de pago (multi-pasarela unificado)
   static const String pasarelasDisponibles = '/api/residente/pago/pasarelas';
