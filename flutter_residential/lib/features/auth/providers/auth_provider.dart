@@ -175,6 +175,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _aplicarSesion(LoginResponse response) async {
     await TokenStorage.guardarSesion(
       token: response.token,
+      refreshToken: response.refreshToken,
       email: response.email,
       rol: response.rol,
       tenantId: response.tenantId,

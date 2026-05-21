@@ -10,7 +10,8 @@ class ApiConstants {
   static const String login = '/auth/login';
   static const String seleccionarTenant = '/auth/login/seleccionar';
   static const String registro = '/auth/registro';
-
+  static const String refresh = '/auth/refresh';
+  
   // Usuarios
   static const String usuarios = '/api/usuarios';
   static const String usuariosPendientes = '/api/usuarios/pendientes';
@@ -79,10 +80,8 @@ class ApiConstants {
 
   // Super Admin — pasarelas por tenant
   static String tenantPasarelas(int tenantId) => '/api/tenants/$tenantId/pasarelas';
-  static String tenantPasarelaToggle(int tenantId, int pasarelaId) =>
-      '/api/tenants/$tenantId/pasarelas/$pasarelaId/toggle';
-  static String tenantPasarelaEliminar(int tenantId, int pasarelaId) =>
-      '/api/tenants/$tenantId/pasarelas/$pasarelaId';
+  static String tenantPasarelaToggle(int tenantId, int pasarelaId) => '/api/tenants/$tenantId/pasarelas/$pasarelaId/toggle';
+  static String tenantPasarelaEliminar(int tenantId, int pasarelaId) => '/api/tenants/$tenantId/pasarelas/$pasarelaId';
 
   // Abonos — residente
   static const String misAbonos = '/api/residente/abonos';
@@ -120,8 +119,7 @@ class ApiConstants {
   static String suspenderZona(int id) => '/api/admin/zonas-comunes/$id/suspender';
   static String reactivarZona(int id) => '/api/admin/zonas-comunes/$id/reactivar';
   static String excepcionesZona(int id) => '/api/admin/zonas-comunes/$id/excepciones';
-  static String eliminarExcepcionZona(int zonaId, int excId) =>
-      '/api/admin/zonas-comunes/$zonaId/excepciones/$excId';
+  static String eliminarExcepcionZona(int zonaId, int excId) => '/api/admin/zonas-comunes/$zonaId/excepciones/$excId';
 
   // Reservas — residente
   static const String residenteZonasComunes = '/api/residente/zonas-comunes';

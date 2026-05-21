@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../features/pagos/models/pasarela_disponible_model.dart';
+import '../../../../features/pagos/widgets/pasarela_comisiones_widget.dart';
 
 // ─── Modelo interno del wizard ────────────────────────────────────────────────
 
@@ -305,6 +306,14 @@ class _PasarelaCardState extends State<_PasarelaCard> {
               ),
             ),
           ],
+
+          // ── Tarifas de comisión (dropdown inline, siempre visible) ─────
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(14),
+            ),
+            child: PasarelaComisionesInline(tipo: p.tipo),
+          ),
         ],
       ),
     );

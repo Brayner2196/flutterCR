@@ -23,6 +23,7 @@ dependencies:
   flutter_staggered_animations: ^1.1.1
   url_launcher: ^6.3.1
   webview_flutter: ^4.10.0
+  connectivity_plus: ^6.1.4
 
   # Firebase / FCM
   firebase_core: ^3.6.0
@@ -42,6 +43,12 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/icons/icono_mp.png
+    - assets/icons/logo_wompi.png
+    - assets/icons/icono_wompi_black.png
+    - assets/icons/logo_bold.png
 
   fonts:
     - family: GoogleSans

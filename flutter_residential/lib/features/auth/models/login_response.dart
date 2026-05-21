@@ -1,5 +1,6 @@
 class LoginResponse {
   final String token;
+  final String refreshToken;
   final String email;
   final String rol;
   final String tenantId;
@@ -8,6 +9,7 @@ class LoginResponse {
 
   LoginResponse({
     required this.token,
+    required this.refreshToken,
     required this.email,
     required this.rol,
     required this.tenantId,
@@ -17,12 +19,13 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
-      token: json['token'],
-      email: json['email'],
-      rol: json['rol'],
-      tenantId: json['tenantId'],
-      nombreConjunto: json['nombreConjunto'],
-      nombre: json['nombre'],
+      token: json['token'] as String,
+      refreshToken: json['refreshToken'] as String? ?? '',
+      email: json['email'] as String,
+      rol: json['rol'] as String,
+      tenantId: json['tenantId'] as String,
+      nombreConjunto: json['nombreConjunto'] as String?,
+      nombre: json['nombre'] as String?,
     );
   }
 }

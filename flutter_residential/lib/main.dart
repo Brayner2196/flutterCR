@@ -21,6 +21,8 @@ import 'features/votaciones/providers/votacion_provider.dart';
 import 'features/marketplace/providers/publicacion_provider.dart';
 import 'features/inquilinos/providers/inquilino_permisos_provider.dart';
 import 'core/network/api_client.dart';
+import 'core/providers/connectivity_provider.dart';
+import 'shared/widgets/offline_banner.dart';
 import 'features/initialRouterScreen/screens/initial_router_screen.dart';
 
 /// Escucha el stream de sesión expirada del ApiClient y llama a AuthProvider.sesionExpirada().
@@ -68,6 +70,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()..cargarSesionGuardada()),
         ChangeNotifierProvider(create: (_) => AppProvider()),
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
@@ -95,7 +98,9 @@ class MyApp extends StatelessWidget {
               themeMode: appProvider.themeMode,
               theme: buildAppTheme(brightness: Brightness.light),
               darkTheme: buildAppTheme(brightness: Brightness.dark),
-              home: const _SessionGuard(child: InitialRouterScreen()),
+              home: const _SessionGuard(
+                child: OfflineGuard(child: InitialRouterScreen()),
+              ),
             );
           },
         ),

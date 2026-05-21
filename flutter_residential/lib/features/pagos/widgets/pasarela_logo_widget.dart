@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pasarela_disponible_model.dart';
 
-/// Logo visual de una pasarela de pago conocida (online).
-/// Renderiza un contenedor con color de marca y texto identificador.
+/// Logo de una pasarela de pago usando el asset PNG de marca.
 /// Se usa en el selector de pasarela y en los movimientos de pago.
 class PasarelaLogoWidget extends StatelessWidget {
   final TipoPasarela tipo;
@@ -11,75 +10,83 @@ class PasarelaLogoWidget extends StatelessWidget {
   const PasarelaLogoWidget({
     super.key,
     required this.tipo,
-    this.size = 40,
+    this.size = 44,
   });
 
-  Color get _color {
+  String get _assetPath {
+    switch (tipo) {
+      case TipoPasarela.mercadoPago:
+        return 'assets/icons/icono_mp.png';
+      case TipoPasarela.wompi:
+        return 'assets/icons/icono_wompi_black.png';
+      case TipoPasarela.bold:
+        return 'assets/icons/logo_bold.png';
+    }
+  }
+
+  Color get _fallbackColor {
     switch (tipo) {
       case TipoPasarela.mercadoPago:
         return const Color(0xFF009EE3);
       case TipoPasarela.wompi:
         return const Color(0xFF6C3CE1);
       case TipoPasarela.bold:
-        return const Color(0xFF1AC957);
+        return const Color(0xFF1AB938);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.22),
+        child: Image.asset(
+          _assetPath,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          // Fallback si el asset falla por alguna razón
+          errorBuilder: (_, __, ___) => _FallbackLogo(
+            color: _fallbackColor,
+            label: tipo.nombreLegible,
+            size: size,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Fallback minimalista si el asset PNG no carga.
+class _FallbackLogo extends StatelessWidget {
+  final Color color;
+  final String label;
+  final double size;
+  const _FallbackLogo({required this.color, required this.label, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = label.split(' ').map((w) => w[0]).take(2).join();
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: _color,
+        color: color,
         borderRadius: BorderRadius.circular(size * 0.22),
-        boxShadow: [
-          BoxShadow(
-            color: _color.withValues(alpha: 0.35),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
-      child: Center(child: _buildInner()),
+      child: Center(
+        child: Text(
+          initials,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size * 0.32,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
     );
-  }
-
-  Widget _buildInner() {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago:
-        return Text(
-          'MP',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: size * 0.30,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-            height: 1,
-          ),
-        );
-      case TipoPasarela.wompi:
-        return Text(
-          'W',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: size * 0.50,
-            fontWeight: FontWeight.w900,
-            height: 1.1,
-          ),
-        );
-      case TipoPasarela.bold:
-        return Text(
-          'B',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: size * 0.50,
-            fontWeight: FontWeight.w900,
-            fontStyle: FontStyle.italic,
-            height: 1.1,
-          ),
-        );
-    }
   }
 }
 
