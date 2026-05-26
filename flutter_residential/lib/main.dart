@@ -20,6 +20,9 @@ import 'features/anuncios/providers/anuncio_provider.dart';
 import 'features/votaciones/providers/votacion_provider.dart';
 import 'features/marketplace/providers/publicacion_provider.dart';
 import 'features/inquilinos/providers/inquilino_permisos_provider.dart';
+import 'features/plan_pago/providers/plan_pago_provider.dart';
+import 'features/presupuesto/providers/presupuesto_provider.dart';
+import 'core/config/app_env.dart';
 import 'core/network/api_client.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'shared/widgets/offline_banner.dart';
@@ -56,6 +59,7 @@ class _SessionGuardState extends State<_SessionGuard> {
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
+  AppEnv.validate();
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   NotificacionService().configurarNavigator(navigatorKey);
@@ -87,6 +91,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VotacionProvider()),
         ChangeNotifierProvider(create: (_) => PublicacionProvider()),
         ChangeNotifierProvider(create: (_) => InquilinoPermisosProvider()),
+        ChangeNotifierProvider(create: (_) => PlanPagoProvider()),
+        ChangeNotifierProvider(create: (_) => PresupuestoProvider()),
       ],
       child: ToastificationWrapper(
         child: Consumer<AppProvider>(

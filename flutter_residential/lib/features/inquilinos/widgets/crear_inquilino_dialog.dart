@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/inquilino_service.dart';
 import '../../../features/usuarios/models/usuario_response.dart';
+import '../../../core/utils/password_policy.dart';
+import '../../../shared/widgets/password_policy_indicator.dart';
 
 class CrearInquilinoDialog extends StatefulWidget {
   const CrearInquilinoDialog({super.key});
@@ -131,6 +133,7 @@ class _CrearInquilinoDialogState extends State<CrearInquilinoDialog> {
               TextFormField(
                 controller: _passwordCtrl,
                 obscureText: !_verPassword,
+                onChanged: (_) => setState(() {}),
                 decoration: _decor('Contraseña inicial', Icons.lock_outline)
                     .copyWith(
                   suffixIcon: IconButton(
@@ -141,12 +144,9 @@ class _CrearInquilinoDialogState extends State<CrearInquilinoDialog> {
                         setState(() => _verPassword = !_verPassword),
                   ),
                 ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Campo requerido';
-                  if (v.length < 8) return 'Mínimo 8 caracteres';
-                  return null;
-                },
+                validator: PasswordPolicy.validate,
               ),
+              PasswordPolicyIndicator(password: _passwordCtrl.text),
               const SizedBox(height: 12),
 
               TextFormField(

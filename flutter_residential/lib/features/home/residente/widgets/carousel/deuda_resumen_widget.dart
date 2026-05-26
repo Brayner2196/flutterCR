@@ -52,6 +52,7 @@ class DeudaResumenWidget extends StatelessWidget {
             child: Center(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
                     '¡Todo al día! 🎉',
@@ -70,19 +71,40 @@ class DeudaResumenWidget extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.savings_outlined,
-                            color: Colors.teal, size: 14),
+                        const Icon(
+                          Icons.savings_outlined,
+                          color: Colors.teal,
+                          size: 14,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Saldo a favor: ${formatMonto(saldoFavor)}',
                           style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.teal,
-                              fontWeight: FontWeight.w600),
+                            fontSize: 12,
+                            color: Colors.teal,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
                   ],
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: onVerEstadoCuenta,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.teal,
+                        side: BorderSide(color: Colors.green),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                      ),
+                      icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                      label: const Text('Ver estado de cuenta'),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -119,8 +141,11 @@ class DeudaResumenWidget extends StatelessWidget {
           // ── Encabezado ──
           Row(
             children: [
-              Icon(Icons.account_balance_wallet_outlined,
-                  color: color, size: 20),
+              Icon(
+                Icons.account_balance_wallet_outlined,
+                color: color,
+                size: 20,
+              ),
               const SizedBox(width: 6),
               Text(
                 'Tu situación financiera',
@@ -204,7 +229,8 @@ class DeudaResumenWidget extends StatelessWidget {
                 foregroundColor: color,
                 side: BorderSide(color: color.withValues(alpha: 0.5)),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 11),
               ),
               icon: const Icon(Icons.receipt_long_outlined, size: 16),
@@ -217,7 +243,6 @@ class DeudaResumenWidget extends StatelessWidget {
   }
 
   // ─── Widgets auxiliares ───────────────────────────────────────────────────
-
   Widget _badgeMora() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

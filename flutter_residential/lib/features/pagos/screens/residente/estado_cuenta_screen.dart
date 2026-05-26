@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../features/dashboard/providers/dashboard_provider.dart';
 import '../../../../features/usuarios/providers/residente_estadisticas_provider.dart';
 import '../../models/cobro_model.dart';
 import '../../models/estado_cuenta_model.dart';
@@ -8,10 +7,13 @@ import '../../models/movimiento_cobro_model.dart';
 import '../../providers/abono_provider.dart';
 import '../../providers/cobros_provider.dart';
 import '../../models/pasarela_disponible_model.dart';
+import '../../models/paginated_cobro_response.dart';
 import '../../services/cobro_service.dart';
 import '../../services/pasarela_service.dart';
 import '../../widgets/pasarela_logo_widget.dart';
 import 'mercado_pago_webview_screen.dart';
+import '../../../../features/plan_pago/providers/plan_pago_provider.dart';
+import '../../../../features/plan_pago/screens/residente/residente_solicitar_plan_screen.dart';
 
 class EstadoCuentaScreen extends StatefulWidget {
   const EstadoCuentaScreen({super.key});
@@ -21,9 +23,14 @@ class EstadoCuentaScreen extends StatefulWidget {
 }
 
 class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
-  // Historial completo de cobros (pagados + pendientes)
+  // Historial paginado — se acumula al hacer scroll
   List<CobroModel> _historial = [];
-  bool _loadingHistorial = true;
+  int _paginaActual = 0;
+  bool _hayMasPaginas = true;
+  bool _loadingHistorial = true; // primera carga → skeleton completo
+  bool _loadingMas = false;      // carga adicional → indicador al pie
+
+  final ScrollController _scrollCtrl = ScrollController();
 
   // Filtros
   int? _anioFiltro;
@@ -83,10 +90,29 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollCtrl.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CobrosProvider>().cargarEstadoCuenta();
-      _cargarHistorial();
+      _iniciarHistorial();
+      // Carga silenciosa para mostrar/ocultar botón de plan de pago
+      context.read<PlanPagoProvider>().cargarConfigResidente();
+      context.read<PlanPagoProvider>().cargarMisPlanes();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_hayMasPaginas || _loadingMas || _loadingHistorial) return;
+    final max = _scrollCtrl.position.maxScrollExtent;
+    final pos = _scrollCtrl.offset;
+    if (pos >= max - 200) {
+      _cargarMas();
+    }
   }
 
   /// Llamado por _CobroCard cuando un pago MP fue exitoso/pendiente.
@@ -115,54 +141,63 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         } else {
           // El cobro no estaba en la lista (ej: nuevo estado PAGADO)
           // Recargar completo para asegurar consistencia
-          _cargarHistorial();
+          _iniciarHistorial();
         }
       });
     } else {
-      // Fallback: recargar toda la lista si no se pudo obtener el cobro
-      _cargarHistorial();
+      // Fallback: recargar desde página 0
+      _iniciarHistorial();
     }
   }
 
-  Future<void> _cargarHistorial() async {
-    setState(() => _loadingHistorial = true);
+  /// Recarga desde cero (pull-to-refresh, primer cargue, post-pago).
+  Future<void> _iniciarHistorial() async {
+    setState(() {
+      _loadingHistorial = true;
+      _historial = [];
+      _paginaActual = 0;
+      _hayMasPaginas = true;
+    });
+    await _fetchPagina(0, esReset: true);
+  }
+
+  /// Carga la siguiente página y la adjunta al final de la lista.
+  Future<void> _cargarMas() async {
+    if (!_hayMasPaginas || _loadingMas) return;
+    setState(() => _loadingMas = true);
+    await _fetchPagina(_paginaActual + 1, esReset: false);
+  }
+
+  Future<void> _fetchPagina(int pagina, {required bool esReset}) async {
     try {
-      // Ambos endpoints en paralelo:
-      // - historialCobros → cobros PAGADOS
-      // - misCobros       → cobros ACTIVOS (pendientes / vencidos / parciales)
-      final results = await Future.wait([
-        CobroService.getHistorial(),
-        CobroService.getMisCobros(),
-      ]);
-
-      // Merge deduplicando por ID (activos tienen prioridad sobre historial)
-      final mapa = <int, CobroModel>{};
-      for (final c in [...results[0], ...results[1]]) {
-        mapa[c.id] = c;
-      }
-
-      final h = mapa.values.toList()
-        ..sort((a, b) {
-          // Cobros especiales (sin período) al frente, luego por período desc
-          if (a.anio == null && b.anio != null) return -1;
-          if (a.anio != null && b.anio == null) return 1;
-          if (a.anio == null && b.anio == null) {
-            return b.fechaGeneracion.compareTo(a.fechaGeneracion);
-          }
-          if (b.anio != a.anio) return b.anio! - a.anio!;
-          return b.mes! - a.mes!;
-        });
-
+      final PaginatedCobroResponse res = await CobroService.getHistorialPaginado(
+        page: pagina,
+        size: 5,
+      );
       if (!mounted) return;
-      setState(() => _historial = h);
-
-      // Cargar saldo a favor usando propiedadId del primer cobro
-      if (h.isNotEmpty) {
-        context.read<AbonoProvider>().cargarSaldoFavor(h.first.propiedadId);
+      setState(() {
+        if (esReset) {
+          _historial = res.content;
+        } else {
+          // Deduplicar por ID por si hubo cambios entre páginas
+          final ids = _historial.map((c) => c.id).toSet();
+          _historial.addAll(res.content.where((c) => !ids.contains(c.id)));
+        }
+        _paginaActual = res.number;
+        _hayMasPaginas = res.hayMasPaginas;
+      });
+      // Cargar saldo a favor con propiedadId del primer cobro
+      if (esReset && res.content.isNotEmpty) {
+        context.read<AbonoProvider>().cargarSaldoFavor(res.content.first.propiedadId);
       }
     } catch (_) {
     } finally {
-      if (mounted) setState(() => _loadingHistorial = false);
+      if (mounted) {
+        setState(() {
+          _loadingHistorial = false;
+          _loadingMas = false;
+        });
+      }
     }
   }
 
@@ -216,7 +251,7 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               context.read<CobrosProvider>().cargarEstadoCuenta();
-              _cargarHistorial();
+              _iniciarHistorial();
             },
           ),
         ],
@@ -228,9 +263,10 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
           : RefreshIndicator(
               onRefresh: () async {
                 await context.read<CobrosProvider>().cargarEstadoCuenta();
-                await _cargarHistorial();
+                await _iniciarHistorial();
               },
               child: ListView(
+                controller: _scrollCtrl,
                 padding: EdgeInsets.zero,
                 children: [
                   // ── Balance header ──────────────────────────
@@ -238,6 +274,21 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
                     estadoCuenta: provider.estadoCuenta,
                     saldoFavor: abonos.saldoFavor?.saldo ?? 0,
                     formatMonto: _fmt,
+                    onSolicitarPlan: () {
+                      final cfg = context.read<PlanPagoProvider>().config;
+                      final cobros = provider.estadoCuenta?.cobrosActivos
+                          .where((c) => !c.estado.contains('PAGADO') &&
+                              !c.estado.contains('EXONERADO'))
+                          .toList() ?? [];
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ResidenteSolicitarPlanScreen(
+                            cobrosDisponibles: cobros,
+                          ),
+                        ),
+                      );
+                    },
                   ),
 
                   Padding(
@@ -270,6 +321,30 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
                           _buildVacio()
                         else
                           ..._buildTimeline(_cobrosFiltrados),
+
+                        // ── Indicador de carga / fin ────────────
+                        if (!_loadingHistorial) ...[
+                          if (_loadingMas)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Center(
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          else if (!_hayMasPaginas && _historial.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              child: Center(
+                                child: Text(
+                                  '— Fin del historial —',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
 
                         const SizedBox(height: 24),
                       ],
@@ -439,11 +514,13 @@ class _BalanceHeader extends StatelessWidget {
   final EstadoCuentaModel? estadoCuenta;
   final double saldoFavor;
   final String Function(double) formatMonto;
+  final VoidCallback? onSolicitarPlan;
 
   const _BalanceHeader({
     required this.estadoCuenta,
     required this.saldoFavor,
     required this.formatMonto,
+    this.onSolicitarPlan,
   });
 
   @override
@@ -557,6 +634,35 @@ class _BalanceHeader extends StatelessWidget {
               ),
             ],
           ),
+
+          // ── Botón plan de pago (solo si hay deuda y módulo activo) ──
+          if (!estaAlDia && onSolicitarPlan != null) ...[
+            const SizedBox(height: 14),
+            Consumer<PlanPagoProvider>(
+              builder: (_, planP, __) {
+                final cfg = planP.config;
+                final tienePlanActivo = planP.planes
+                    .any((p) => p.esActivo || p.esPendiente);
+                if (!cfg.activo || tienePlanActivo) {
+                  return const SizedBox.shrink();
+                }
+                return OutlinedButton.icon(
+                  onPressed: onSolicitarPlan,
+                  icon: const Icon(Icons.calendar_month_outlined, size: 16),
+                  label: const Text('Solicitar plan de pago'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white54),
+                    minimumSize: const Size(0, 38),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 0),
+                    textStyle: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );

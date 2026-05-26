@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
+import '../exceptions/session_expired_exception.dart';
 import '../storage/token_storage.dart';
 
 class ApiClient {
@@ -13,6 +14,12 @@ class ApiClient {
   /// Emite evento cuando el refresh falla y la sesión debe cerrarse.
   static final _sessionExpiredController = StreamController<void>.broadcast();
   static Stream<void> get sessionExpiredStream => _sessionExpiredController.stream;
+
+  // ─── Mutex de refresh ────────────────────────────────────────────────────
+  // Evita que múltiples peticiones simultáneas (ej: dashboard) lancen varias
+  // solicitudes de refresh al mismo tiempo, invalidando el token recién emitido.
+
+  static Future<bool>? _refreshInFlight;
 
   // ─── Verificación de red ────────────────────────────────────────────────
 
@@ -31,8 +38,16 @@ class ApiClient {
   // ─── Refresh token interno ──────────────────────────────────────────────
 
   /// Intenta renovar el access token usando el refresh token guardado.
-  /// Retorna true si tuvo éxito, false si debe cerrar sesión.
+  /// Solo hay una solicitud de refresh en vuelo a la vez (mutex).
   static Future<bool> _tryRefresh() async {
+    // Si ya hay un refresh en curso, espera el mismo Future en lugar de lanzar otro.
+    _refreshInFlight ??= _executeRefresh().whenComplete(() {
+      _refreshInFlight = null;
+    });
+    return _refreshInFlight!;
+  }
+
+  static Future<bool> _executeRefresh() async {
     try {
       final refreshToken = await TokenStorage.leerRefreshToken();
       if (refreshToken == null) return false;
@@ -47,10 +62,15 @@ class ApiClient {
           .timeout(_timeout);
 
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final rawBody = res.body.trim();
+        if (rawBody.isEmpty) return false;
+        final data = jsonDecode(rawBody) as Map<String, dynamic>;
+        final newToken = data['token'] as String?;
+        final newRefresh = data['refreshToken'] as String?;
+        if (newToken == null || newRefresh == null) return false;
         await TokenStorage.actualizarTokens(
-          token: data['token'] as String,
-          refreshToken: data['refreshToken'] as String,
+          token: newToken,
+          refreshToken: newRefresh,
         );
         return true;
       }
@@ -61,27 +81,29 @@ class ApiClient {
   }
 
   /// Verifica si la respuesta es 401 y en ese caso intenta refresh.
-  /// Retorna null si no hace falta retry, o la nueva respuesta si sí.
+  /// - Devuelve `null` si la respuesta no era 401 (el caller usa `?? res`).
+  /// - Devuelve la nueva respuesta si el refresh fue exitoso y se reintentó.
+  /// - Lanza [SessionExpiredException] si el refresh falló (nunca devuelve la 401 vacía).
   static Future<http.Response?> _handleUnauthorized(
     http.Response res,
     Future<http.Response> Function() retry,
   ) async {
-    if (res.statusCode != 401) return null;
+    if (res.statusCode != 401) return null; // no era 401, el caller maneja res
 
     final refreshed = await _tryRefresh();
-    if (refreshed) {
-      return await retry();
-    }
+    if (refreshed) return await retry();
 
-    // No se pudo renovar — cerrar sesión
+    // Refresh falló — avisar al SessionGuard y lanzar excepción tipada.
+    // Nunca devolvemos null aquí para que el caller no intente parsear
+    // la respuesta 401 (que puede tener body vacío → FormatException).
     _sessionExpiredController.add(null);
-    return null;
+    throw const SessionExpiredException();
   }
 
   // ─── Headers ────────────────────────────────────────────────────────────
 
   static Future<Map<String, String>> _headers({bool requiresAuth = true}) async {
-    final headers = {'Content-Type': 'application/json'};
+    final headers = <String, String>{'Content-Type': 'application/json'};
     if (requiresAuth) {
       final sesion = await TokenStorage.leerSesion();
       final token = sesion['token'];
@@ -108,9 +130,13 @@ class ApiClient {
 
       return await _handleUnauthorized(
             res,
-            () async => http.get(uri, headers: await _headers(requiresAuth: requiresAuth)).timeout(_timeout),
+            () async => http
+                .get(uri, headers: await _headers(requiresAuth: requiresAuth))
+                .timeout(_timeout),
           ) ??
           res;
+    } on SessionExpiredException {
+      rethrow;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
@@ -134,9 +160,13 @@ class ApiClient {
       if (!requiresAuth) return res; // login/registro no necesitan retry
       return await _handleUnauthorized(
             res,
-            () async => http.post(uri, headers: await _headers(requiresAuth: requiresAuth), body: encodedBody).timeout(_timeout),
+            () async => http
+                .post(uri, headers: await _headers(requiresAuth: requiresAuth), body: encodedBody)
+                .timeout(_timeout),
           ) ??
           res;
+    } on SessionExpiredException {
+      rethrow;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
@@ -155,9 +185,12 @@ class ApiClient {
 
       return await _handleUnauthorized(
             res,
-            () async => http.put(uri, headers: await _headers(), body: encodedBody).timeout(_timeout),
+            () async =>
+                http.put(uri, headers: await _headers(), body: encodedBody).timeout(_timeout),
           ) ??
           res;
+    } on SessionExpiredException {
+      rethrow;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
@@ -176,6 +209,8 @@ class ApiClient {
             () async => http.delete(uri, headers: await _headers()).timeout(_timeout),
           ) ??
           res;
+    } on SessionExpiredException {
+      rethrow;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
@@ -194,9 +229,12 @@ class ApiClient {
 
       return await _handleUnauthorized(
             res,
-            () async => http.patch(uri, headers: await _headers(), body: encodedBody).timeout(_timeout),
+            () async =>
+                http.patch(uri, headers: await _headers(), body: encodedBody).timeout(_timeout),
           ) ??
           res;
+    } on SessionExpiredException {
+      rethrow;
     } on SocketException {
       throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {

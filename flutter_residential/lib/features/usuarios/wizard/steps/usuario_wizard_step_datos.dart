@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/password_policy.dart';
+import '../../../../shared/widgets/password_policy_indicator.dart';
 
-class UsuarioWizardStepDatos extends StatelessWidget {
+class UsuarioWizardStepDatos extends StatefulWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nombreCtrl;
   final TextEditingController emailCtrl;
@@ -19,6 +21,32 @@ class UsuarioWizardStepDatos extends StatelessWidget {
     required this.verPassword,
     required this.onToggleVerPassword,
   });
+
+  @override
+  State<UsuarioWizardStepDatos> createState() => _UsuarioWizardStepDatosState();
+}
+
+class _UsuarioWizardStepDatosState extends State<UsuarioWizardStepDatos> {
+  String _passwordValue = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordValue = widget.passwordCtrl.text;
+    widget.passwordCtrl.addListener(_onPasswordChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.passwordCtrl.removeListener(_onPasswordChanged);
+    super.dispose();
+  }
+
+  void _onPasswordChanged() {
+    if (mounted && widget.passwordCtrl.text != _passwordValue) {
+      setState(() => _passwordValue = widget.passwordCtrl.text);
+    }
+  }
 
   InputDecoration _decor(
     BuildContext context,
@@ -43,7 +71,7 @@ class UsuarioWizardStepDatos extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Form(
-        key: formKey,
+        key: widget.formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -53,13 +81,11 @@ class UsuarioWizardStepDatos extends StatelessWidget {
               decoration: BoxDecoration(
                 color: cs.primaryContainer.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: cs.primary.withValues(alpha: 0.2)),
+                border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.person_add_outlined,
-                      color: cs.primary, size: 18),
+                  Icon(Icons.person_add_outlined, color: cs.primary, size: 18),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -77,7 +103,7 @@ class UsuarioWizardStepDatos extends StatelessWidget {
 
             // Nombre
             TextFormField(
-              controller: nombreCtrl,
+              controller: widget.nombreCtrl,
               textCapitalization: TextCapitalization.words,
               decoration:
                   _decor(context, 'Nombre completo', Icons.person_outline),
@@ -91,7 +117,7 @@ class UsuarioWizardStepDatos extends StatelessWidget {
 
             // Email
             TextFormField(
-              controller: emailCtrl,
+              controller: widget.emailCtrl,
               keyboardType: TextInputType.emailAddress,
               decoration:
                   _decor(context, 'Correo electrónico', Icons.email_outlined),
@@ -106,32 +132,32 @@ class UsuarioWizardStepDatos extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            // Contraseña
+            // Contraseña — validación con política completa
             TextFormField(
-              controller: passwordCtrl,
-              obscureText: !verPassword,
+              controller: widget.passwordCtrl,
+              obscureText: !widget.verPassword,
               decoration: _decor(
                 context,
                 'Contraseña',
                 Icons.lock_outline,
                 suffix: IconButton(
-                  icon: Icon(verPassword
+                  icon: Icon(widget.verPassword
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined),
-                  onPressed: onToggleVerPassword,
+                  onPressed: widget.onToggleVerPassword,
                 ),
               ),
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Campo requerido';
-                if (v.length < 8) return 'Mínimo 8 caracteres';
-                return null;
-              },
+              validator: PasswordPolicy.validate,
             ),
+
+            // Indicador de política en tiempo real
+            PasswordPolicyIndicator(password: _passwordValue),
+
             const SizedBox(height: 14),
 
             // Teléfono
             TextFormField(
-              controller: telefonoCtrl,
+              controller: widget.telefonoCtrl,
               keyboardType: TextInputType.phone,
               decoration:
                   _decor(context, 'Teléfono (opcional)', Icons.phone_outlined),

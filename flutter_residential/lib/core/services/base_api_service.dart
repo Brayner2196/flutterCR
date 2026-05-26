@@ -13,8 +13,16 @@ abstract class BaseApiService {
     String fallbackMsg,
   ) {
     if (res.statusCode == 200 || res.statusCode == 201) {
-      final body = jsonDecode(res.body) as List;
-      return body.map((e) => fromJson(e as Map<String, dynamic>)).toList();
+      final rawBody = res.body.trim();
+      if (rawBody.isEmpty) {
+        throw ApiException(message: fallbackMsg, statusCode: res.statusCode);
+      }
+      try {
+        final body = jsonDecode(rawBody) as List;
+        return body.map((e) => fromJson(e as Map<String, dynamic>)).toList();
+      } on FormatException {
+        throw ApiException(message: fallbackMsg, statusCode: res.statusCode);
+      }
     }
     throw _buildException(res, fallbackMsg);
   }
@@ -27,8 +35,16 @@ abstract class BaseApiService {
     required String fallbackMsg,
   }) {
     if (successCodes.contains(res.statusCode)) {
-      final body = jsonDecode(res.body) as Map<String, dynamic>;
-      return fromJson(body);
+      final rawBody = res.body.trim();
+      if (rawBody.isEmpty) {
+        throw ApiException(message: fallbackMsg, statusCode: res.statusCode);
+      }
+      try {
+        final body = jsonDecode(rawBody) as Map<String, dynamic>;
+        return fromJson(body);
+      } on FormatException {
+        throw ApiException(message: fallbackMsg, statusCode: res.statusCode);
+      }
     }
     throw _buildException(res, fallbackMsg);
   }
@@ -45,8 +61,12 @@ abstract class BaseApiService {
   }
 
   static ApiException _buildException(http.Response res, String fallback) {
+    final rawBody = res.body.trim();
+    if (rawBody.isEmpty) {
+      return ApiException(message: fallback, statusCode: res.statusCode);
+    }
     try {
-      final body = jsonDecode(res.body);
+      final body = jsonDecode(rawBody);
       final msg = (body is Map)
           ? (body['message'] as String? ?? body['error'] as String? ?? fallback)
           : fallback;

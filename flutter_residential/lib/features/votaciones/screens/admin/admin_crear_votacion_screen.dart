@@ -21,6 +21,7 @@ class _AdminCrearVotacionScreenState extends State<AdminCrearVotacionScreen> {
   String _tipo = 'OPCION_UNICA';
   bool _mostrarVotantes = false;
   bool _permiteCambiarVoto = false;
+  bool _mostrarPorcentajes = false;
   bool _guardando = false;
 
   static const _tipos = ['OPCION_UNICA', 'OPCION_MULTIPLE', 'ESCALA_NUMERICA', 'TEXTO_LIBRE'];
@@ -40,6 +41,7 @@ class _AdminCrearVotacionScreenState extends State<AdminCrearVotacionScreen> {
       _escalaCtrl.text = (v.escalaMax ?? 5).toString();
       _mostrarVotantes = v.mostrarVotantes;
       _permiteCambiarVoto = v.permiteCambiarVoto;
+      _mostrarPorcentajes = v.mostrarPorcentajes;
       for (final op in v.opciones) {
         _opcionesCtrl.add(TextEditingController(text: op.texto));
       }
@@ -165,6 +167,14 @@ class _AdminCrearVotacionScreenState extends State<AdminCrearVotacionScreen> {
                 value: _permiteCambiarVoto,
                 onChanged: (v) => setState(() => _permiteCambiarVoto = v),
               ),
+              SwitchListTile(
+                title: const Text('Mostrar porcentajes de votación'),
+                subtitle: const Text(
+                  'Los propietarios e inquilinos verán el % de votos por opción al participar',
+                ),
+                value: _mostrarPorcentajes,
+                onChanged: (v) => setState(() => _mostrarPorcentajes = v),
+              ),
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _guardando ? null : _guardar,
@@ -192,6 +202,7 @@ class _AdminCrearVotacionScreenState extends State<AdminCrearVotacionScreen> {
         'tipoVotacion': _tipo,
         'mostrarVotantes': _mostrarVotantes,
         'permiteCambiarVoto': _permiteCambiarVoto,
+        'mostrarPorcentajes': _mostrarPorcentajes,
         if (_tipo == 'ESCALA_NUMERICA') 'escalaMax': int.tryParse(_escalaCtrl.text) ?? 5,
         if (_necesitaOpciones)
           'opciones': _opcionesCtrl.map((c) => c.text.trim()).where((s) => s.isNotEmpty).toList(),

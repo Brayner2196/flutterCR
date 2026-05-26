@@ -66,6 +66,18 @@ class VotacionModel {
   final List<OpcionVotacionModel> opciones;
   final List<VotoResidenteModel>? votantes;
 
+  /// IDs de opciones que el usuario actual ya seleccionó (viene del backend).
+  final List<int> miVotoOpcionIds;
+
+  /// Valor numérico que el usuario votó en escalas (viene del backend).
+  final int? miVotoValorNumerico;
+
+  /// Texto libre que el usuario escribió (viene del backend).
+  final String? miVotoRespuestaTexto;
+
+  /// Si los propietarios/inquilinos pueden ver el porcentaje de votos por opción.
+  final bool mostrarPorcentajes;
+
   VotacionModel({
     required this.id,
     required this.titulo,
@@ -83,6 +95,10 @@ class VotacionModel {
     required this.yaVote,
     required this.opciones,
     this.votantes,
+    this.miVotoOpcionIds = const [],
+    this.miVotoValorNumerico,
+    this.miVotoRespuestaTexto,
+    this.mostrarPorcentajes = false,
   });
 
   factory VotacionModel.fromJson(Map<String, dynamic> json) => VotacionModel(
@@ -108,5 +124,13 @@ class VotacionModel {
                 .map((v) => VotoResidenteModel.fromJson(v))
                 .toList()
             : null,
+        miVotoOpcionIds: (json['miVotoOpcionIds'] as List<dynamic>? ?? [])
+            .map((e) => (e as num).toInt())
+            .toList(),
+        miVotoValorNumerico: json['miVotoValorNumerico'] != null
+            ? (json['miVotoValorNumerico'] as num).toInt()
+            : null,
+        miVotoRespuestaTexto: json['miVotoRespuestaTexto'] as String?,
+        mostrarPorcentajes: json['mostrarPorcentajes'] as bool? ?? false,
       );
 }

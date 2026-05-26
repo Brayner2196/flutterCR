@@ -1,10 +1,11 @@
+import '../config/app_env.dart';
+
 class ApiConstants {
-  /// Base URL for the API
-  //static const String baseUrl = 'http://localhost:8080';
-  //static const String baseUrl = 'http://10.0.2.2:8080'; // Para emulador Android
-  //static const String baseUrl = 'https://backendcr-production-991c.up.railway.app'; // Para emulador Android
-  static const String baseUrl = 'https://cr-dev.up.railway.app'; // Para emulador Android
-  
+  /// Base URL inyectada en compilación via --dart-define=API_BASE_URL=<url>
+  /// Ver AppEnv y el Makefile del proyecto para los comandos por ambiente.
+  //static const String baseUrl = AppEnv.baseUrl;
+  static const String baseUrl = 'https://cr-dev.up.railway.app';
+
 
   // Auth
   static const String login = '/auth/login';
@@ -61,6 +62,7 @@ class ApiConstants {
   static const String estadoCuenta = '/api/residente/estado-cuenta';
   static const String misCobros = '/api/residente/cobros';
   static const String historialCobros = '/api/residente/cobros/historial';
+  static const String historialCobrosPageable = '/api/residente/cobros/historial-paginado';
   static String miCobro(int id) => '/api/residente/cobros/$id';
   static const String misPagos = '/api/residente/pagos';
   static String movimientosCobro(int id) => '/api/residente/cobros/$id/movimientos';
@@ -109,6 +111,7 @@ class ApiConstants {
   // PQR — residente
   static const String residentePqrs = '/api/residente/pqrs';
   static const String misPqrs = '/api/residente/pqrs/me';
+  static String historialPqr(int id) => '/api/residente/pqrs/$id/historial';
 
   // Reservas — admin
   static const String adminReservas = '/api/admin/reservas';
@@ -126,6 +129,8 @@ class ApiConstants {
   static const String residenteReservas = '/api/residente/reservas';
   static const String misReservas = '/api/residente/reservas/me';
   static String cancelarReserva(int id) => '/api/residente/reservas/$id/cancelar';
+  static String disponibilidadZona(int id, String fecha) =>
+      '/api/residente/zonas-comunes/$id/disponibilidad?fecha=$fecha';
 
   // Anuncios — admin
   static const String adminAnuncios = '/api/admin/anuncios';
@@ -179,4 +184,30 @@ class ApiConstants {
   static String activarUsuario(int id) => '/api/usuarios/$id/activar';
   static String desactivarUsuario(int id) => '/api/usuarios/$id/desactivar';
   static String cambiarRolUsuario(int id) => '/api/usuarios/$id/rol';
+
+  // Plan de Pago — admin
+  static const String adminPlanPagoConfig = '/api/admin/planes-pago/configuracion';
+  static const String adminPlanesPago = '/api/admin/planes-pago';
+  static String adminPlanPago(int id) => '/api/admin/planes-pago/$id';
+  static String adminDecidirPlan(int id) => '/api/admin/planes-pago/$id/decidir';
+  static String adminCancelarPlan(int id) => '/api/admin/planes-pago/$id/cancelar';
+  static String adminMarcarCuotaPagada(int planId, int cuotaId) =>
+      '/api/admin/planes-pago/$planId/cuotas/$cuotaId/pagar';
+
+  // Plan de Pago — residente
+  static const String residentePlanPagoConfig = '/api/residente/planes-pago/configuracion';
+  static const String residentePlanesPago = '/api/residente/planes-pago';
+  static const String residentePlanActivo = '/api/residente/planes-pago/activo';
+
+  // Transparencia Presupuesto — admin
+  static const String adminPresupuestos = '/api/admin/presupuestos';
+  static String adminPresupuesto(int id) => '/api/admin/presupuestos/$id';
+  static String adminPresupuestoToggleActivo(int id) => '/api/admin/presupuestos/$id/activo';
+  static String adminPresupuestoGastos(int id) => '/api/admin/presupuestos/$id/gastos';
+  static String adminEliminarGasto(int presupuestoId, int gastoId) =>
+      '/api/admin/presupuestos/$presupuestoId/gastos/$gastoId';
+
+  // Transparencia Presupuesto — residente
+  static const String residentePresupuestos = '/api/residente/presupuestos';
+  static const String residentePresupuestoActivo = '/api/residente/presupuestos/activo';
 }

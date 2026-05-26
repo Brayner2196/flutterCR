@@ -9,6 +9,7 @@ class TokenStorage {
   static const _keyTenantId = 'tenant_id';
   static const _keyNombreConjunto = 'nombre_conjunto';
   static const _keyNombre = 'user_nombre';
+  static const _keyTimezone = 'tenant_timezone';
 
   static Future<void> guardarSesion({
     required String token,
@@ -18,6 +19,7 @@ class TokenStorage {
     required String tenantId,
     String? nombreConjunto,
     String? nombre,
+    String? timezone,
   }) async {
     await _storage.write(key: _keyToken, value: token);
     await _storage.write(key: _keyRefreshToken, value: refreshToken);
@@ -30,6 +32,8 @@ class TokenStorage {
     if (nombre != null) {
       await _storage.write(key: _keyNombre, value: nombre);
     }
+    await _storage.write(
+        key: _keyTimezone, value: timezone ?? 'America/Bogota');
   }
 
   /// Actualiza solo los tokens (usado por el interceptor de refresh).
@@ -51,6 +55,10 @@ class TokenStorage {
     return await _storage.read(key: _keyRefreshToken);
   }
 
+  static Future<String?> leerTimezone() async {
+    return await _storage.read(key: _keyTimezone);
+  }
+
   static Future<Map<String, String?>> leerSesion() async {
     return {
       'token': await _storage.read(key: _keyToken),
@@ -60,6 +68,7 @@ class TokenStorage {
       'tenantId': await _storage.read(key: _keyTenantId),
       'nombreConjunto': await _storage.read(key: _keyNombreConjunto),
       'nombre': await _storage.read(key: _keyNombre),
+      'timezone': await _storage.read(key: _keyTimezone),
     };
   }
 
@@ -73,6 +82,7 @@ class TokenStorage {
       _storage.delete(key: _keyTenantId),
       _storage.delete(key: _keyNombreConjunto),
       _storage.delete(key: _keyNombre),
+      _storage.delete(key: _keyTimezone),
     ]);
   }
 }

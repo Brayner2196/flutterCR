@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/timezone_picker_field.dart';
 
 class TenantWizardStepBasico extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController nombreCtrl;
   final TextEditingController codigoCtrl;
   final TextEditingController direccionCtrl;
+  final String timezone;
+  final ValueChanged<String> onTimezoneChanged;
 
   const TenantWizardStepBasico({
     super.key,
@@ -12,6 +15,8 @@ class TenantWizardStepBasico extends StatelessWidget {
     required this.nombreCtrl,
     required this.codigoCtrl,
     required this.direccionCtrl,
+    required this.timezone,
+    required this.onTimezoneChanged,
   });
 
   @override
@@ -93,6 +98,12 @@ class TenantWizardStepBasico extends StatelessWidget {
                 hintText: 'Ej: Cra 15 # 80-20, Bogotá',
                 prefixIcon: Icon(Icons.location_on_outlined, color: cs.primary),
               ),
+            ),
+            const SizedBox(height: 20),
+            TimezonePickerField(
+              label: 'Zona horaria',
+              value: timezone,
+              onChanged: onTimezoneChanged,
             ),
           ],
         ),

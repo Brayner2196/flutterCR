@@ -42,10 +42,13 @@ class PqrModel {
         creadoEn: json['creadoEn'] as String?,
       );
 
-  bool get esPendiente => estado == 'PENDIENTE';
+  bool get esRadicada => estado == 'RADICADA';
+  // esPendiente mantenido por compatibilidad — apunta a RADICADA (estado inicial del backend)
+  bool get esPendiente => esRadicada;
   bool get esEnProceso => estado == 'EN_PROCESO';
   bool get esResuelto => estado == 'RESUELTO';
   bool get esCerrado => estado == 'CERRADO';
+  bool get esRechazada => estado == 'RECHAZADA';
 
   String get tipoLegible {
     switch (tipo) {
@@ -59,10 +62,12 @@ class PqrModel {
 
   String get estadoLegible {
     switch (estado) {
-      case 'PENDIENTE': return 'Pendiente';
+      case 'RADICADA': return 'Radicada';
+      case 'PENDIENTE': return 'Radicada'; // alias legacy
       case 'EN_PROCESO': return 'En proceso';
       case 'RESUELTO': return 'Resuelta';
       case 'CERRADO': return 'Cerrada';
+      case 'RECHAZADA': return 'Rechazada';
       default: return estado;
     }
   }

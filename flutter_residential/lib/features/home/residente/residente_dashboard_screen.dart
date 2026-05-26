@@ -13,6 +13,10 @@ import '../../pqr/screens/residente/mis_pqrs_screen.dart';
 import '../../anuncios/screens/residente/mis_anuncios_screen.dart';
 import '../../votaciones/screens/residente/mis_votaciones_screen.dart';
 import '../../marketplace/screens/residente/marketplace_screen.dart';
+import '../../plan_pago/screens/residente/residente_mi_plan_screen.dart';
+import '../../plan_pago/providers/plan_pago_provider.dart';
+import '../../presupuesto/screens/residente/residente_presupuesto_screen.dart';
+import '../../presupuesto/providers/presupuesto_provider.dart';
 import 'widgets/quick_access_card.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 
@@ -48,6 +52,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       if (auth.isPropietario || permisos.tienePermiso('VOTAR')) {
         context.read<VotacionProvider>().cargarResidente();
       }
+      // Plan de pago — carga silenciosa para mostrar el tile si hay plan activo
+      if (auth.isPropietario || permisos.tienePermiso('ESTADO_CUENTA')) {
+        context.read<PlanPagoProvider>().cargarConfigResidente();
+        context.read<PlanPagoProvider>().cargarMisPlanes();
+      }
+      // Presupuesto — carga silenciosa para mostrar el tile de transparencia
+      context.read<PresupuestoProvider>().cargarActivo();
     });
   }
 
@@ -85,7 +96,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CarouselInfoRelevanteResidente(),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               'Accesos rápidos',
               style: theme.textTheme.titleMedium?.copyWith(
@@ -224,15 +235,45 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    // Mi Propiedad — siempre visible
-    cards.add(QuickAccessCard(
-      label: 'Mi Propiedad',
-      subtitulo: 'Ver detalles de tu unidad',
-      icono: Icons.home_work_outlined,
-      fg: AppColors.blue,
-      bg: AppColors.bgBlue,
-      onTap: () => widget.onNavegar(2),
-    ));
+    // Plan de Pago (visible si tiene plan activo/pendiente o módulo habilitado)
+    if (puede('ESTADO_CUENTA')) {
+      final planProvider = context.read<PlanPagoProvider>();
+      final tienePlan = planProvider.planes.any((p) => p.esActivo || p.esPendiente);
+      final moduloActivo = planProvider.config.activo;
+      if (tienePlan || moduloActivo) {
+        final planActivo = planProvider.planes.where((p) => p.esActivo).firstOrNull;
+        cards.add(QuickAccessCard(
+          label: 'Plan de pago',
+          subtitulo: planActivo != null
+              ? '${planActivo.cuotasPagadas}/${planActivo.numeroCuotas} cuotas pagadas'
+              : 'Fracciona tu deuda',
+          icono: Icons.calendar_month_outlined,
+          fg: AppColors.orange,
+          bg: AppColors.bgOrange,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ResidenteMiPlanScreen()),
+          ),
+        ));
+      }
+    }
+
+    // Presupuesto (visible si hay presupuesto activo)
+    final presupuestoProvider = context.read<PresupuestoProvider>();
+    if (presupuestoProvider.activo != null) {
+      final p = presupuestoProvider.activo!;
+      cards.add(QuickAccessCard(
+        label: 'Presupuesto',
+        subtitulo: '${p.porcentajeEjecucionGeneral.toStringAsFixed(0)}% ejecutado — ${p.anio}',
+        icono: Icons.account_balance_outlined,
+        fg: AppColors.ok,
+        bg: AppColors.bgGreen,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ResidentePresupuestoScreen()),
+        ),
+      ));
+    }
 
     if (cards.isEmpty) {
       return const _SinAccesosWidget();

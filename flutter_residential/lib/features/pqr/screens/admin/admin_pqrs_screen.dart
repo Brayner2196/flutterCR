@@ -35,20 +35,24 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => _PqrDetalleSheet(
         pqr: pqr,
-        onCambiarEstado: (id, estado) => _cambiarEstado(id, estado),
+        onCambiarEstado: (id, estado, comentario) =>
+            _cambiarEstado(id, estado, comentario),
         onResponder: (id, respuesta) => _responder(id, respuesta),
       ),
     );
   }
 
-  Future<void> _cambiarEstado(int id, String nuevoEstado) async {
+  Future<void> _cambiarEstado(
+      int id, String nuevoEstado, String? comentario) async {
     try {
-      await context.read<PqrProvider>().cambiarEstado(id, nuevoEstado);
+      await context
+          .read<PqrProvider>()
+          .cambiarEstado(id, nuevoEstado, comentario: comentario);
       if (!mounted) return;
       toastification.show(
         context: context,
         type: ToastificationType.success,
-        title: Text('Estado actualizado a ${_estadoLegible(nuevoEstado)}'),
+        title: Text('Estado actualizado a ${estadoLegible(nuevoEstado)}'),
         autoCloseDuration: const Duration(seconds: 3),
       );
     } catch (e) {
@@ -83,12 +87,13 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
     }
   }
 
-  static String _estadoLegible(String e) {
+  static String estadoLegible(String e) {
     const map = {
-      'PENDIENTE': 'Pendiente',
+      'RADICADA': 'Radicada',
       'EN_PROCESO': 'En proceso',
-      'RESUELTO': 'Resuelto',
-      'CERRADO': 'Cerrado',
+      'RESUELTO': 'Resuelta',
+      'CERRADO': 'Cerrada',
+      'RECHAZADA': 'Rechazada',
     };
     return map[e] ?? e;
   }
@@ -114,7 +119,7 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '${p.cantidadPendientes} pendiente${p.cantidadPendientes == 1 ? '' : 's'}',
+                    '${p.cantidadPendientes} radicada${p.cantidadPendientes == 1 ? '' : 's'}',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -145,11 +150,11 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
                     ),
                     const SizedBox(width: 6),
                     _FiltroChip(
-                      label: 'Pendientes',
-                      activo: _filtro == 'PENDIENTE',
+                      label: 'Radicadas',
+                      activo: _filtro == 'RADICADA',
                       colorActivo: DashboardTokens.fgOrange,
                       bgActivo: DashboardTokens.bgOrange,
-                      onTap: () => _aplicarFiltro('PENDIENTE'),
+                      onTap: () => _aplicarFiltro('RADICADA'),
                     ),
                     const SizedBox(width: 6),
                     _FiltroChip(
@@ -175,6 +180,14 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
                       bgActivo: cs.surfaceContainerHighest,
                       onTap: () => _aplicarFiltro('CERRADO'),
                     ),
+                    const SizedBox(width: 6),
+                    _FiltroChip(
+                      label: 'Rechazadas',
+                      activo: _filtro == 'RECHAZADA',
+                      colorActivo: cs.error,
+                      bgActivo: cs.errorContainer,
+                      onTap: () => _aplicarFiltro('RECHAZADA'),
+                    ),
                   ],
                 ),
               ),
@@ -184,8 +197,7 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
             if (p.error != null && p.pqrs.isEmpty)
               Expanded(
                 child: Center(
-                  child: Text(p.error!,
-                      style: TextStyle(color: cs.error)),
+                  child: Text(p.error!, style: TextStyle(color: cs.error)),
                 ),
               )
             else if (p.loading && p.pqrs.isEmpty)
@@ -306,7 +318,6 @@ class _PqrTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Badge estado
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -323,7 +334,6 @@ class _PqrTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Badge tipo
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -338,7 +348,6 @@ class _PqrTile extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // Indicador de respuesta
                 if (pqr.respuestaAdmin != null)
                   Icon(Icons.reply_outlined,
                       size: 16, color: DashboardTokens.fgGreen),
@@ -355,8 +364,7 @@ class _PqrTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               pqr.descripcion,
-              style:
-                  TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -371,8 +379,7 @@ class _PqrTile extends StatelessWidget {
                         fontSize: 11, color: cs.onSurfaceVariant)),
                 if (pqr.creadoEn != null) ...[
                   const SizedBox(width: 8),
-                  Text('·',
-                      style: TextStyle(color: cs.onSurfaceVariant)),
+                  Text('·', style: TextStyle(color: cs.onSurfaceVariant)),
                   const SizedBox(width: 8),
                   Icon(Icons.schedule_outlined,
                       size: 13, color: cs.onSurfaceVariant),
@@ -396,12 +403,17 @@ class _PqrTile extends StatelessWidget {
 
   static (Color, Color) _coloresEstado(String estado, ColorScheme cs) {
     switch (estado) {
-      case 'PENDIENTE':
+      case 'RADICADA':
         return (DashboardTokens.bgOrange, DashboardTokens.fgOrange);
       case 'EN_PROCESO':
         return (DashboardTokens.bgYellow, DashboardTokens.fgYellow);
       case 'RESUELTO':
         return (DashboardTokens.bgGreen, DashboardTokens.fgGreen);
+      case 'RECHAZADA':
+        return (
+          const Color(0xFFFFEBEE),
+          const Color(0xFFC62828),
+        );
       default:
         return (cs.surfaceContainerHighest, cs.onSurfaceVariant);
     }
@@ -409,8 +421,10 @@ class _PqrTile extends StatelessWidget {
 
   static String _formatFecha(String iso) {
     try {
-      final dt = DateTime.parse(iso).toLocal();
-      return '${dt.day}/${dt.month}/${dt.year}';
+      // Formato del backend: dd-MM-yyyy HH:mm:ss
+      final parts = iso.split(' ')[0].split('-');
+      if (parts.length == 3) return '${parts[0]}/${parts[1]}/${parts[2]}';
+      return iso;
     } catch (_) {
       return iso;
     }
@@ -421,7 +435,8 @@ class _PqrTile extends StatelessWidget {
 
 class _PqrDetalleSheet extends StatefulWidget {
   final PqrModel pqr;
-  final Future<void> Function(int id, String estado) onCambiarEstado;
+  final Future<void> Function(int id, String estado, String? comentario)
+      onCambiarEstado;
   final Future<void> Function(int id, String respuesta) onResponder;
 
   const _PqrDetalleSheet({
@@ -437,15 +452,13 @@ class _PqrDetalleSheet extends StatefulWidget {
 class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
   late final TextEditingController _respCtrl;
   bool _guardando = false;
-  // Copia local del PQR para reflejar cambios sin cerrar el sheet
   late PqrModel _pqr;
 
   @override
   void initState() {
     super.initState();
     _pqr = widget.pqr;
-    _respCtrl =
-        TextEditingController(text: widget.pqr.respuestaAdmin ?? '');
+    _respCtrl = TextEditingController(text: widget.pqr.respuestaAdmin ?? '');
   }
 
   @override
@@ -454,10 +467,115 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
     super.dispose();
   }
 
-  Future<void> _cambiarEstado(String nuevoEstado) async {
+  /// Muestra el diálogo de selección de estado + comentario opcional.
+  Future<void> _abrirDialogoCambiarEstado() async {
+    final transiciones = _transicionesDisponibles(_pqr.estado);
+    if (transiciones.isEmpty) return;
+
+    String? estadoSeleccionado = transiciones.first.estado;
+    final comentCtrl = TextEditingController();
+
+    final resultado = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setStateDialog) {
+          return AlertDialog(
+            title: const Text('Cambiar estado'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Selecciona el nuevo estado:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Chips de estados disponibles
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: transiciones.map((t) {
+                    final seleccionado = estadoSeleccionado == t.estado;
+                    return GestureDetector(
+                      onTap: () =>
+                          setStateDialog(() => estadoSeleccionado = t.estado),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: seleccionado ? t.bgColor : t.bgColor.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: seleccionado
+                                ? t.color
+                                : t.color.withValues(alpha: 0.3),
+                            width: seleccionado ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(t.icon, size: 15, color: t.color),
+                            const SizedBox(width: 6),
+                            Text(
+                              t.label,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: seleccionado
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: t.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: comentCtrl,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: 'Comentario (opcional)',
+                    hintText: 'Ej: Iniciando investigación...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: estadoSeleccionado == null
+                    ? null
+                    : () => Navigator.pop(ctx, true),
+                child: const Text('Confirmar'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (resultado != true || estadoSeleccionado == null) return;
+    final comentario = comentCtrl.text.trim();
+
     setState(() => _guardando = true);
-    await widget.onCambiarEstado(_pqr.id, nuevoEstado);
-    // Refrescar la copia local desde el provider
+    await widget.onCambiarEstado(
+        _pqr.id, estadoSeleccionado!, comentario.isEmpty ? null : comentario);
+
     if (mounted) {
       final pqrActualizada = context
           .read<PqrProvider>()
@@ -491,6 +609,7 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final (bg, fg) = _coloresEstado(_pqr.estado, cs);
+    final transiciones = _transicionesDisponibles(_pqr.estado);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -505,7 +624,6 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
           ),
           child: Column(
             children: [
-              // Handle
               const SizedBox(height: 8),
               Center(
                 child: Container(
@@ -519,7 +637,6 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
               ),
               const SizedBox(height: 12),
 
-              // Contenido scrollable
               Expanded(
                 child: ListView(
                   controller: scrollCtrl,
@@ -571,13 +688,11 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                               Text(
                                 _pqr.asunto,
                                 style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800),
+                                    fontSize: 18, fontWeight: FontWeight.w800),
                               ),
                             ],
                           ),
                         ),
-                        // Botón cerrar
                         IconButton(
                           onPressed: () => Navigator.pop(context),
                           icon: const Icon(Icons.close),
@@ -600,7 +715,7 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                         if (_pqr.creadoEn != null)
                           _InfoChip(
                             icon: Icons.calendar_today_outlined,
-                            label: _formatFecha(_pqr.creadoEn!),
+                            label: _pqr.creadoEn!.split(' ')[0],
                             cs: cs,
                           ),
                         if (_pqr.propiedadId != null)
@@ -630,37 +745,79 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest
-                            .withValues(alpha: 0.5),
+                        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: cs.outline),
                       ),
                       child: Text(
                         _pqr.descripcion,
                         style: TextStyle(
-                            fontSize: 14,
-                            color: cs.onSurface,
-                            height: 1.5),
+                            fontSize: 14, color: cs.onSurface, height: 1.5),
                       ),
                     ),
                     const SizedBox(height: 20),
 
                     // ── Cambio de estado ───────────────────
-                    if (!_pqr.esCerrado) ...[
-                      Text(
-                        'Cambiar estado',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: cs.onSurfaceVariant,
-                          letterSpacing: 0.4,
-                        ),
+                    if (!_pqr.esCerrado && !_pqr.esRechazada) ...[
+                      Row(
+                        children: [
+                          Text(
+                            'Cambiar estado',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: cs.onSurfaceVariant,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                          if (transiciones.isNotEmpty) ...[
+                            const Spacer(),
+                            // Chips de acceso rápido
+                            ...transiciones.take(2).map((t) => Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: _BotonTransicionRapida(
+                                    transicion: t,
+                                    guardando: _guardando,
+                                    onTap: () async {
+                                      setState(() => _guardando = true);
+                                      await widget.onCambiarEstado(
+                                          _pqr.id, t.estado, null);
+                                      if (mounted) {
+                                        final actualizada = context
+                                            .read<PqrProvider>()
+                                            .pqrs
+                                            .firstWhere((p) => p.id == _pqr.id,
+                                                orElse: () => _pqr);
+                                        setState(() {
+                                          _pqr = actualizada;
+                                          _guardando = false;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                )),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 10),
-                      _BotonesEstado(
-                        estadoActual: _pqr.estado,
-                        guardando: _guardando,
-                        onCambiar: _cambiarEstado,
+                      // Botón de cambio manual con diálogo
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _guardando ? null : _abrirDialogoCambiarEstado,
+                          icon: _guardando
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2),
+                                )
+                              : const Icon(Icons.swap_horiz_rounded, size: 16),
+                          label: const Text('Cambio manual con comentario'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       const Divider(height: 1),
@@ -701,12 +858,11 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Mostrar fecha de respuesta anterior si existe
                     if (_pqr.fechaRespuesta != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
-                          'Respondida el ${_formatFecha(_pqr.fechaRespuesta!)}',
+                          'Respondida el ${_pqr.fechaRespuesta!.split(' ')[0]}',
                           style: TextStyle(
                               fontSize: 12, color: cs.onSurfaceVariant),
                         ),
@@ -716,13 +872,13 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                       controller: _respCtrl,
                       minLines: 3,
                       maxLines: 8,
-                      enabled: !_pqr.esCerrado,
+                      enabled: !_pqr.esCerrado && !_pqr.esRechazada,
                       decoration: InputDecoration(
-                        hintText: _pqr.esCerrado
-                            ? 'PQR cerrada — no se puede editar'
+                        hintText: (_pqr.esCerrado || _pqr.esRechazada)
+                            ? 'PQR finalizada — no se puede editar'
                             : 'Escribe la respuesta para el residente...',
                         filled: true,
-                        fillColor: _pqr.esCerrado
+                        fillColor: (_pqr.esCerrado || _pqr.esRechazada)
                             ? cs.surfaceContainerHighest.withValues(alpha: 0.4)
                             : null,
                         border: OutlineInputBorder(
@@ -732,13 +888,12 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                       onChanged: (_) => setState(() {}),
                     ),
 
-                    if (!_pqr.esCerrado) ...[
+                    if (!_pqr.esCerrado && !_pqr.esRechazada) ...[
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton.icon(
-                          onPressed: _guardando ||
-                                  _respCtrl.text.trim().isEmpty
+                          onPressed: _guardando || _respCtrl.text.trim().isEmpty
                               ? null
                               : _enviarRespuesta,
                           icon: _guardando
@@ -746,8 +901,7 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white),
+                                      strokeWidth: 2, color: Colors.white),
                                 )
                               : const Icon(Icons.send_rounded, size: 16),
                           label: Text(_pqr.respuestaAdmin != null
@@ -770,65 +924,22 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
 
   static (Color, Color) _coloresEstado(String estado, ColorScheme cs) {
     switch (estado) {
-      case 'PENDIENTE':
+      case 'RADICADA':
         return (DashboardTokens.bgOrange, DashboardTokens.fgOrange);
       case 'EN_PROCESO':
         return (DashboardTokens.bgYellow, DashboardTokens.fgYellow);
       case 'RESUELTO':
         return (DashboardTokens.bgGreen, DashboardTokens.fgGreen);
+      case 'RECHAZADA':
+        return (const Color(0xFFFFEBEE), const Color(0xFFC62828));
       default:
-        return (
-          const Color(0xFFE0E0E0),
-          const Color(0xFF616161),
-        );
+        return (const Color(0xFFE0E0E0), const Color(0xFF616161));
     }
-  }
-
-  static String _formatFecha(String iso) {
-    try {
-      final dt = DateTime.parse(iso).toLocal();
-      return '${dt.day}/${dt.month}/${dt.year}';
-    } catch (_) {
-      return iso;
-    }
-  }
-}
-
-// ─── Botones de transición de estado ─────────────────────────────────────────
-
-class _BotonesEstado extends StatelessWidget {
-  final String estadoActual;
-  final bool guardando;
-  final Future<void> Function(String) onCambiar;
-
-  const _BotonesEstado({
-    required this.estadoActual,
-    required this.guardando,
-    required this.onCambiar,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Transiciones válidas por estado
-    final transiciones = _transicionesDisponibles(estadoActual);
-    if (transiciones.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: transiciones
-          .map((t) => _BotonTransicion(
-                transicion: t,
-                guardando: guardando,
-                onTap: () => onCambiar(t.estado),
-              ))
-          .toList(),
-    );
   }
 
   static List<_Transicion> _transicionesDisponibles(String estado) {
     switch (estado) {
-      case 'PENDIENTE':
+      case 'RADICADA':
         return [
           _Transicion(
             estado: 'EN_PROCESO',
@@ -844,6 +955,13 @@ class _BotonesEstado extends StatelessWidget {
             color: DashboardTokens.fgGreen,
             bgColor: DashboardTokens.bgGreen,
           ),
+          _Transicion(
+            estado: 'RECHAZADA',
+            label: 'Rechazar',
+            icon: Icons.block_outlined,
+            color: const Color(0xFFC62828),
+            bgColor: const Color(0xFFFFEBEE),
+          ),
         ];
       case 'EN_PROCESO':
         return [
@@ -857,9 +975,16 @@ class _BotonesEstado extends StatelessWidget {
           _Transicion(
             estado: 'CERRADO',
             label: 'Cerrar',
-            icon: Icons.cancel_outlined,
+            icon: Icons.lock_outline,
             color: const Color(0xFF616161),
             bgColor: const Color(0xFFE0E0E0),
+          ),
+          _Transicion(
+            estado: 'RECHAZADA',
+            label: 'Rechazar',
+            icon: Icons.block_outlined,
+            color: const Color(0xFFC62828),
+            bgColor: const Color(0xFFFFEBEE),
           ),
         ];
       case 'RESUELTO':
@@ -878,6 +1003,53 @@ class _BotonesEstado extends StatelessWidget {
   }
 }
 
+// ─── Botón de transición rápida (sin diálogo) ────────────────────────────────
+
+class _BotonTransicionRapida extends StatelessWidget {
+  final _Transicion transicion;
+  final bool guardando;
+  final VoidCallback onTap;
+
+  const _BotonTransicionRapida({
+    required this.transicion,
+    required this.guardando,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: guardando ? null : onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: transicion.bgColor,
+          borderRadius: BorderRadius.circular(8),
+          border:
+              Border.all(color: transicion.color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(transicion.icon, size: 14, color: transicion.color),
+            const SizedBox(width: 4),
+            Text(
+              transicion.label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: transicion.color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Modelo de transición ─────────────────────────────────────────────────────
+
 class _Transicion {
   final String estado;
   final String label;
@@ -892,50 +1064,6 @@ class _Transicion {
     required this.color,
     required this.bgColor,
   });
-}
-
-class _BotonTransicion extends StatelessWidget {
-  final _Transicion transicion;
-  final bool guardando;
-  final VoidCallback onTap;
-
-  const _BotonTransicion({
-    required this.transicion,
-    required this.guardando,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: guardando ? null : onTap,
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: transicion.bgColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-              color: transicion.color.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(transicion.icon, size: 16, color: transicion.color),
-            const SizedBox(width: 6),
-            Text(
-              transicion.label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: transicion.color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ─── Chip de info ─────────────────────────────────────────────────────────────

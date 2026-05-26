@@ -16,6 +16,7 @@ class AuthProvider extends ChangeNotifier {
   String? _tenantId;
   String? _nombreConjunto;
   String? _nombre;
+  String? _timezone;
   String? _error;
 
   // Para el flujo multi-tenant: guardamos temporalmente mientras el usuario elige conjunto
@@ -29,6 +30,8 @@ class AuthProvider extends ChangeNotifier {
   String? get tenantId => _tenantId;
   String? get nombreConjunto => _nombreConjunto;
   String? get nombre => _nombre;
+  /// Timezone del tenant activo. Fallback: "America/Bogota".
+  String get timezone => _timezone ?? 'America/Bogota';
   String? get error => _error;
   MultiTenantResponse? get multiTenantPendiente => _multiTenantPendiente;
 
@@ -54,6 +57,7 @@ class AuthProvider extends ChangeNotifier {
       _tenantId = sesion['tenantId'];
       _nombreConjunto = sesion['nombreConjunto'];
       _nombre = sesion['nombre'];
+      _timezone = sesion['timezone'];
       _status = AuthStatus.autenticado;
     } else {
       _status = AuthStatus.noAutenticado;
@@ -145,6 +149,7 @@ class AuthProvider extends ChangeNotifier {
     _tenantId = null;
     _nombreConjunto = null;
     _nombre = null;
+    _timezone = null;
     _multiTenantPendiente = null;
     _passwordTemporal = null;
     _error = null;
@@ -161,6 +166,7 @@ class AuthProvider extends ChangeNotifier {
     _tenantId = null;
     _nombreConjunto = null;
     _nombre = null;
+    _timezone = null;
     _multiTenantPendiente = null;
     _passwordTemporal = null;
     _error = null;
@@ -181,6 +187,7 @@ class AuthProvider extends ChangeNotifier {
       tenantId: response.tenantId,
       nombreConjunto: response.nombreConjunto,
       nombre: response.nombre,
+      timezone: response.timezone,
     );
     _token = response.token;
     _email = response.email;
@@ -188,6 +195,7 @@ class AuthProvider extends ChangeNotifier {
     _tenantId = response.tenantId;
     _nombreConjunto = response.nombreConjunto;
     _nombre = response.nombre;
+    _timezone = response.timezone;
     _status = AuthStatus.autenticado;
     notifyListeners();
 

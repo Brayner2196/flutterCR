@@ -463,16 +463,18 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
         widget.onGuardado();
       } else {
         final error = jsonDecode(res.body)['message'] ?? 'Error al guardar';
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(error)));
+        }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       setState(() => _guardando = false);
     }

@@ -9,6 +9,7 @@ class TenantWizardStepResumen extends StatelessWidget {
   final TextEditingController direccionCtrl;
   final TextEditingController schemaCtrl;
   final TextEditingController emailCtrl;
+  final String timezone;
   final List<TipoNodoEditable> tiposPropiedad;
   final List<PasarelaWizardData> pasarelas;
 
@@ -19,6 +20,7 @@ class TenantWizardStepResumen extends StatelessWidget {
     required this.direccionCtrl,
     required this.schemaCtrl,
     required this.emailCtrl,
+    required this.timezone,
     required this.tiposPropiedad,
     required this.pasarelas,
   });
@@ -111,6 +113,12 @@ class TenantWizardStepResumen extends StatelessWidget {
                   valor: direccionCtrl.text.trim(),
                   icono: Icons.location_on_outlined,
                 ),
+              _ItemResumen(
+                label: 'Zona horaria',
+                valor: timezone,
+                icono: Icons.public,
+                mono: true,
+              ),
             ],
           ),
           const SizedBox(height: 16),

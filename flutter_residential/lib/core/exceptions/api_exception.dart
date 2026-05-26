@@ -13,7 +13,10 @@ class ApiException implements Exception {
   /// Extrae el mensaje legible de cualquier tipo de error.
   static String extract(dynamic error) {
     if (error is ApiException) return error.message;
+    // SessionExpiredException tiene su propio toString() limpio
     final raw = error.toString();
-    return raw.startsWith('Exception: ') ? raw.substring(11) : raw;
+    if (raw.startsWith('Exception: ')) return raw.substring(11);
+    if (raw.startsWith('FormatException: ')) return 'Error inesperado en la respuesta del servidor';
+    return raw;
   }
 }

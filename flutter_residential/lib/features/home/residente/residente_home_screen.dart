@@ -92,7 +92,6 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     if (_esPropietario) {
       return [
         ResidenteDashboardScreen(onNavegar: _onTabSelected),
-        const MiPropiedadScreen(),
         MisInquilinosScreen(
           onFabRegistrado: (accion) =>
               setState(() => _accionAgregarInquilino = accion),
@@ -102,7 +101,6 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     }
     return [
       ResidenteDashboardScreen(onNavegar: _onTabSelected),
-      const MiPropiedadScreen(),
       const PerfilResidenteScreen(),
     ];
   }
@@ -118,11 +116,6 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
       selectedIcon: Icon(Icons.account_balance_wallet_rounded),
       label: 'Finanzas',
     );
-    final propiedad = const NavigationDestination(
-      icon: Icon(Icons.home_work_outlined),
-      selectedIcon: Icon(Icons.home_work_rounded),
-      label: 'Mi Propiedad',
-    );
     final inquilinos = const NavigationDestination(
       icon: Icon(Icons.people_outline),
       selectedIcon: Icon(Icons.people_rounded),
@@ -135,14 +128,14 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     );
 
     if (_esPropietario) {
-      return [inicio, finanzas, propiedad, inquilinos, perfil];
+      return [inicio, finanzas, inquilinos, perfil];
     }
 
     // Inquilino: Finanzas solo si tiene el permiso
     if (_tieneFinanzas) {
-      return [inicio, finanzas, propiedad, perfil];
+      return [inicio, finanzas, perfil];
     }
-    return [inicio, propiedad, perfil];
+    return [inicio, perfil];
   }
 
   @override
@@ -153,7 +146,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
 
     // FAB solo en el tab de Inquilinos (índice 2 del stack, solo propietario)
     final mostrarFabInquilinos =
-        _esPropietario && _tabActual == 2;
+        _esPropietario && _tabActual == 1;
 
     return Scaffold(
       appBar: AppBarResidente(),

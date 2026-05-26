@@ -3,6 +3,8 @@ import 'package:toastification/toastification.dart';
 import '../../propiedades/models/tipo_propiedad_nodo.dart';
 import '../../propiedades/services/propiedad_service.dart';
 import '../services/auth_service.dart';
+import '../../../core/utils/password_policy.dart';
+import '../../../shared/widgets/password_policy_indicator.dart';
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -223,6 +225,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   controller: _passwordCtrl,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
+                  onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     labelText: 'Contraseña *',
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -234,12 +237,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
                           setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Ingresa una contraseña';
-                    if (v.length < 6) return 'Mínimo 6 caracteres';
-                    return null;
-                  },
+                  validator: PasswordPolicy.validate,
                 ),
+                PasswordPolicyIndicator(password: _passwordCtrl.text),
                 const SizedBox(height: 16),
 
                 TextFormField(

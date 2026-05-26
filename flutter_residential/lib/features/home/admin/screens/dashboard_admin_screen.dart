@@ -10,6 +10,8 @@ import 'package:flutter_residential/features/pagos/screens/admin/admin_verificar
 import 'package:flutter_residential/features/pqr/screens/admin/admin_pqrs_screen.dart';
 import 'package:flutter_residential/features/reservas/screens/admin/admin_reservas_screen.dart';
 import 'package:flutter_residential/features/votaciones/screens/admin/admin_votaciones_screen.dart';
+import 'package:flutter_residential/features/plan_pago/screens/admin/admin_planes_pago_screen.dart';
+import 'package:flutter_residential/features/presupuesto/screens/admin/admin_presupuestos_screen.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
@@ -128,6 +130,24 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   iconColor: _teal,
                   colorText: _teal,
                   onTap: () => _abrir(const AdminVotacionesScreen()),
+                ),
+                QuickAccessCardData(
+                  title: 'Planes de pago',
+                  icon: Icons.calendar_month_outlined,
+                  backgroundColor: AppColors.bgOrange,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.orange,
+                  colorText: AppColors.orange,
+                  onTap: () => _abrir(const AdminPlanesPagoScreen()),
+                ),
+                QuickAccessCardData(
+                  title: 'Presupuesto',
+                  icon: Icons.account_balance_outlined,
+                  backgroundColor: AppColors.bgGreen,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.ok,
+                  colorText: AppColors.ok,
+                  onTap: () => _abrir(const AdminPresupuestosScreen()),
                 ),
               ],
             ),

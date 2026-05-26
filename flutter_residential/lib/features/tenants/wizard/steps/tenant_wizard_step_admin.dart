@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/password_policy.dart';
+import '../../../../shared/widgets/password_policy_indicator.dart';
 
 class TenantWizardStepAdmin extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -72,7 +74,7 @@ class _TenantWizardStepAdminState extends State<TenantWizardStepAdmin> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Mínimo 6 caracteres. El admin puede cambiarla al ingresar.',
+              'El admin puede cambiarla al ingresar.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
               ),
@@ -81,6 +83,7 @@ class _TenantWizardStepAdminState extends State<TenantWizardStepAdmin> {
             TextFormField(
               controller: widget.passwordCtrl,
               obscureText: !_verPassword,
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: '••••••••',
                 prefixIcon: Icon(Icons.lock_outlined, color: Colors.deepPurple),
@@ -95,12 +98,9 @@ class _TenantWizardStepAdminState extends State<TenantWizardStepAdmin> {
                   onPressed: () => setState(() => _verPassword = !_verPassword),
                 ),
               ),
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Campo requerido';
-                if (v.length < 6) return 'Mínimo 6 caracteres';
-                return null;
-              },
+              validator: PasswordPolicy.validate,
             ),
+            PasswordPolicyIndicator(password: widget.passwordCtrl.text),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(14),

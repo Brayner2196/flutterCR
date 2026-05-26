@@ -4,6 +4,7 @@ import '../../../core/services/base_api_service.dart';
 import '../models/cobro_model.dart';
 import '../models/estado_cuenta_model.dart';
 import '../models/movimiento_cobro_model.dart';
+import '../models/paginated_cobro_response.dart';
 import '../models/periodo_cobro_model.dart';
 
 class CobroService {
@@ -11,8 +12,7 @@ class CobroService {
 
   static Future<PeriodoCobroModel> abrirPeriodo(Map<String, dynamic> data) async {
     final res = await ApiClient.post(ApiConstants.adminPeriodos, data, requiresAuth: true);
-    return BaseApiService.parseSingle(res, PeriodoCobroModel.fromJson,
-        successCodes: [201], fallbackMsg: 'Error al abrir período');
+    return BaseApiService.parseSingle(res, PeriodoCobroModel.fromJson,  successCodes: [201], fallbackMsg: 'Error al abrir período');
   }
 
   static Future<List<PeriodoCobroModel>> listarPeriodos() async {
@@ -95,5 +95,19 @@ class CobroService {
   static Future<List<CobroModel>> getHistorial() async {
     final res = await ApiClient.get(ApiConstants.historialCobros);
     return BaseApiService.parseList(res, CobroModel.fromJson, 'Error al obtener historial');
+  }
+
+  /// Historial paginado — infinite scroll. page es 0-based.
+  static Future<PaginatedCobroResponse> getHistorialPaginado({
+    int page = 0,
+    int size = 5,
+  }) async {
+    final url = '${ApiConstants.historialCobrosPageable}?page=$page&size=$size';
+    final res = await ApiClient.get(url);
+    return BaseApiService.parseSingle(
+      res,
+      PaginatedCobroResponse.fromJson,
+      fallbackMsg: 'Error al obtener historial paginado',
+    );
   }
 }

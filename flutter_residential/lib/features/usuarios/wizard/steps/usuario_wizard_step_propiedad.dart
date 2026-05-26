@@ -3,6 +3,24 @@ import 'package:provider/provider.dart';
 import '../../../../features/propiedades/models/tipo_propiedad_nodo.dart';
 import '../../../../features/propiedades/providers/propiedad_provider.dart';
 
+/// Nodo facturable con su ruta completa desde la raíz.
+/// Ej: Apartamento → ruta = [Torre, Piso, Apartamento]
+class _RutaFacturable {
+  final List<TipoPropiedadNodo> ruta;
+
+  const _RutaFacturable(this.ruta);
+
+  TipoPropiedadNodo get nodo => ruta.last;
+  String get etiqueta => nodo.nombre;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _RutaFacturable && other.nodo.id == nodo.id;
+
+  @override
+  int get hashCode => nodo.id.hashCode;
+}
+
 class UsuarioWizardStepPropiedad extends StatefulWidget {
   final String rol;
 
@@ -18,7 +36,7 @@ class UsuarioWizardStepPropiedad extends StatefulWidget {
 
 class UsuarioWizardStepPropiedadState
     extends State<UsuarioWizardStepPropiedad> {
-  TipoPropiedadNodo? _tipoRaizSeleccionado;
+  _RutaFacturable? _rutaSeleccionada;
   final List<TipoPropiedadNodo> _nivelesActivos = [];
   final List<TextEditingController> _pathCtrlList = [];
 
@@ -41,9 +59,10 @@ class UsuarioWizardStepPropiedadState
   // ── API pública para el wizard ─────────────────────────────────────────────
 
   bool get esValido {
-    if (_tipoRaizSeleccionado == null) return false;
+    if (_rutaSeleccionada == null) return false;
+    // Todos los niveles de la ruta deben estar llenos
     return _pathCtrlList.isNotEmpty &&
-        _pathCtrlList[0].text.trim().isNotEmpty;
+        _pathCtrlList.every((c) => c.text.trim().isNotEmpty);
   }
 
   /// Retorna el path como lista de {tipoId, valor} para enviar al backend.
@@ -72,35 +91,41 @@ class UsuarioWizardStepPropiedadState
 
   // ── Lógica interna ─────────────────────────────────────────────────────────
 
-  void _onTipoRaizChanged(TipoPropiedadNodo? tipo) {
+  /// Recorre el árbol y devuelve una lista de rutas completas hacia cada nodo
+  /// facturable. La ruta incluye todos los ancestros + el nodo facturable.
+  List<_RutaFacturable> _encontrarFacturables(
+    List<TipoPropiedadNodo> nodos, [
+    List<TipoPropiedadNodo>? ancestros,
+  ]) {
+    final resultado = <_RutaFacturable>[];
+    for (final nodo in nodos) {
+      final ruta = [...?ancestros, nodo];
+      if (nodo.esFacturable) {
+        resultado.add(_RutaFacturable(ruta));
+      }
+      if (nodo.hijos.isNotEmpty) {
+        resultado.addAll(_encontrarFacturables(nodo.hijos, ruta));
+      }
+    }
+    return resultado;
+  }
+
+  /// Al seleccionar una ruta facturable, crea un controller por cada nivel
+  /// de la ruta completa — todos los inputs aparecen a la vez.
+  void _onRutaChanged(_RutaFacturable? ruta) {
     for (final c in _pathCtrlList) {
       c.dispose();
     }
     _pathCtrlList.clear();
     _nivelesActivos.clear();
 
-    if (tipo != null) {
-      _nivelesActivos.add(tipo);
-      _pathCtrlList.add(TextEditingController());
+    if (ruta != null) {
+      for (final nodo in ruta.ruta) {
+        _nivelesActivos.add(nodo);
+        _pathCtrlList.add(TextEditingController());
+      }
     }
-    setState(() => _tipoRaizSeleccionado = tipo);
-  }
-
-  void _onNivelLlenado(int index) {
-    final texto = _pathCtrlList[index].text.trim();
-    if (texto.isEmpty) return;
-
-    while (_nivelesActivos.length > index + 1) {
-      _nivelesActivos.removeLast();
-      _pathCtrlList.removeLast().dispose();
-    }
-
-    final nodoActual = _nivelesActivos[index];
-    if (nodoActual.hijos.isNotEmpty) {
-      _nivelesActivos.add(nodoActual.hijos.first);
-      _pathCtrlList.add(TextEditingController());
-    }
-    setState(() {});
+    setState(() => _rutaSeleccionada = ruta);
   }
 
   // ── UI ─────────────────────────────────────────────────────────────────────
@@ -119,7 +144,9 @@ class UsuarioWizardStepPropiedadState
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
-    final tiposArbol = context.watch<PropiedadProvider>().tiposArbol;
+    final provider = context.watch<PropiedadProvider>();
+    final tiposArbol = provider.tiposArbol;
+    final cargando = provider.cargando;
     final esInquilino = widget.rol == 'INQUILINO';
 
     final bannerColor = esInquilino ? Colors.orange : Colors.teal;
@@ -180,74 +207,94 @@ class UsuarioWizardStepPropiedadState
           ),
           const SizedBox(height: 24),
 
-          if (tiposArbol.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
-                child: Column(
-                  children: [
-                    Icon(Icons.home_work_outlined,
-                        size: 44, color: cs.outlineVariant),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Sin tipos de propiedad configurados',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
+          Builder(builder: (_) {
+            // Spinner mientras carga
+            if (cargando) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            // Nodos facturables con su ruta completa desde la raíz
+            final facturables = _encontrarFacturables(tiposArbol);
+
+            if (facturables.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Column(
+                    children: [
+                      Icon(Icons.home_work_outlined,
+                          size: 44, color: cs.outlineVariant),
+                      const SizedBox(height: 12),
+                      Text(
+                        tiposArbol.isEmpty
+                            ? 'Sin tipos de propiedad configurados'
+                            : 'Sin tipos de propiedad facturables',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Configúralos desde la sección de Propiedades.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                      const SizedBox(height: 4),
+                      Text(
+                        tiposArbol.isEmpty
+                            ? 'Configúralos desde la sección de Propiedades.'
+                            : 'Marca al menos un tipo como facturable en Configuración → Tipos de propiedad.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            )
-          else ...[
-            // Selector de tipo raíz
-            DropdownButtonFormField<TipoPropiedadNodo>(
-              value: _tipoRaizSeleccionado,
-              decoration: _decor(
-                'Tipo de propiedad',
-                Icons.home_work_outlined,
-                hint: 'Selecciona...',
-              ),
-              hint: const Text('Selecciona el tipo...'),
-              items: tiposArbol
-                  .map((t) => DropdownMenuItem(
-                        value: t,
-                        child: Text(t.nombre),
-                      ))
-                  .toList(),
-              onChanged: _onTipoRaizChanged,
-            ),
+              );
+            }
 
-            // Campos dinámicos por nivel
-            for (int i = 0; i < _nivelesActivos.length; i++) ...[
-              const SizedBox(height: 14),
-              _NivelField(
-                nivel: i,
-                nodo: _nivelesActivos[i],
-                controller: _pathCtrlList[i],
-                esPrimero: i == 0,
-                esUltimo: i == _nivelesActivos.length - 1,
-                onSubmitted: () => _onNivelLlenado(i),
-                onChanged: (v) {
-                  if (v.trim().isNotEmpty) _onNivelLlenado(i);
-                },
-              ),
-            ],
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Dropdown muestra el nodo facturable (ej: Apartamento)
+                DropdownButtonFormField<_RutaFacturable>(
+                  value: _rutaSeleccionada,
+                  decoration: _decor(
+                    'Tipo de propiedad',
+                    Icons.home_work_outlined,
+                    hint: 'Selecciona...',
+                  ),
+                  hint: const Text('Selecciona el tipo...'),
+                  items: facturables
+                      .map((r) => DropdownMenuItem(
+                            value: r,
+                            child: Text(r.etiqueta),
+                          ))
+                      .toList(),
+                  onChanged: _onRutaChanged,
+                ),
 
-            // Breadcrumb del path construido
-            if (_pathCtrlList.isNotEmpty &&
-                _pathCtrlList[0].text.trim().isNotEmpty) ...[
-              const SizedBox(height: 20),
-              _PathPreview(labels: buildPathLabels()),
-            ],
-          ],
+                // Todos los niveles del árbol se muestran de golpe al seleccionar
+                for (int i = 0; i < _nivelesActivos.length; i++) ...[
+                  const SizedBox(height: 14),
+                  _NivelField(
+                    nivel: i,
+                    nodo: _nivelesActivos[i],
+                    controller: _pathCtrlList[i],
+                    esPrimero: i == 0,
+                    esUltimo: i == _nivelesActivos.length - 1,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ],
+
+                // Preview del path construido (aparece al llenar el primer nivel)
+                if (_pathCtrlList.isNotEmpty &&
+                    _pathCtrlList[0].text.trim().isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  _PathPreview(labels: buildPathLabels()),
+                ],
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -262,7 +309,6 @@ class _NivelField extends StatelessWidget {
   final TextEditingController controller;
   final bool esPrimero;
   final bool esUltimo;
-  final VoidCallback onSubmitted;
   final void Function(String) onChanged;
 
   const _NivelField({
@@ -271,7 +317,6 @@ class _NivelField extends StatelessWidget {
     required this.controller,
     required this.esPrimero,
     required this.esUltimo,
-    required this.onSubmitted,
     required this.onChanged,
   });
 
@@ -337,7 +382,6 @@ class _NivelField extends StatelessWidget {
                 borderSide: BorderSide(color: color, width: 2),
               ),
             ),
-            onFieldSubmitted: (_) => onSubmitted(),
             onChanged: onChanged,
           ),
         ),

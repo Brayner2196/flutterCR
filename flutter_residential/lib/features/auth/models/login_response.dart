@@ -6,6 +6,8 @@ class LoginResponse {
   final String tenantId;
   final String? nombreConjunto;
   final String? nombre;
+  /// Ej: "America/Bogota". Null si el usuario es SUPER_ADMIN.
+  final String? timezone;
 
   LoginResponse({
     required this.token,
@@ -15,6 +17,7 @@ class LoginResponse {
     required this.tenantId,
     this.nombreConjunto,
     this.nombre,
+    this.timezone,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -26,6 +29,7 @@ class LoginResponse {
       tenantId: json['tenantId'] as String,
       nombreConjunto: json['nombreConjunto'] as String?,
       nombre: json['nombre'] as String?,
+      timezone: json['timezone'] as String?,
     );
   }
 }

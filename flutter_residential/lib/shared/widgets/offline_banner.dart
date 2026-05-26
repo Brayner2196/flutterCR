@@ -20,7 +20,7 @@ class OfflineGuard extends StatelessWidget {
             AnimatedPositioned(
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeInOut,
-              top: isOffline ? 0 : -60,
+              top: isOffline ? 0 : -90,
               left: 0,
               right: 0,
               child: const _OfflineBanner(),
@@ -54,7 +54,7 @@ class _OfflineBanner extends StatelessWidget {
           color: const Color(0xFF323232),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),

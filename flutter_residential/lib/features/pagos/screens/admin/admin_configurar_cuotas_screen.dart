@@ -897,6 +897,7 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
                       labelText: 'Tipo de propiedad',
                       border: OutlineInputBorder()),
                   items: widget.tiposFlat
+                      .where((t) => t.esFacturable)
                       .map((t) => DropdownMenuItem(
                           value: t.id, child: Text(t.nombre)))
                       .toList(),

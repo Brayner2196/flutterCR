@@ -84,6 +84,8 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
     'tiposPropiedad': <TipoNodoEditable>[],
   };
 
+  String _timezone = 'America/Bogota';
+
   // Pasarelas inicializadas con las 3 opciones disponibles
   late final List<PasarelaWizardData> _pasarelas = [
     PasarelaWizardData(tipo: TipoPasarela.mercadoPago, prioridad: 1),
@@ -191,6 +193,7 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
         'codigo': _codigoCtrl.text.trim(),
         'emailAdmin': _emailCtrl.text.trim(),
         'passwordAdmin': _passwordCtrl.text,
+        'timezone': _timezone,
         if (_direccionCtrl.text.trim().isNotEmpty)
           'direccion': _direccionCtrl.text.trim(),
         if (tiposJson.isNotEmpty) 'tiposPropiedad': tiposJson,
@@ -282,6 +285,8 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
                   nombreCtrl: _nombreCtrl,
                   codigoCtrl: _codigoCtrl,
                   direccionCtrl: _direccionCtrl,
+                  timezone: _timezone,
+                  onTimezoneChanged: (tz) => setState(() => _timezone = tz),
                 ),
                 TenantWizardStepSchema(
                   formKey: _keySchema,
@@ -307,6 +312,7 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
                   direccionCtrl: _direccionCtrl,
                   schemaCtrl: _schemaCtrl,
                   emailCtrl: _emailCtrl,
+                  timezone: _timezone,
                   tiposPropiedad: _datos['tiposPropiedad'] as List<TipoNodoEditable>,
                   pasarelas: _pasarelas,
                 ),

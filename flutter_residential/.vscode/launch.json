@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "CR — Dev (emulador)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define=API_BASE_URL=http://10.0.2.2:8080",
+        "--dart-define=APP_ENV=dev"
+      ]
+    },
+    {
+      "name": "CR — DevServer (dispositivo físico)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define=API_BASE_URL=https://cr-dev.up.railway.app",
+        "--dart-define=APP_ENV=dev"
+      ]
+    },
+    {
+      "name": "CR — Staging",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define=API_BASE_URL=https://cr-dev.up.railway.app",
+        "--dart-define=APP_ENV=staging"
+      ]
+    },
+    {
+      "name": "CR — Producción (solo lectura, no buildear aquí)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define=API_BASE_URL=https://backendcr-production-991c.up.railway.app",
+        "--dart-define=APP_ENV=prod"
+      ]
+    }
+  ]
+}

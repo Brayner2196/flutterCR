@@ -1,6 +1,7 @@
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/services/base_api_service.dart';
+import '../models/pqr_historial_model.dart';
 import '../models/pqr_model.dart';
 
 class PqrService {
@@ -18,8 +19,11 @@ class PqrService {
         fallbackMsg: 'Error al responder PQR');
   }
 
-  static Future<PqrModel> cambiarEstado(int id, String estado) async {
-    final res = await ApiClient.put(ApiConstants.estadoPqr(id), {'estado': estado});
+  static Future<PqrModel> cambiarEstado(int id, String estado,
+      {String? comentario}) async {
+    final body = <String, dynamic>{'estado': estado};
+    if (comentario != null && comentario.isNotEmpty) body['comentario'] = comentario;
+    final res = await ApiClient.put(ApiConstants.estadoPqr(id), body);
     return BaseApiService.parseSingle(res, PqrModel.fromJson,
         fallbackMsg: 'Error al cambiar estado');
   }
@@ -27,6 +31,12 @@ class PqrService {
   static Future<List<PqrModel>> misPqrs() async {
     final res = await ApiClient.get(ApiConstants.misPqrs);
     return BaseApiService.parseList(res, PqrModel.fromJson, 'Error al obtener tus PQRs');
+  }
+
+  static Future<List<PqrHistorialModel>> historialPqr(int id) async {
+    final res = await ApiClient.get(ApiConstants.historialPqr(id));
+    return BaseApiService.parseList(
+        res, PqrHistorialModel.fromJson, 'Error al obtener historial de la PQR');
   }
 
   static Future<PqrModel> crear({

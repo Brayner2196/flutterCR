@@ -38,8 +38,10 @@ class PqrProvider extends ChangeNotifier {
     return actualizada;
   }
 
-  Future<PqrModel> cambiarEstado(int id, String estado) async {
-    final actualizada = await PqrService.cambiarEstado(id, estado);
+  Future<PqrModel> cambiarEstado(int id, String estado,
+      {String? comentario}) async {
+    final actualizada =
+        await PqrService.cambiarEstado(id, estado, comentario: comentario);
     final idx = _pqrs.indexWhere((p) => p.id == id);
     if (idx != -1) _pqrs[idx] = actualizada;
     notifyListeners();

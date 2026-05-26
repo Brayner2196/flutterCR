@@ -94,12 +94,12 @@ class _VotacionResidenteCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: cs.primaryContainer,
+                      color: Colors.blueAccent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text('Pendiente',
                         style: TextStyle(
-                            color: cs.onPrimaryContainer, fontSize: 11, fontWeight: FontWeight.bold)),
+                            color: Colors.blueAccent, fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
               ],
             ),
@@ -113,13 +113,17 @@ class _VotacionResidenteCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.how_to_vote_outlined, size: 14, color: cs.outline),
+                Icon(Icons.how_to_vote_outlined, size: 14, color: cs.primary),
                 const SizedBox(width: 4),
                 Text('${votacion.totalVotantes} han votado',
-                    style: TextStyle(fontSize: 11, color: cs.outline)),
+                    style: TextStyle(fontSize: 11, color: cs.primary)),
                 const Spacer(),
                 Expanded(
-                  child: FilledButton.tonal(
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: cs.primaryContainer,
+                      foregroundColor: cs.primary 
+                    ),
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(

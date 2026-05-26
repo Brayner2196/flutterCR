@@ -7,6 +7,8 @@ import 'package:flutter_residential/features/pagos/screens/admin/admin_cobro_esp
 import 'package:flutter_residential/features/pagos/screens/admin/admin_configurar_cuotas_screen.dart';
 import 'package:flutter_residential/features/pagos/screens/admin/admin_configurar_mora_screen.dart';
 import 'package:flutter_residential/features/pagos/screens/admin/admin_pasarelas_screen.dart';
+import 'package:flutter_residential/features/plan_pago/screens/admin/admin_config_plan_pago_screen.dart';
+import 'package:flutter_residential/features/presupuesto/screens/admin/admin_presupuestos_screen.dart';
 
 class ConfiguracionScreen extends StatelessWidget {
   const ConfiguracionScreen({super.key});
@@ -77,6 +79,26 @@ class ConfiguracionScreen extends StatelessWidget {
                       subtitulo: 'Tipo de cálculo, porcentaje y días de gracia',
                       onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => const AdminConfigurarMoraScreen(),
+                      )),
+                    ),
+                    const SizedBox(height: 10),
+                    ConfigSectionTile(
+                      icono: Icons.calendar_month_outlined,
+                      color: Colors.deepOrange,
+                      titulo: 'Plan de pago',
+                      subtitulo: 'Fraccionar deuda en cuotas — reglas y aprobación',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const AdminConfigPlanPagoScreen(),
+                      )),
+                    ),
+                    const SizedBox(height: 10),
+                    ConfigSectionTile(
+                      icono: Icons.account_balance_outlined,
+                      color: Colors.green,
+                      titulo: 'Presupuesto',
+                      subtitulo: 'Presupuesto anual por categorías y registro de gastos',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const AdminPresupuestosScreen(),
                       )),
                     ),
                   ],

@@ -84,6 +84,12 @@ class ReservaService {
     return BaseApiService.parseList(res, ZonaComunModel.fromJson, 'Error al listar zonas');
   }
 
+  static Future<DisponibilidadZonaModel> disponibilidadZona(int zonaId, String fecha) async {
+    final res = await ApiClient.get(ApiConstants.disponibilidadZona(zonaId, fecha));
+    return BaseApiService.parseSingle(res, DisponibilidadZonaModel.fromJson,
+        fallbackMsg: 'Error al obtener disponibilidad');
+  }
+
   static Future<ReservaModel> crear(Map<String, dynamic> data) async {
     final res = await ApiClient.post(ApiConstants.residenteReservas, data, requiresAuth: true);
     return BaseApiService.parseSingle(res, ReservaModel.fromJson,

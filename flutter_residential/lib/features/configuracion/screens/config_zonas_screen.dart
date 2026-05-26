@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/features/configuracion/widgets/zona_form_sheet.dart';
 import 'package:flutter_residential/features/reservas/models/reserva_model.dart';
+import 'package:flutter_residential/features/reservas/screens/admin/admin_zona_form_screen.dart';
 import 'package:flutter_residential/features/reservas/services/reserva_service.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 
@@ -37,14 +37,14 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
   }
 
   void _abrirFormulario({ZonaComunModel? zona}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => ZonaFormSheet(zona: zona, onGuardado: _cargar),
-    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdminZonaFormScreen(zona: zona),
+      ),
+    ).then((guardado) {
+      if (guardado == true) _cargar();
+    });
   }
 
   Future<void> _suspender(ZonaComunModel zona) async {
