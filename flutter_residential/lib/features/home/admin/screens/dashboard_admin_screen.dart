@@ -13,6 +13,7 @@ import 'package:flutter_residential/features/votaciones/screens/admin/admin_vota
 import 'package:flutter_residential/features/plan_pago/screens/admin/admin_planes_pago_screen.dart';
 import 'package:flutter_residential/features/presupuesto/screens/admin/admin_presupuestos_screen.dart';
 import 'package:flutter_residential/features/parqueaderos/screens/admin/admin_parqueaderos_screen.dart';
+import 'package:flutter_residential/features/consejo/screens/admin_consejo_screen.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
@@ -158,6 +159,15 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   iconColor: AppColors.blue,
                   colorText: AppColors.blue,
                   onTap: () => _abrir(const AdminParqueaderosScreen()),
+                ),
+                QuickAccessCardData(
+                  title: 'Consejo',
+                  icon: Icons.gavel_rounded,
+                  backgroundColor: AppColors.bgPurple,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.purple,
+                  colorText: AppColors.purple,
+                  onTap: () => _abrir(const AdminConsejoScreen()),
                 ),
               ],
             ),

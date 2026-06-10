@@ -231,4 +231,19 @@ class ApiConstants {
   static const String consejoMiembros = '/api/consejo/miembros';
   static String consejoPqrs([String? estado]) =>
       estado != null ? '/api/consejo/pqrs?estado=$estado' : '/api/consejo/pqrs';
+
+  // Admin consejo — gestión de miembros (solo TENANT_ADMIN)
+  static const String adminConsejo          = '/api/admin/consejo';
+  static const String adminConsejoHistorial = '/api/admin/consejo/historial';
+  static String adminConsejoId(int id)      => '/api/admin/consejo/$id';
+
+  // Consejo — estadísticas (CONSEJERO + TENANT_ADMIN)
+  static String consejoEstadisticas({String? desde, String? hasta}) {
+    final params = <String>[];
+    if (desde != null) params.add('desde=$desde');
+    if (hasta != null) params.add('hasta=$hasta');
+    return params.isEmpty
+        ? '/api/consejo/estadisticas'
+        : '/api/consejo/estadisticas?${params.join('&')}';
+  }
 }

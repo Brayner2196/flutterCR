@@ -5,6 +5,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../anuncios/screens/admin/admin_anuncios_screen.dart';
 import '../../votaciones/screens/admin/admin_votaciones_screen.dart';
 import '../providers/consejo_provider.dart';
+import 'consejo_estadisticas_screen.dart';
 import 'consejo_pqrs_screen.dart';
 import 'consejo_directorio_screen.dart';
 
@@ -107,6 +108,15 @@ class _ConsejoDashboardScreenState extends State<ConsejoDashboardScreen> {
               fg: AppColors.purple,
               bg: AppColors.bgPurple,
               onTap: () => _ir(context, const ConsejoDirectorioScreen()),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _QuickCard(
+              label: 'Estadísticas',
+              subtitulo: 'PQRs, anuncios y votaciones',
+              icono: Icons.bar_chart_rounded,
+              fg: AppColors.teal,
+              bg: AppColors.bgTeal,
+              onTap: () => _ir(context, const ConsejoEstadisticasScreen()),
             ),
           ],
         ),
