@@ -51,4 +51,21 @@ class PagoModel {
   bool get esPendiente => estado == 'PENDIENTE_VERIFICACION';
   bool get esVerificado => estado == 'VERIFICADO';
   bool get esRechazado => estado == 'RECHAZADO';
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'cobroId': cobroId,
+        'usuarioId': usuarioId,
+        'usuarioNombre': usuarioNombre,
+        'montoPagado': montoPagado,
+        'fechaPago': fechaPago,
+        'metodoPago': metodoPago,
+        'referencia': referencia,
+        'urlComprobante': urlComprobante,
+        'notas': notas,
+        'estado': estado,
+        'motivoRechazo': motivoRechazo,
+        'fechaVerificacion': fechaVerificacion,
+        'creadoEn': creadoEn,
+      };
 }

@@ -148,4 +148,58 @@ class ResidenteEstadisticasModel {
       mesesEnMora: vencidos.length,
     );
   }
+
+  /// Serializa a JSON para persistir en cache local.
+  Map<String, dynamic> toJson() => {
+        'totalPendiente': totalPendiente,
+        'totalVencido': totalVencido,
+        'totalMora': totalMora,
+        'cobrosPendientes': cobrosPendientes,
+        'cobrosVencidos': cobrosVencidos,
+        'totalPagadoHistorico': totalPagadoHistorico,
+        'totalCobrosHistoricos': totalCobrosHistoricos,
+        'cobrosPagados': cobrosPagados,
+        'porcentajeCumplimiento': porcentajeCumplimiento,
+        'pagosVerificados': pagosVerificados,
+        'pagosPendientesVerificacion': pagosPendientesVerificacion,
+        'pagosRechazados': pagosRechazados,
+        'pagosPorMetodo': pagosPorMetodo,
+        if (ultimoPago != null) 'ultimoPago': ultimoPago!.toJson(),
+        if (proximoVencimiento != null)
+          'proximoVencimiento': proximoVencimiento!.toJson(),
+        if (diasParaVencimiento != null)
+          'diasParaVencimiento': diasParaVencimiento,
+        'mesesEnMora': mesesEnMora,
+      };
+
+  /// Deserializa desde cache local (campos ya calculados).
+  factory ResidenteEstadisticasModel.fromJson(Map<String, dynamic> json) =>
+      ResidenteEstadisticasModel(
+        totalPendiente: (json['totalPendiente'] as num).toDouble(),
+        totalVencido: (json['totalVencido'] as num).toDouble(),
+        totalMora: (json['totalMora'] as num).toDouble(),
+        cobrosPendientes: json['cobrosPendientes'] as int,
+        cobrosVencidos: json['cobrosVencidos'] as int,
+        totalPagadoHistorico: (json['totalPagadoHistorico'] as num).toDouble(),
+        totalCobrosHistoricos: json['totalCobrosHistoricos'] as int,
+        cobrosPagados: json['cobrosPagados'] as int,
+        porcentajeCumplimiento:
+            (json['porcentajeCumplimiento'] as num).toDouble(),
+        pagosVerificados: json['pagosVerificados'] as int,
+        pagosPendientesVerificacion:
+            json['pagosPendientesVerificacion'] as int,
+        pagosRechazados: json['pagosRechazados'] as int,
+        pagosPorMetodo:
+            Map<String, int>.from(json['pagosPorMetodo'] as Map),
+        ultimoPago: json['ultimoPago'] != null
+            ? PagoModel.fromJson(
+                json['ultimoPago'] as Map<String, dynamic>)
+            : null,
+        proximoVencimiento: json['proximoVencimiento'] != null
+            ? CobroModel.fromJson(
+                json['proximoVencimiento'] as Map<String, dynamic>)
+            : null,
+        diasParaVencimiento: json['diasParaVencimiento'] as int?,
+        mesesEnMora: json['mesesEnMora'] as int,
+      );
 }

@@ -1,6 +1,8 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../core/providers/base_provider.dart';
-import '../../pagos/models/cobro_model.dart';
-import '../../pagos/models/pago_model.dart';
 import '../models/residente_estadisticas_model.dart';
 import '../../pagos/services/abono_service.dart';
 import '../../pagos/services/cobro_service.dart';
@@ -16,41 +18,88 @@ class ResidenteEstadisticasProvider extends BaseProvider {
   ResidenteEstadisticasModel? get estadisticas => _estadisticas;
   double get saldoFavor => _saldoFavor;
 
-  /// Carga cobros y pagos filtrados por [propiedadId].
-  /// Si se omite, usa el último propiedadId cargado (para refrescar).
+  static const _cachePrefix = 'stats_residente_v1_';
+
+  // ─── Cache stale-while-revalidate ─────────────────────
+
+  /// Intenta cargar datos del cache local. Retorna true si había cache.
+  Future<bool> _cargarDesdeCache(int propiedadId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('$_cachePrefix$propiedadId');
+      if (raw == null) return false;
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      _estadisticas =
+          ResidenteEstadisticasModel.fromJson(data['stats'] as Map<String, dynamic>);
+      _saldoFavor = (data['saldoFavor'] as num).toDouble();
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false; // cache corrupto — ignorar y cargar del API
+    }
+  }
+
+  Future<void> _guardarCache(
+      int propiedadId, ResidenteEstadisticasModel stats, double saldo) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        '$_cachePrefix$propiedadId',
+        jsonEncode({'stats': stats.toJson(), 'saldoFavor': saldo}),
+      );
+    } catch (_) {} // fallo de cache no es crítico
+  }
+
+  Future<void> _limpiarCache(int propiedadId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('$_cachePrefix$propiedadId');
+    } catch (_) {}
+  }
+
+  // ─── Carga principal ───────────────────────────────────
+
+  /// Carga cobros, pagos y saldo a favor en paralelo.
+  /// Si hay cache, lo muestra de inmediato y refresca en background sin spinner.
   Future<void> cargar({int? propiedadId}) async {
     final pid = propiedadId ?? _propiedadIdActual;
     if (propiedadId != null) _propiedadIdActual = propiedadId;
 
-    setLoading(true);
-    try {
-      final results = await Future.wait([
-        CobroService.getMisCobros(propiedadId: pid),
-        PagoService.getMisPagos(propiedadId: pid),
-      ]);
+    // 1. Mostrar cache de inmediato si existe (el usuario ve datos al instante)
+    final teniaCacheCache = pid != null && await _cargarDesdeCache(pid);
 
-      final cobros = results[0] as List<CobroModel>;
-      final pagos = results[1] as List<PagoModel>;
+    // 2. Mostrar spinner solo si no había cache
+    if (!teniaCacheCache) setLoading(true);
+
+    try {
+      // 3. Las 3 llamadas en paralelo — tiempo total = max(cobros, pagos, saldo)
+      final cobrosF = CobroService.getMisCobros(propiedadId: pid);
+      final pagosF = PagoService.getMisPagos(propiedadId: pid);
+      final saldoF = pid != null
+          ? AbonoService.getSaldoFavor(pid)
+              .then<double>((sf) => sf.saldo)
+              .catchError<double>((_) => 0.0)
+          : Future<double>.value(0.0);
+
+      final cobros = await cobrosF;
+      final pagos = await pagosF;
+      final saldo = await saldoF;
 
       _estadisticas = ResidenteEstadisticasModel.fromData(
         todosLosCobros: cobros,
         todosLosPagos: pagos,
       );
-
-      // Saldo a favor — siempre por propiedadId específica
-      final propIdParaSaldo = pid ?? (cobros.isNotEmpty ? cobros.first.propiedadId : null);
-      if (propIdParaSaldo != null) {
-        try {
-          final sf = await AbonoService.getSaldoFavor(propIdParaSaldo);
-          _saldoFavor = sf.saldo;
-        } catch (_) {
-          _saldoFavor = 0.0;
-        }
-      }
+      _saldoFavor = saldo;
 
       limpiarError();
+
+      // 4. Persistir en cache para la próxima entrada
+      if (pid != null) await _guardarCache(pid, _estadisticas!, _saldoFavor);
     } catch (e) {
-      setError(e.toString().replaceFirst('Exception: ', ''));
+      // Si había cache, no mostrar error — el usuario ya ve datos útiles
+      if (!teniaCacheCache) {
+        setError(e.toString().replaceFirst('Exception: ', ''));
+      }
     } finally {
       setLoading(false);
     }
@@ -59,6 +108,7 @@ class ResidenteEstadisticasProvider extends BaseProvider {
   Future<void> refrescar() => cargar();
 
   void limpiarDatos() {
+    if (_propiedadIdActual != null) _limpiarCache(_propiedadIdActual!);
     _estadisticas = null;
     _saldoFavor = 0.0;
     _propiedadIdActual = null;

@@ -66,4 +66,24 @@ class CobroModel {
 
   double get porcentajePagado =>
       montoTotal > 0 ? (montoPagado / montoTotal).clamp(0.0, 1.0) : 0.0;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'periodoId': periodoId,
+        'anio': anio,
+        'mes': mes,
+        'propiedadId': propiedadId,
+        'propiedadIdentificador': propiedadIdentificador,
+        'concepto': concepto,
+        'descripcion': descripcion,
+        'montoBase': montoBase,
+        'montoMora': montoMora,
+        'montoTotal': montoTotal,
+        'montoPagado': montoPagado,
+        'montoPendiente': montoPendiente,
+        'fechaGeneracion': fechaGeneracion,
+        'fechaLimitePago': fechaLimitePago,
+        'estado': estado,
+        'tieneMovimientos': tieneMovimientos,
+      };
 }
