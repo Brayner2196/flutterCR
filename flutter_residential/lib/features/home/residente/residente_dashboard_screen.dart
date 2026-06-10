@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/features/home/residente/widgets/carousel/carousel_info_relevante_residente.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../inquilinos/providers/inquilino_permisos_provider.dart';
 import '../../usuarios/providers/residente_estadisticas_provider.dart';
@@ -17,7 +18,11 @@ import '../../plan_pago/screens/residente/residente_mi_plan_screen.dart';
 import '../../plan_pago/providers/plan_pago_provider.dart';
 import '../../presupuesto/screens/residente/residente_presupuesto_screen.dart';
 import '../../presupuesto/providers/presupuesto_provider.dart';
+import '../../propiedades/providers/propiedad_provider.dart';
+import '../../parqueaderos/screens/residente/mis_parqueaderos_residente_screen.dart';
 import 'widgets/quick_access_card.dart';
+import 'widgets/carousel/deuda_resumen_widget.dart';
+import 'widgets/feed/activity_feed_widget.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 
 class ResidenteDashboardScreen extends StatefulWidget {
@@ -31,18 +36,20 @@ class ResidenteDashboardScreen extends StatefulWidget {
 }
 
 class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
+  bool _estadisticasCargadas = false;
+  bool _esGridView = false;
+
+  static const _kGridViewPref = 'dashboard_grid_view';
+
   @override
   void initState() {
     super.initState();
+    _cargarPreferenciaGrid();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       final permisos = context.read<InquilinoPermisosProvider>();
+      final propProvider = context.read<PropiedadProvider>();
 
-      // Estadísticas financieras solo si el usuario tiene acceso
-      if (auth.isPropietario || permisos.tienePermiso('ESTADO_CUENTA')) {
-        context.read<ResidenteEstadisticasProvider>().cargar();
-      }
-      // Datos para badges: solo si tiene el permiso correspondiente
       if (auth.isPropietario || permisos.tienePermiso('ANUNCIOS')) {
         context.read<AnuncioProvider>().cargarResidente();
       }
@@ -52,14 +59,90 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       if (auth.isPropietario || permisos.tienePermiso('VOTAR')) {
         context.read<VotacionProvider>().cargarResidente();
       }
-      // Plan de pago — carga silenciosa para mostrar el tile si hay plan activo
       if (auth.isPropietario || permisos.tienePermiso('ESTADO_CUENTA')) {
         context.read<PlanPagoProvider>().cargarConfigResidente();
         context.read<PlanPagoProvider>().cargarMisPlanes();
       }
-      // Presupuesto — carga silenciosa para mostrar el tile de transparencia
       context.read<PresupuestoProvider>().cargarActivo();
+
+      final pid = propProvider.propiedadActual?.propiedadId;
+      if (pid != null) {
+        _cargarEstadisticas(pid);
+      } else {
+        propProvider.addListener(_onPropiedadLista);
+      }
     });
+  }
+
+  Future<void> _cargarPreferenciaGrid() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() => _esGridView = prefs.getBool(_kGridViewPref) ?? false);
+    }
+  }
+
+  Future<void> _toggleGridView() async {
+    final newValue = !_esGridView;
+    setState(() => _esGridView = newValue);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kGridViewPref, newValue);
+  }
+
+  void _onPropiedadLista() {
+    if (_estadisticasCargadas || !mounted) return;
+    final pid = context.read<PropiedadProvider>().propiedadActual?.propiedadId;
+    if (pid == null) return;
+    _estadisticasCargadas = true;
+    context.read<PropiedadProvider>().removeListener(_onPropiedadLista);
+    _cargarEstadisticas(pid);
+  }
+
+  void _cargarEstadisticas(int propiedadId) {
+    final auth = context.read<AuthProvider>();
+    final permisos = context.read<InquilinoPermisosProvider>();
+    if (auth.isPropietario || permisos.tienePermiso('ESTADO_CUENTA')) {
+      context.read<ResidenteEstadisticasProvider>()
+          .cargar(propiedadId: propiedadId);
+    }
+  }
+
+  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(
+        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+        (m) => '${m[1]}.',
+      )}';
+
+  Widget _buildErrorDeuda(BuildContext context, ResidenteEstadisticasProvider stats) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.dangerSoft,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, color: AppColors.danger, size: 36),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            stats.error ?? 'Error al cargar datos financieros',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.danger),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton(
+            onPressed: () => stats.refrescar(),
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    context.read<PropiedadProvider>().removeListener(_onPropiedadLista);
+    super.dispose();
   }
 
   @override
@@ -71,21 +154,33 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     final anuncios = context.watch<AnuncioProvider>();
     final pqrs = context.watch<PqrProvider>();
     final votaciones = context.watch<VotacionProvider>();
+    context.watch<PresupuestoProvider>();
 
     final esPropietario = auth.isPropietario;
+    final propiedadProvider = context.watch<PropiedadProvider>();
+    final esParqueadero = propiedadProvider.propiedadActualEsParqueadero;
+    final cs = theme.colorScheme;
+
+    final tengoPermiso = esPropietario || permisos.tienePermiso('ESTADO_CUENTA');
+    final ultimoPago = stats.estadisticas?.ultimoPago;
+    final hayActividad = ultimoPago != null ||
+        anuncios.anuncios.any((a) => !a.vistoPorMi) ||
+        pqrs.pqrs.any((p) => p.esPendiente || p.esEnProceso) ||
+        votaciones.votaciones.any((v) => v.estado == 'ABIERTA' && !v.yaVote);
 
     return RefreshIndicator(
       onRefresh: () async {
+        final pid = context.read<PropiedadProvider>().propiedadActual?.propiedadId;
         if (esPropietario || permisos.tienePermiso('ESTADO_CUENTA')) {
-          await stats.refrescar();
+          await stats.cargar(propiedadId: pid);
         }
         if (esPropietario || permisos.tienePermiso('ANUNCIOS')) {
           await anuncios.cargarResidente();
         }
-        if (esPropietario || permisos.tienePermiso('PQRS')) {
+        if (!esParqueadero && (esPropietario || permisos.tienePermiso('PQRS'))) {
           await pqrs.cargarMisPqrs();
         }
-        if (esPropietario || permisos.tienePermiso('VOTAR')) {
+        if (!esParqueadero && (esPropietario || permisos.tienePermiso('VOTAR'))) {
           await votaciones.cargarResidente();
         }
       },
@@ -95,18 +190,90 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CarouselInfoRelevanteResidente(),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Accesos rápidos',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            // ── Sección financiera (siempre visible, sin carousel) ──
+            if (tengoPermiso) ...[
+              Skeletonizer(
+                enabled: stats.loading,
+                child: stats.estadisticas != null
+                    ? DeudaResumenWidget(
+                        stats: stats.estadisticas!,
+                        saldoFavor: stats.saldoFavor,
+                        formatMonto: _fmt,
+                        onVerEstadoCuenta: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EstadoCuentaScreen(),
+                          ),
+                        ),
+                      )
+                    : stats.error != null
+                    ? _buildErrorDeuda(context, stats)
+                    : Container(
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                        ),
+                      ),
               ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+
+            // ── Actividad reciente ──
+            if (hayActividad) ...[
+              Text(
+                'Actividad reciente',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ActivityFeedWidget(
+                ultimoPago: ultimoPago,
+                formatMonto: _fmt,
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+
+            // Header con toggle grid/lista (visible para cualquier usuario)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Accesos rapidos',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: _esGridView ? 'Ver en lista' : 'Ver en cuadricula',
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOut,
+                      ),
+                      child: FadeTransition(opacity: animation, child: child),
+                    ),
+                    child: Icon(
+                      _esGridView
+                          ? Icons.view_list_rounded
+                          : Icons.grid_view_rounded,
+                      key: ValueKey(_esGridView),
+                    ),
+                  ),
+                  onPressed: _toggleGridView,
+                ),
+              ],
             ),
+
             const SizedBox(height: AppSpacing.sm),
             _buildAccesos(
               context: context,
               esPropietario: esPropietario,
+              esParqueadero: esParqueadero,
               permisos: permisos,
               anuncios: anuncios,
               pqrs: pqrs,
@@ -119,22 +286,26 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     );
   }
 
-  // ─── Accesos rápidos ──────────────────────────────────────────────────────
-
   Widget _buildAccesos({
     required BuildContext context,
     required bool esPropietario,
+    required bool esParqueadero,
     required InquilinoPermisosProvider permisos,
     required AnuncioProvider anuncios,
     required PqrProvider pqrs,
     required VotacionProvider votaciones,
   }) {
-    /// Devuelve true si el módulo es visible para el usuario actual.
-    bool puede(String permiso) => esPropietario || permisos.tienePermiso(permiso);
+    bool puede(String permiso) {
+      if (esParqueadero) {
+        const permitidosParqueadero = {'ESTADO_CUENTA', 'PQRS', 'ANUNCIOS'};
+        if (!permitidosParqueadero.contains(permiso)) return false;
+      }
+      return esPropietario || permisos.tienePermiso(permiso);
+    }
 
-    final cards = <Widget>[];
+    final cards = <QuickAccessCard>[];
+    final propiedadActual = context.read<PropiedadProvider>().propiedadActual;
 
-    // Estado de Cuenta
     if (puede('ESTADO_CUENTA')) {
       cards.add(QuickAccessCard(
         label: 'Estado de Cuenta',
@@ -149,11 +320,10 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    // Reservas
-    if (puede('RESERVAS')) {
+    if (!esParqueadero && puede('RESERVAS')) {
       cards.add(QuickAccessCard(
         label: 'Reservas',
-        subtitulo: 'Áreas comunes',
+        subtitulo: 'Areas comunes',
         icono: Icons.event_outlined,
         fg: AppColors.orange,
         bg: AppColors.bgOrange,
@@ -164,7 +334,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    // PQRs
     if (puede('PQRS')) {
       cards.add(QuickAccessCard(
         label: 'PQRs',
@@ -182,7 +351,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    // Anuncios
     if (puede('ANUNCIOS')) {
       cards.add(QuickAccessCard(
         label: 'Anuncios',
@@ -200,12 +368,11 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    // Votaciones
-    if (puede('VOTAR')) {
+    if (!esParqueadero && puede('VOTAR')) {
       cards.add(QuickAccessCard(
         label: 'Votaciones',
         subtitulo: votaciones.pendientesDeVotar > 0
-            ? '${votaciones.pendientesDeVotar} ${votaciones.pendientesDeVotar == 1 ? 'votación abierta' : 'votaciones abiertas'}'
+            ? '${votaciones.pendientesDeVotar} ${votaciones.pendientesDeVotar == 1 ? 'votacion abierta' : 'votaciones abiertas'}'
             : 'Sin votaciones activas',
         icono: Icons.how_to_vote_outlined,
         fg: AppColors.green,
@@ -220,8 +387,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    // Marketplace
-    if (puede('MARKETPLACE')) {
+    if (!esParqueadero && puede('MARKETPLACE')) {
       cards.add(QuickAccessCard(
         label: 'Marketplace',
         subtitulo: 'Compra y vende en el conjunto',
@@ -235,8 +401,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    // Plan de Pago (visible si tiene plan activo/pendiente o módulo habilitado)
-    if (puede('ESTADO_CUENTA')) {
+    if (!esParqueadero && puede('ESTADO_CUENTA')) {
       final planProvider = context.read<PlanPagoProvider>();
       final tienePlan = planProvider.planes.any((p) => p.esActivo || p.esPendiente);
       final moduloActivo = planProvider.config.activo;
@@ -258,43 +423,95 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       }
     }
 
-    // Presupuesto (visible si hay presupuesto activo)
-    final presupuestoProvider = context.read<PresupuestoProvider>();
-    if (presupuestoProvider.activo != null) {
-      final p = presupuestoProvider.activo!;
-      cards.add(QuickAccessCard(
-        label: 'Presupuesto',
-        subtitulo: '${p.porcentajeEjecucionGeneral.toStringAsFixed(0)}% ejecutado — ${p.anio}',
-        icono: Icons.account_balance_outlined,
-        fg: AppColors.ok,
-        bg: AppColors.bgGreen,
+    if (!esParqueadero) {
+      final presupuestoProvider = context.read<PresupuestoProvider>();
+      if (presupuestoProvider.activo != null) {
+        final p = presupuestoProvider.activo!;
+        cards.add(QuickAccessCard(
+          label: 'Presupuesto',
+          subtitulo: '${p.porcentajeEjecucionGeneral.toStringAsFixed(0)}% ejecutado - ${p.anio}',
+          icono: Icons.account_balance_outlined,
+          fg: AppColors.ok,
+          bg: AppColors.bgGreen,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const ResidentePresupuestoScreen()),
+          ),
+        ));
+      }
+    }
+
+    if (propiedadActual != null) {
+      final cardParqueadero = QuickAccessCard(
+        label: esParqueadero ? 'Mi Parqueadero' : 'Parqueaderos',
+        subtitulo: esParqueadero
+            ? 'Gestionar vehiculos y accesos'
+            : 'Mis vehiculos y parqueaderos',
+        icono: Icons.local_parking,
+        fg: AppColors.blue,
+        bg: AppColors.bgBlue,
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ResidentePresupuestoScreen()),
+          MaterialPageRoute(
+            builder: (_) => MisParqueaderosResidenteScreen(
+              propiedadId: propiedadActual.propiedadId,
+            ),
+          ),
         ),
-      ));
+      );
+      if (esParqueadero) {
+        cards.insert(0, cardParqueadero);
+      } else {
+        cards.add(cardParqueadero);
+      }
     }
 
     if (cards.isEmpty) {
       return const _SinAccesosWidget();
     }
 
+    // Vista grid (disponible para cualquier usuario que active el toggle)
+    if (_esGridView) {
+      return GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: 2,
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisSpacing: AppSpacing.sm,
+        childAspectRatio: 1.1,
+        children: cards
+            .map((c) => QuickAccessCard(
+                  key: c.key,
+                  label: c.label,
+                  icono: c.icono,
+                  fg: c.fg,
+                  bg: c.bg,
+                  badge: c.badge,
+                  onTap: c.onTap,
+                  isGrid: true,
+                ))
+            .toList(),
+      );
+    }
+
+    // Vista lista (default)
     return Column(
       children: cards
           .expand((c) => [c, const SizedBox(height: AppSpacing.sm)])
           .toList()
-        ..removeLast(), // quitar el último SizedBox extra
+        ..removeLast(),
     );
   }
 }
 
-/// Mostrado cuando el inquilino no tiene ningún permiso otorgado.
 class _SinAccesosWidget extends StatelessWidget {
   const _SinAccesosWidget();
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
@@ -312,7 +529,9 @@ class _SinAccesosWidget extends StatelessWidget {
           Text(
             'El propietario aún no te ha otorgado\npermisos sobre módulos del conjunto.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
           ),
         ],
       ),

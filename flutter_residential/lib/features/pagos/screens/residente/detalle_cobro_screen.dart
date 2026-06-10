@@ -1,11 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/cobro_model.dart';
-import '../../models/pasarela_disponible_model.dart';
-import '../../services/pasarela_service.dart';
-import '../../widgets/pasarela_logo_widget.dart';
-import 'mercado_pago_webview_screen.dart';
+import '../../services/cobro_service.dart';
+import '../../widgets/pasarela_selector.dart';
+import 'pasarela_webview_screen.dart';
 import 'registrar_abono_screen.dart';
-import 'registrar_pago_screen.dart';
 
 class DetalleCobroScreen extends StatefulWidget {
   final CobroModel cobro;
@@ -18,33 +17,47 @@ class DetalleCobroScreen extends StatefulWidget {
 class _DetalleCobroScreenState extends State<DetalleCobroScreen> {
   bool _loadingMp = false;
 
-  CobroModel get cobro => widget.cobro;
+  /// Estado local del cobro — se actualiza con polling post-pago
+  late CobroModel _cobro;
+
+  /// Polling: verifica el estado del cobro cada [_pollInterval] hasta que
+  /// esté PAGADO o se agote el timeout [_pollMaxSegundos].
+  static const _pollInterval    = Duration(seconds: 3);
+  static const _pollMaxSegundos = 30;
+  Timer? _pollTimer;
+  int    _pollSegundos = 0;
+  bool   _polleando    = false;
+
+  CobroModel get cobro => _cobro;
+
+  @override
+  void initState() {
+    super.initState();
+    _cobro = widget.cobro;
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
 
   // ─── Acción: Pagar (multi-pasarela) ──────────────────────────────────────
 
+  /// Delega al [PasarelaSelector] la selección de pasarela, creación de
+  /// checkout y apertura del WebView. Maneja el resultado localmente.
   Future<void> _iniciarPago() async {
     setState(() => _loadingMp = true);
     try {
-      final pasarelas = await PasarelaService.obtenerDisponibles();
-      if (pasarelas.isEmpty) {
-        throw Exception('No hay métodos de pago configurados para este conjunto');
-      }
-
-      TipoPasarela? pasarelaElegida;
-      if (pasarelas.length == 1) {
-        pasarelaElegida = pasarelas.first.tipo;
-      } else {
-        setState(() => _loadingMp = false);
-        if (!mounted) return;
-        pasarelaElegida = await _mostrarSelectorPasarela(pasarelas);
-        if (pasarelaElegida == null || !mounted) return;
-        setState(() => _loadingMp = true);
-      }
-
-      final checkout = await PasarelaService.crearCheckout(cobro.id, pasarelaElegida);
+      final resultado = await PasarelaSelector.iniciarPago(
+        context: context,
+        cobroId: cobro.id,
+        tituloCobro: cobro.anio != null
+            ? '${cobro.concepto} ${cobro.mes}/${cobro.anio}'
+            : cobro.concepto,
+      );
       if (!mounted) return;
-      await _abrirWebViewYNotificar(checkout.checkoutUrl,
-          tipoPasarela: checkout.tipoPasarela);
+      _manejarResultadoPago(resultado);
     } catch (e) {
       if (mounted) {
         _mostrarError(e.toString().replaceFirst('Exception: ', ''));
@@ -54,108 +67,97 @@ class _DetalleCobroScreenState extends State<DetalleCobroScreen> {
     }
   }
 
-  Future<TipoPasarela?> _mostrarSelectorPasarela(
-      List<PasarelaDisponibleModel> pasarelas) async {
-    return showModalBottomSheet<TipoPasarela>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Selecciona método de pago',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            ...pasarelas.map((p) => ListTile(
-                  leading: PasarelaLogoWidget(tipo: p.tipo, size: 44),
-                  title: Text(p.nombre,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle:
-                      p.prioridad == 1 ? const Text('Recomendado',
-                          style: TextStyle(color: Colors.teal, fontSize: 12))
-                          : null,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.pop(context, p.tipo),
-                )),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _iconoPasarela(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago:
-        return Icons.payment;
-      case TipoPasarela.wompi:
-        return Icons.credit_card;
-      case TipoPasarela.bold:
-        return Icons.bolt;
-    }
-  }
-
-  Color _colorPasarela(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago:
-        return const Color(0xFF009EE3);
-      case TipoPasarela.wompi:
-        return const Color(0xFF6C3CE1);
-      case TipoPasarela.bold:
-        return const Color(0xFF1A1A2E);
-    }
-  }
-
-  Future<void> _abrirWebViewYNotificar(String url,
-      {TipoPasarela tipoPasarela = TipoPasarela.mercadoPago}) async {
-    final resultado = await Navigator.push<ResultadoPagoMP>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MercadoPagoWebViewScreen(
-          checkoutUrl: url,
-          tituloCobro: cobro.anio != null
-              ? '${cobro.concepto} ${cobro.mes}/${cobro.anio}'
-              : cobro.concepto,
-          tipoPasarela: tipoPasarela,
-        ),
-      ),
-    );
-    if (!mounted) return;
-    _manejarResultadoPago(resultado);
-  }
-
-  void _manejarResultadoPago(ResultadoPagoMP? resultado) {
+  void _manejarResultadoPago(ResultadoPago? resultado) {
     switch (resultado) {
-      case ResultadoPagoMP.exito:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Pago realizado con éxito!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
-          ),
-        );
-        Navigator.of(context).pop(true); // Regresa y refresca la lista
+      case ResultadoPago.procesando:
+        // El WebView interceptó la URL de éxito y disparó la confirmación.
+        // Iniciamos polling para saber cuándo el back confirmó el pago.
+        _iniciarPolling();
         break;
-      case ResultadoPagoMP.pendiente:
+      case ResultadoPago.exito:
+        _mostrarExito();
+        Navigator.of(context).pop(true);
+        break;
+      case ResultadoPago.pendiente:
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Pago pendiente de confirmación'),
             backgroundColor: Colors.orange,
-            duration: Duration(seconds: 4),
+            duration: Duration(seconds: 5),
           ),
         );
         Navigator.of(context).pop(true);
         break;
-      case ResultadoPagoMP.fallo:
+      case ResultadoPago.fallo:
         _mostrarError('El pago no pudo procesarse. Podés intentarlo nuevamente.');
         break;
-      case ResultadoPagoMP.cancelado:
+      case ResultadoPago.cancelado:
       case null:
-        break; // El usuario canceló, no hacemos nada
+        break;
     }
+  }
+
+  // ─── Polling del estado del cobro ─────────────────────────────────────────
+
+  /// Inicia polling tras recibir [ResultadoPago.procesando] del WebView.
+  /// Consulta el cobro cada 3s por hasta 30s.
+  /// Si el cobro pasa a PAGADO → muestra éxito y hace pop.
+  /// Si agota el tiempo → avisa que puede demorar y hace pop sin error.
+  void _iniciarPolling() {
+    if (_polleando) return;
+    setState(() => _polleando = true);
+    _pollSegundos = 0;
+
+    _pollTimer = Timer.periodic(_pollInterval, (_) async {
+      _pollSegundos += _pollInterval.inSeconds;
+
+      try {
+        final cobroActualizado = await CobroService.getCobro(cobro.id);
+        if (!mounted) {
+          _pollTimer?.cancel();
+          return;
+        }
+        setState(() => _cobro = cobroActualizado);
+
+        if (cobroActualizado.esPagado) {
+          _pollTimer?.cancel();
+          setState(() => _polleando = false);
+          _mostrarExito();
+          Navigator.of(context).pop(true);
+          return;
+        }
+      } catch (e) {
+        debugPrint('Polling cobro ${cobro.id}: error → $e');
+      }
+
+      if (_pollSegundos >= _pollMaxSegundos) {
+        _pollTimer?.cancel();
+        if (!mounted) return;
+        setState(() => _polleando = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'El pago está siendo procesado. '
+              'En breve recibirás la confirmación.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 6),
+          ),
+        );
+        Navigator.of(context).pop(true);
+      }
+    });
+  }
+
+  void _mostrarExito() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('¡Pago confirmado con éxito!'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 4),
+      ),
+    );
   }
 
   void _mostrarError(String msg) {
@@ -211,7 +213,34 @@ class _DetalleCobroScreenState extends State<DetalleCobroScreen> {
           ]),
         ],
       ),
-      bottomNavigationBar: cobro.tieneDeuda
+      bottomNavigationBar: _polleando
+          // ── Banner de "verificando pago" ──────────────────────────────────
+          ? SafeArea(
+              child: Container(
+                width: double.infinity,
+                color: Colors.teal.shade700,
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 18, height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        'Verificando tu pago... (${_pollMaxSegundos - _pollSegundos}s)',
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : cobro.tieneDeuda
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -262,21 +291,6 @@ class _DetalleCobroScreenState extends State<DetalleCobroScreen> {
                             label: const Text('Abonar'),
                           ),
                         ),
-                        if (cobro.esPendiente || cobro.esVencido) ...[
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        RegistrarPagoScreen(cobro: cobro)),
-                              ),
-                              icon: const Icon(Icons.receipt_long_outlined),
-                              label: const Text('Comprobante'),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ],

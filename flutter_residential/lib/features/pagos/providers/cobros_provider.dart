@@ -1,130 +1,114 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../models/cobro_model.dart';
 import '../models/estado_cuenta_model.dart';
 import '../models/periodo_cobro_model.dart';
 import '../services/cobro_service.dart';
 
-class CobrosProvider extends ChangeNotifier {
+class CobrosProvider extends BaseProvider {
   EstadoCuentaModel? _estadoCuenta;
   List<CobroModel> _cobros = [];
   List<PeriodoCobroModel> _periodos = [];
-  bool _loading = false;
-  String? _error;
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Getters públicos (loading y error heredados de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   EstadoCuentaModel? get estadoCuenta => _estadoCuenta;
   List<CobroModel> get cobros => _cobros;
   List<PeriodoCobroModel> get periodos => _periodos;
-  bool get loading => _loading;
-  String? get error => _error;
 
   List<CobroModel> get pendientes => _cobros.where((c) => c.esPendiente).toList();
   List<CobroModel> get vencidos => _cobros.where((c) => c.esVencido).toList();
   List<CobroModel> get pagados => _cobros.where((c) => c.esPagado).toList();
 
-  Future<void> cargarEstadoCuenta() async {
-    _setLoading(true);
-    try {
-      _estadoCuenta = await CobroService.getEstadoCuenta();
-      _cobros = _estadoCuenta!.cobrosActivos;
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Cargar datos (usando ejecutar() de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Future<void> cargarEstadoCuenta({int? propiedadId}) async {
+    _estadoCuenta = await ejecutar(() async {
+      final cuenta = await CobroService.getEstadoCuenta(propiedadId: propiedadId);
+      _cobros = cuenta.cobrosActivos;
+      return cuenta;
+    });
   }
 
-  Future<void> cargarMisCobros() async {
-    _setLoading(true);
-    try {
-      _cobros = await CobroService.getMisCobros();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+  Future<void> cargarMisCobros({int? propiedadId}) async {
+    _cobros = await ejecutar(() => CobroService.getMisCobros(propiedadId: propiedadId)) ?? [];
   }
 
-  Future<void> cargarHistorial() async {
-    _setLoading(true);
-    try {
-      _cobros = await CobroService.getHistorial();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+  Future<void> cargarHistorial({int? propiedadId}) async {
+    _cobros = await ejecutar(() => CobroService.getHistorial(propiedadId: propiedadId)) ?? [];
   }
 
   Future<void> cargarPeriodos() async {
-    _setLoading(true);
-    try {
-      _periodos = await CobroService.listarPeriodos();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+    _periodos = await ejecutar(() => CobroService.listarPeriodos()) ?? [];
   }
 
   Future<void> cargarCobrosAdmin({int? periodoId, String? estado}) async {
-    _setLoading(true);
-    try {
-      _cobros = await CobroService.listarCobrosAdmin(
-          periodoId: periodoId, estado: estado);
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+    _cobros = await ejecutar(
+      () => CobroService.listarCobrosAdmin(
+        periodoId: periodoId,
+        estado: estado,
+      ),
+    ) ?? [];
   }
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Acciones (usando helpers de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   Future<PeriodoCobroModel> abrirPeriodo(Map<String, dynamic> data) async {
-    final nuevo = await CobroService.abrirPeriodo(data);
-    _periodos.insert(0, nuevo);
-    notifyListeners();
+    final nuevo = await ejecutar(() => CobroService.abrirPeriodo(data));
+    if (nuevo == null) throw Exception(error ?? 'Error al abrir periodo');
+    agregarAlInicio(_periodos, nuevo);
     return nuevo;
   }
 
   Future<void> cerrarPeriodo(int id) async {
-    final actualizado = await CobroService.cerrarPeriodo(id);
-    final idx = _periodos.indexWhere((p) => p.id == actualizado.id);
-    if (idx != -1) _periodos[idx] = actualizado;
-    notifyListeners();
+    final actualizado = await ejecutar(
+      () => CobroService.cerrarPeriodo(id),
+    );
+    if (actualizado != null) reemplazar(_periodos, actualizado, (p) => p.id);
   }
 
   Future<List<CobroModel>> generarCobros(int anio, int mes) async {
-    final nuevos = await CobroService.generarCobros(anio, mes);
+    final nuevos = await ejecutar(
+      () => CobroService.generarCobros(anio, mes),
+    );
+    if (nuevos == null) throw Exception(error ?? 'Error al generar cobros');
     _cobros = nuevos;
     notifyListeners();
     return nuevos;
   }
 
   Future<CobroModel> crearCobroEspecial(Map<String, dynamic> data) async {
-    final nuevo = await CobroService.crearCobroEspecial(data);
+    final nuevo = await ejecutar(
+      () => CobroService.crearCobroEspecial(data),
+    );
+    if (nuevo == null) throw Exception(error ?? 'Error al crear cobro especial');
     notifyListeners();
     return nuevo;
   }
 
   Future<CobroModel> exonerar(int id, String nota) async {
-    final actualizado = await CobroService.exonerar(id, nota);
-    final idx = _cobros.indexWhere((c) => c.id == actualizado.id);
-    if (idx != -1) _cobros[idx] = actualizado;
-    notifyListeners();
+    final actualizado = await ejecutar(
+      () => CobroService.exonerar(id, nota),
+    );
+    if (actualizado == null) throw Exception(error ?? 'Error al exonerar cobro');
+    reemplazar(_cobros, actualizado, (c) => c.id);
     return actualizado;
   }
 
-  void limpiar() {
-    _estadoCuenta = null;
-    _cobros = [];
-    _periodos = [];
-    _error = null;
-    _loading = false;
-    notifyListeners();
-  }
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Limpiar estado
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  void _setLoading(bool v) {
-    _loading = v;
-    _error = v ? null : _error;
+  void limpiarDatos() {
+    _estadoCuenta = null;
+    _cobros.clear();
+    _periodos.clear();
+    limpiarError();
     notifyListeners();
   }
 }

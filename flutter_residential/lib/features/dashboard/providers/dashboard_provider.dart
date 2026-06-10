@@ -1,41 +1,34 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../models/dashboard_resumen.dart';
 import '../services/dashboard_service.dart';
 
-class DashboardProvider extends ChangeNotifier {
+class DashboardProvider extends BaseProvider {
   DashboardResumen? _resumen;
-  bool _loading = false;
-  String? _error;
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Getters públicos (loading y error heredados de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   DashboardResumen? get resumen => _resumen;
-  bool get loading => _loading;
-  String? get error => _error;
   bool get tieneDatos => _resumen != null;
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Cargar datos (usando ejecutar() de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   Future<void> cargar() async {
-    _setLoading(true);
-    try {
-      _resumen = await DashboardService.getResumen();
-      _error = null;
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+    _resumen = await ejecutar(() => DashboardService.getResumen());
   }
 
   Future<void> refrescar() => cargar();
 
-  void limpiar() {
-    _resumen = null;
-    _error = null;
-    _loading = false;
-    notifyListeners();
-  }
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Limpiar estado
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  void _setLoading(bool v) {
-    _loading = v;
-    if (v) _error = null;
+  void limpiarDatos() {
+    _resumen = null;
+    limpiarError();
     notifyListeners();
   }
 }

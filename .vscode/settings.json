@@ -1,3 +1,39 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "claude": {
+        "agents": {
+            "brainstorming-flutterCR": {
+                "enabled": true,
+                "trigger": "manual",
+                "keywords": [
+                    "feature nueva",
+                    "nuevo feature",
+                    "componente",
+                    "widget",
+                    "refactoring",
+                    "architecture",
+                    "diseño",
+                    "brainstorm",
+                    "mejora",
+                    "optimización"
+                ],
+                "autoActivate": {
+                    "enabled": true,
+                    "triggers": [
+                        "user asks about new feature or functionality",
+                        "user mentions refactoring or code improvement",
+                        "user discusses architecture or design",
+                        "user talks about creating a component or widget",
+                        "user mentions optimization or performance"
+                    ]
+                },
+                "instructions": ".instructions.md",
+                "contextFiles": [
+                    "CLAUDE.md",
+                    ".agent.md",
+                    "brainstorming-templates.md"
+                ]
+            }
+        }
+    }
 }

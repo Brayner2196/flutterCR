@@ -15,6 +15,28 @@ class ApiClient {
   static final _sessionExpiredController = StreamController<void>.broadcast();
   static Stream<void> get sessionExpiredStream => _sessionExpiredController.stream;
 
+  // ─── Persistir claims de consejo desde JWT ──────────────────────────────
+
+  /// Decodifica el payload del JWT (base64url) y persiste esConsejero + cargoConsejo.
+  /// Fire-and-forget: no afecta el flujo de refresh si falla.
+  static void _persistirClaimsConsejo(String jwt) {
+    try {
+      final parts = jwt.split('.');
+      if (parts.length < 2) return;
+      // base64url → base64 estándar
+      var payload = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+      while (payload.length % 4 != 0) payload += '=';
+      final decoded = utf8.decode(base64Decode(payload));
+      final claims = jsonDecode(decoded) as Map<String, dynamic>;
+      final esConsejero = claims['esConsejero'] as bool? ?? false;
+      final cargo = claims['cargoConsejo'] as String?;
+      // Actualiza solo las claves de consejo (no toca token ni otros campos)
+      TokenStorage.guardarClaimsConsejo(esConsejero: esConsejero, cargoConsejo: cargo);
+    } catch (_) {
+      // Falla silenciosamente — el user verá el estado correcto en el próximo login
+    }
+  }
+
   // ─── Mutex de refresh ────────────────────────────────────────────────────
   // Evita que múltiples peticiones simultáneas (ej: dashboard) lancen varias
   // solicitudes de refresh al mismo tiempo, invalidando el token recién emitido.
@@ -72,6 +94,8 @@ class ApiClient {
           token: newToken,
           refreshToken: newRefresh,
         );
+        // Persiste claims de consejo extraídos del nuevo JWT
+        _persistirClaimsConsejo(newToken);
         return true;
       }
       return false;
@@ -84,14 +108,25 @@ class ApiClient {
   /// - Devuelve `null` si la respuesta no era 401 (el caller usa `?? res`).
   /// - Devuelve la nueva respuesta si el refresh fue exitoso y se reintentó.
   /// - Lanza [SessionExpiredException] si el refresh falló (nunca devuelve la 401 vacía).
+  /// - Si [suppressSessionExpiry] es true, NO dispara el sessionExpiredStream ni
+  ///   lanza excepción; simplemente relanza el 401 como respuesta normal.
+  ///   Usar en llamadas best-effort (ej: confirmar pago desde WebView) donde
+  ///   una 401 no debe cerrar la sesión del usuario.
   static Future<http.Response?> _handleUnauthorized(
     http.Response res,
-    Future<http.Response> Function() retry,
-  ) async {
+    Future<http.Response> Function() retry, {
+    bool suppressSessionExpiry = false,
+  }) async {
     if (res.statusCode != 401) return null; // no era 401, el caller maneja res
 
     final refreshed = await _tryRefresh();
     if (refreshed) return await retry();
+
+    // Refresh falló.
+    if (suppressSessionExpiry) {
+      // Llamada best-effort: devolver la 401 sin disparar logout.
+      return res;
+    }
 
     // Refresh falló — avisar al SessionGuard y lanzar excepción tipada.
     // Nunca devolvemos null aquí para que el caller no intente parsear
@@ -102,17 +137,29 @@ class ApiClient {
 
   // ─── Headers ────────────────────────────────────────────────────────────
 
-  static Future<Map<String, String>> _headers({bool requiresAuth = true}) async {
+  static Future<Map<String, String>> _headers({
+    bool requiresAuth = true,
+    String? token,
+    String? tenantId,
+  }) async {
     final headers = <String, String>{'Content-Type': 'application/json'};
     if (requiresAuth) {
-      final sesion = await TokenStorage.leerSesion();
-      final token = sesion['token'];
-      final tenantId = sesion['tenantId'];
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
+      // Si se pasan explícitamente (ej: logout) los usa directamente sin leer storage.
+      // Esto evita el race condition entre el DELETE de notificaciones y borrarSesion().
+      String? resolvedToken = token;
+      String? resolvedTenant = tenantId;
+
+      if (resolvedToken == null || resolvedTenant == null) {
+        final sesion = await TokenStorage.leerSesion();
+        resolvedToken ??= sesion['token'];
+        resolvedTenant ??= sesion['tenantId'];
       }
-      if (tenantId != null && tenantId.isNotEmpty) {
-        headers['X-Tenant-ID'] = tenantId;
+
+      if (resolvedToken != null) {
+        headers['Authorization'] = 'Bearer $resolvedToken';
+      }
+      if (resolvedTenant != null && resolvedTenant.isNotEmpty) {
+        headers['X-Tenant-ID'] = resolvedTenant;
       }
     }
     return headers;
@@ -148,6 +195,9 @@ class ApiClient {
     String path,
     Map<String, dynamic> body, {
     bool requiresAuth = false,
+    /// Si es true y el refresh falla, NO dispara sessionExpiredStream ni hace logout.
+    /// Usar para llamadas best-effort como confirmar pago desde WebView.
+    bool suppressSessionExpiry = false,
   }) async {
     await _checkConnectivity();
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
@@ -163,6 +213,7 @@ class ApiClient {
             () async => http
                 .post(uri, headers: await _headers(requiresAuth: requiresAuth), body: encodedBody)
                 .timeout(_timeout),
+            suppressSessionExpiry: suppressSessionExpiry,
           ) ??
           res;
     } on SessionExpiredException {
@@ -198,15 +249,23 @@ class ApiClient {
     }
   }
 
-  static Future<http.Response> delete(String path) async {
+  static Future<http.Response> delete(
+    String path, {
+    String? token,
+    String? tenantId,
+  }) async {
     await _checkConnectivity();
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
     try {
-      final res = await http.delete(uri, headers: await _headers()).timeout(_timeout);
+      final res = await http
+          .delete(uri, headers: await _headers(token: token, tenantId: tenantId))
+          .timeout(_timeout);
 
       return await _handleUnauthorized(
             res,
-            () async => http.delete(uri, headers: await _headers()).timeout(_timeout),
+            () async => http
+                .delete(uri, headers: await _headers(token: token, tenantId: tenantId))
+                .timeout(_timeout),
           ) ??
           res;
     } on SessionExpiredException {

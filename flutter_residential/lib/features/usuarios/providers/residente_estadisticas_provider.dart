@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../../pagos/models/cobro_model.dart';
 import '../../pagos/models/pago_model.dart';
 import '../models/residente_estadisticas_model.dart';
@@ -6,29 +6,27 @@ import '../../pagos/services/abono_service.dart';
 import '../../pagos/services/cobro_service.dart';
 import '../../pagos/services/pago_service.dart';
 
-/// Provider que carga y calcula estadísticas del residente
-/// combinando datos de cobros y pagos existentes.
-class ResidenteEstadisticasProvider extends ChangeNotifier {
+class ResidenteEstadisticasProvider extends BaseProvider {
   ResidenteEstadisticasModel? _estadisticas;
   double _saldoFavor = 0.0;
-  bool _loading = false;
-  String? _error;
+
+  /// propiedadId de la última carga — permite refrescar con el mismo filtro.
+  int? _propiedadIdActual;
 
   ResidenteEstadisticasModel? get estadisticas => _estadisticas;
   double get saldoFavor => _saldoFavor;
-  bool get loading => _loading;
-  String? get error => _error;
 
-  Future<void> cargar() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
+  /// Carga cobros y pagos filtrados por [propiedadId].
+  /// Si se omite, usa el último propiedadId cargado (para refrescar).
+  Future<void> cargar({int? propiedadId}) async {
+    final pid = propiedadId ?? _propiedadIdActual;
+    if (propiedadId != null) _propiedadIdActual = propiedadId;
 
+    setLoading(true);
     try {
-      // Cargar cobros y pagos en paralelo
       final results = await Future.wait([
-        CobroService.getMisCobros(),
-        PagoService.getMisPagos(),
+        CobroService.getMisCobros(propiedadId: pid),
+        PagoService.getMisPagos(propiedadId: pid),
       ]);
 
       final cobros = results[0] as List<CobroModel>;
@@ -39,30 +37,32 @@ class ResidenteEstadisticasProvider extends ChangeNotifier {
         todosLosPagos: pagos,
       );
 
-      // Cargar saldo a favor usando el propiedadId del primer cobro
-      if (cobros.isNotEmpty) {
+      // Saldo a favor — siempre por propiedadId específica
+      final propIdParaSaldo = pid ?? (cobros.isNotEmpty ? cobros.first.propiedadId : null);
+      if (propIdParaSaldo != null) {
         try {
-          final sf = await AbonoService.getSaldoFavor(cobros.first.propiedadId);
+          final sf = await AbonoService.getSaldoFavor(propIdParaSaldo);
           _saldoFavor = sf.saldo;
         } catch (_) {
           _saldoFavor = 0.0;
         }
       }
+
+      limpiarError();
     } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
+      setError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      _loading = false;
-      notifyListeners();
+      setLoading(false);
     }
   }
 
   Future<void> refrescar() => cargar();
 
-  void limpiar() {
+  void limpiarDatos() {
     _estadisticas = null;
     _saldoFavor = 0.0;
-    _error = null;
-    _loading = false;
-    notifyListeners();
+    _propiedadIdActual = null;
+    limpiarError();
+    setLoading(false);
   }
 }

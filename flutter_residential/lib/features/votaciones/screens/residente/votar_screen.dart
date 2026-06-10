@@ -385,7 +385,11 @@ class _VotarScreenState extends State<VotarScreen> {
 
     setState(() => _enviando = true);
     try {
-      final resultado = await context.read<VotacionProvider>().votar(_votacion.id, body);
+      final provider = context.read<VotacionProvider>();
+      final resultado = await provider.votar(_votacion.id, body);
+      if (resultado == null) {
+        throw Exception(provider.error ?? 'Error al registrar voto');
+      }
       setState(() {
         _votacion = resultado;
         _modoLectura = !resultado.permiteCambiarVoto;

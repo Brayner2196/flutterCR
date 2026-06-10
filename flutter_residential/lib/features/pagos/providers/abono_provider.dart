@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../models/abono_model.dart';
 import '../models/saldo_favor_model.dart';
 import '../services/abono_service.dart';
 
-class AbonoProvider extends ChangeNotifier {
+class AbonoProvider extends BaseProvider {
   List<AbonoModel> _abonos = [];
   SaldoFavorModel? _saldoFavor;
-  bool _loading = false;
-  String? _error;
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Getters públicos (loading y error heredados de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   List<AbonoModel> get abonos => _abonos;
   SaldoFavorModel? get saldoFavor => _saldoFavor;
-  bool get loading => _loading;
-  String? get error => _error;
 
   List<AbonoModel> get pendientes =>
       _abonos.where((a) => a.esPendiente).toList();
@@ -21,15 +21,12 @@ class AbonoProvider extends ChangeNotifier {
   List<AbonoModel> get rechazados =>
       _abonos.where((a) => a.esRechazado).toList();
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Cargar datos (usando ejecutar() de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   Future<void> cargarMisAbonos() async {
-    _setLoading(true);
-    try {
-      _abonos = await AbonoService.getMisAbonos();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+    _abonos = await ejecutar(() => AbonoService.getMisAbonos()) ?? [];
   }
 
   Future<void> cargarSaldoFavor(int propiedadId) async {
@@ -40,39 +37,48 @@ class AbonoProvider extends ChangeNotifier {
   }
 
   Future<void> cargarTodosAbonosAdmin() async {
-    _setLoading(true);
-    try {
-      final results = await Future.wait([
+    final results = await ejecutar(
+      () => Future.wait([
         AbonoService.listarAbonosAdmin(estado: 'PENDIENTE_VERIFICACION'),
         AbonoService.listarAbonosAdmin(estado: 'VERIFICADO'),
         AbonoService.listarAbonosAdmin(estado: 'RECHAZADO'),
-      ]);
+      ]),
+    );
+    if (results != null) {
       _abonos = [...results[0], ...results[1], ...results[2]];
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
+      notifyListeners();
     }
   }
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Acciones (usando helpers de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   Future<AbonoModel> registrar(Map<String, dynamic> data) async {
-    final nuevo = await AbonoService.registrarAbono(data);
-    _abonos.add(nuevo);
-    notifyListeners();
+    final nuevo = await ejecutar(
+      () => AbonoService.registrarAbono(data),
+    );
+    if (nuevo == null) throw Exception(error ?? 'Error al registrar abono');
+    agregarAlFinal(_abonos, nuevo);
     return nuevo;
   }
 
   Future<void> verificar(int id, {String? notas}) async {
-    final actualizado = await AbonoService.verificarAbono(id, notas: notas);
-    _reemplazar(actualizado);
+    final actualizado = await ejecutar(
+      () => AbonoService.verificarAbono(id, notas: notas),
+    );
+    if (actualizado != null) _actualizarOAgregar(actualizado);
   }
 
   Future<void> rechazar(int id, String motivo) async {
-    final actualizado = await AbonoService.rechazarAbono(id, motivo);
-    _reemplazar(actualizado);
+    final actualizado = await ejecutar(
+      () => AbonoService.rechazarAbono(id, motivo),
+    );
+    if (actualizado != null) _actualizarOAgregar(actualizado);
   }
 
-  void _reemplazar(AbonoModel actualizado) {
+  /// Helper privado: reemplaza item existente o agrega si no existe
+  void _actualizarOAgregar(AbonoModel actualizado) {
     final idx = _abonos.indexWhere((a) => a.id == actualizado.id);
     if (idx != -1) {
       _abonos[idx] = actualizado;
@@ -82,17 +88,14 @@ class AbonoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void limpiar() {
-    _abonos = [];
-    _saldoFavor = null;
-    _error = null;
-    _loading = false;
-    notifyListeners();
-  }
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Limpiar estado
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  void _setLoading(bool v) {
-    _loading = v;
-    _error = v ? null : _error;
+  void limpiarDatos() {
+    _abonos.clear();
+    _saldoFavor = null;
+    limpiarError();
     notifyListeners();
   }
 }

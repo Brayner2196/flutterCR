@@ -73,6 +73,7 @@ class PropiedadService {
     String? descripcion,
     int? parentId,
     bool esFacturable = false,
+    bool esParqueadero = false,
   }) async {
     final res = await ApiClient.post(
       ApiConstants.tiposPropiedad,
@@ -80,7 +81,8 @@ class PropiedadService {
         'nombre': nombre,
         if (descripcion != null) 'descripcion': descripcion,
         if (parentId != null) 'parentId': parentId,
-        'esFacturable': esFacturable,
+        'esFacturable':  esFacturable,
+        'esParqueadero': esParqueadero,
       },
       requiresAuth: true,
     );
@@ -90,13 +92,14 @@ class PropiedadService {
 
   /// Actualizar tipo de propiedad (admin)
   static Future<void> actualizarTipo(int id,
-      {required String nombre, String? descripcion, bool esFacturable = false}) async {
+      {required String nombre, String? descripcion, bool esFacturable = false, bool esParqueadero = false}) async {
     final res = await ApiClient.put(
       '${ApiConstants.tiposPropiedad}/$id',
       {
-        'nombre': nombre,
+        'nombre':       nombre,
         if (descripcion != null) 'descripcion': descripcion,
-        'esFacturable': esFacturable,
+        'esFacturable':  esFacturable,
+        'esParqueadero': esParqueadero,
       },
     );
     BaseApiService.assertSuccess(res, fallbackMsg: 'Error al actualizar tipo');

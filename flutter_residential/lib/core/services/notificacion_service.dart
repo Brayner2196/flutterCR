@@ -17,7 +17,7 @@ import '../../features/votaciones/screens/admin/admin_votaciones_screen.dart';
 import '../../features/usuarios/screens/admin/usuarios_screen.dart';
 
 // ─── Pantallas residente ──────────────────────────────────────────────────────
-import '../../features/pagos/screens/residente/mis_cobros_screen.dart';
+import '../../features/pagos/screens/residente/estado_cuenta_screen.dart';
 import '../../features/reservas/screens/residente/mis_reservas_screen.dart';
 import '../../features/pqr/screens/residente/mis_pqrs_screen.dart';
 import '../../features/anuncios/screens/residente/mis_anuncios_screen.dart';
@@ -231,7 +231,7 @@ class NotificacionService {
     switch (ruta) {
       case 'pagos':
         if (esAdmin)     destino = const AdminCobrosScreen();
-        if (esResidente) destino = const MisCobrosScreen();
+        if (esResidente) destino = const EstadoCuentaScreen();
         break;
 
       case 'reservas':
@@ -297,9 +297,16 @@ class NotificacionService {
     }
   }
 
-  Future<void> eliminarTokenDelBackend() async {
+  /// Elimina el token FCM del backend.
+  /// [token] y [tenantId] se pasan explícitamente desde logout() para evitar
+  /// el race condition entre el HTTP DELETE y el borrado del secure storage.
+  Future<void> eliminarTokenDelBackend({String? token, String? tenantId}) async {
     try {
-      await ApiClient.delete(ApiConstants.fcmToken);
+      await ApiClient.delete(
+        ApiConstants.fcmToken,
+        token: token,
+        tenantId: tenantId,
+      );
       await _fcm.deleteToken();
     } catch (_) {}
   }

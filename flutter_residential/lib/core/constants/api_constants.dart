@@ -1,8 +1,7 @@
 import '../config/app_env.dart';
 
 class ApiConstants {
-  /// Base URL inyectada en compilación via --dart-define=API_BASE_URL=<url>
-  /// Ver AppEnv y el Makefile del proyecto para los comandos por ambiente.
+
   //static const String baseUrl = AppEnv.baseUrl;
   static const String baseUrl = 'https://cr-dev.up.railway.app';
 
@@ -175,6 +174,7 @@ class ApiConstants {
   // Notificaciones push (FCM)
   static const String fcmToken = '/api/notificaciones/token';
 
+
   // Marketplace — admin
   static const String adminPublicaciones = '/api/admin/publicaciones';
   static String eliminarPublicacionAdmin(int id) => '/api/admin/publicaciones/$id';
@@ -210,4 +210,25 @@ class ApiConstants {
   // Transparencia Presupuesto — residente
   static const String residentePresupuestos = '/api/residente/presupuestos';
   static const String residentePresupuestoActivo = '/api/residente/presupuestos/activo';
+
+  // Parqueaderos — admin
+  static const String adminParqueaderosConfig  = '/api/admin/parqueaderos/configuracion';
+  static const String adminParqueaderos        = '/api/admin/parqueaderos';
+  static const String adminParqueaderosBulk    = '/api/admin/parqueaderos/bulk';
+  static const String adminVehiculos           = '/api/admin/parqueaderos/vehiculos';
+  static String adminParqueaderoAsignarPropiedad(int id) => '/api/admin/parqueaderos/$id/propiedad';
+  static String adminParqueaderoEliminar(int id)          => '/api/admin/parqueaderos/$id';
+  static String adminVehiculoAprobar(int id)              => '/api/admin/parqueaderos/vehiculos/$id/aprobar';
+  static String adminVehiculoRechazar(int id)             => '/api/admin/parqueaderos/vehiculos/$id/rechazar';
+
+  // Parqueaderos — residente
+  static const String residenteVehiculos       = '/api/residente/parqueaderos/vehiculos';
+  static const String residenteMisParqueaderos = '/api/residente/parqueaderos/mis-parqueaderos';
+  static String residenteVehiculoEliminar(int id)                => '/api/residente/parqueaderos/vehiculos/$id';
+  static String residenteParqueaderoCambiarVehiculo(int id)      => '/api/residente/parqueaderos/$id/vehiculo';
+
+  // Consejo comunal — directorio público + vista consejero
+  static const String consejoMiembros = '/api/consejo/miembros';
+  static String consejoPqrs([String? estado]) =>
+      estado != null ? '/api/consejo/pqrs?estado=$estado' : '/api/consejo/pqrs';
 }

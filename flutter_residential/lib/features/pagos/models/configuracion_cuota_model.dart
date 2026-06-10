@@ -2,6 +2,9 @@ class ConfiguracionCuotaModel {
   final int id;
   final int? tipoPropiedadId;
   final int? propiedadId;
+  /// Tipo de propiedad ancestro sobre cuyo número se evalúa el rango.
+  /// Null = el rango aplica sobre el número de la propia unidad facturable.
+  final int? tipoPropiedadCondicionId;
   final int? numeroDesde;
   final int? numeroHasta;
   final double monto;
@@ -15,6 +18,7 @@ class ConfiguracionCuotaModel {
     required this.id,
     this.tipoPropiedadId,
     this.propiedadId,
+    this.tipoPropiedadCondicionId,
     this.numeroDesde,
     this.numeroHasta,
     required this.monto,
@@ -29,6 +33,7 @@ class ConfiguracionCuotaModel {
         id: json['id'] as int,
         tipoPropiedadId: json['tipoPropiedadId'] as int?,
         propiedadId: json['propiedadId'] as int?,
+        tipoPropiedadCondicionId: json['tipoPropiedadCondicionId'] as int?,
         numeroDesde: json['numeroDesde'] as int?,
         numeroHasta: json['numeroHasta'] as int?,
         monto: (json['monto'] as num).toDouble(),
@@ -41,6 +46,8 @@ class ConfiguracionCuotaModel {
   Map<String, dynamic> toJson() => {
         if (tipoPropiedadId != null) 'tipoPropiedadId': tipoPropiedadId,
         if (propiedadId != null) 'propiedadId': propiedadId,
+        if (tipoPropiedadCondicionId != null)
+          'tipoPropiedadCondicionId': tipoPropiedadCondicionId,
         if (numeroDesde != null) 'numeroDesde': numeroDesde,
         if (numeroHasta != null) 'numeroHasta': numeroHasta,
         'monto': monto,

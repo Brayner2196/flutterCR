@@ -257,6 +257,22 @@ class _NodoTileState extends State<_NodoTile> {
                                   color: Colors.amber.shade800)),
                         ),
                       ],
+                      if (nodo.esParqueadero) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.teal.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(color: Colors.teal.withValues(alpha: 0.4)),
+                          ),
+                          child: const Text('Parqueadero',
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.teal)),
+                        ),
+                      ],
                       if (!nodo.activo) ...[
                         const SizedBox(width: 6),
                         Container(
@@ -360,6 +376,7 @@ class _TipoNodoFormState extends State<_TipoNodoForm> {
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _descCtrl;
   late bool _esFacturable;
+  late bool _esParqueadero;
   bool _guardando = false;
 
   bool get _esEdicion => widget.nodo != null;
@@ -367,9 +384,10 @@ class _TipoNodoFormState extends State<_TipoNodoForm> {
   @override
   void initState() {
     super.initState();
-    _nombreCtrl = TextEditingController(text: widget.nodo?.nombre ?? '');
-    _descCtrl = TextEditingController(text: widget.nodo?.descripcion ?? '');
-    _esFacturable = widget.nodo?.esFacturable ?? false;
+    _nombreCtrl    = TextEditingController(text: widget.nodo?.nombre ?? '');
+    _descCtrl      = TextEditingController(text: widget.nodo?.descripcion ?? '');
+    _esFacturable  = widget.nodo?.esFacturable ?? false;
+    _esParqueadero = widget.nodo?.esParqueadero ?? false;
   }
 
   @override
@@ -389,6 +407,7 @@ class _TipoNodoFormState extends State<_TipoNodoForm> {
           nombre: _nombreCtrl.text.trim(),
           descripcion: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
           esFacturable: _esFacturable,
+          esParqueadero: _esParqueadero,
         );
       } else {
         await PropiedadService.crearTipo(
@@ -396,6 +415,7 @@ class _TipoNodoFormState extends State<_TipoNodoForm> {
           descripcion: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
           parentId: widget.parentId,
           esFacturable: _esFacturable,
+          esParqueadero: _esParqueadero,
         );
       }
       widget.onGuardado();
@@ -520,6 +540,57 @@ class _TipoNodoFormState extends State<_TipoNodoForm> {
                       value: _esFacturable,
                       onChanged: (v) => setState(() => _esFacturable = v),
                       activeColor: Colors.amber.shade700,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Toggle es parqueadero
+            GestureDetector(
+              onTap: () => setState(() => _esParqueadero = !_esParqueadero),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: _esParqueadero
+                      ? Colors.teal.withValues(alpha: 0.1)
+                      : cs.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _esParqueadero
+                        ? Colors.teal.withValues(alpha: 0.6)
+                        : cs.outlineVariant,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.local_parking,
+                      size: 20,
+                      color: _esParqueadero ? Colors.teal : cs.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Es parqueadero',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: _esParqueadero ? Colors.teal : cs.onSurface)),
+                          Text(
+                            'Al crear una propiedad de este tipo se genera un spot físico automáticamente',
+                            style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _esParqueadero,
+                      onChanged: (v) => setState(() => _esParqueadero = v),
+                      activeColor: Colors.teal,
                     ),
                   ],
                 ),

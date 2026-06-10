@@ -1,12 +1,9 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../models/gasto_registrado_model.dart';
 import '../models/presupuesto_model.dart';
 import '../services/presupuesto_service.dart';
 
-class PresupuestoProvider extends ChangeNotifier {
-  bool _loading = false;
-  String? _error;
-
+class PresupuestoProvider extends BaseProvider {
   /// Lista de presupuestos (admin: todos; residente: todos)
   List<PresupuestoModel> _presupuestos = [];
 
@@ -16,53 +13,57 @@ class PresupuestoProvider extends ChangeNotifier {
   /// Presupuesto activo (residente)
   PresupuestoModel? _activo;
 
-  // ── Getters ───────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Getters públicos (loading y error heredados de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  bool get loading => _loading;
-  String? get error => _error;
   List<PresupuestoModel> get presupuestos => _presupuestos;
   PresupuestoModel? get detalle => _detalle;
   PresupuestoModel? get activo => _activo;
 
-  // ── Admin ─────────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Cargar datos (usando ejecutar() de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Future<void> cargarListaAdmin() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-    try {
-      _presupuestos = await PresupuestoService.listarAdmin();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
+    _presupuestos = await ejecutar(() => PresupuestoService.listarAdmin()) ?? [];
+  }
+
+  Future<void> cargarListaResidente() async {
+    _presupuestos = await ejecutar(() => PresupuestoService.listarResidente()) ?? [];
   }
 
   Future<void> cargarDetalle(int id) async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
+    _detalle = await ejecutar(() => PresupuestoService.detalleAdmin(id));
+  }
+
+  /// presupuestoActivo() retorna Future<PresupuestoModel?> — llamada directa sin ejecutar()
+  /// para evitar inferencia de T nullable. Null = sin presupuesto activo, es válido.
+  Future<void> cargarActivo() async {
+    setLoading(true);
     try {
-      _detalle = await PresupuestoService.detalleAdmin(id);
+      _activo = await PresupuestoService.presupuestoActivo();
     } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
+      setError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      _loading = false;
-      notifyListeners();
+      setLoading(false);
     }
   }
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Acciones (usando helpers de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   Future<PresupuestoModel> crear(Map<String, dynamic> body) async {
-    final p = await PresupuestoService.crear(body);
-    _presupuestos = [p, ..._presupuestos];
-    notifyListeners();
+    final p = await ejecutar(() => PresupuestoService.crear(body));
+    if (p == null) throw Exception(error ?? 'Error al crear presupuesto');
+    agregarAlInicio(_presupuestos, p);
     return p;
   }
 
   Future<PresupuestoModel> actualizar(int id, Map<String, dynamic> body) async {
-    final p = await PresupuestoService.actualizar(id, body);
+    final p = await ejecutar(() => PresupuestoService.actualizar(id, body));
+    if (p == null) throw Exception(error ?? 'Error al actualizar presupuesto');
     _reemplazarEnLista(p);
     if (_detalle?.id == id) _detalle = p;
     notifyListeners();
@@ -70,8 +71,10 @@ class PresupuestoProvider extends ChangeNotifier {
   }
 
   Future<void> toggleActivo(int id, {required bool activo}) async {
-    final p = await PresupuestoService.toggleActivo(id, activo: activo);
-    // Si se activó, desmarcar los demás en lista local
+    final p = await ejecutar(
+      () => PresupuestoService.toggleActivo(id, activo: activo),
+    );
+    if (p == null) return;
     if (activo) {
       _presupuestos = _presupuestos
           .map((e) => e.id == id ? p : _desactivarLocal(e))
@@ -85,48 +88,24 @@ class PresupuestoProvider extends ChangeNotifier {
 
   Future<GastoRegistradoModel> registrarGasto(
       int presupuestoId, Map<String, dynamic> body) async {
-    final gasto = await PresupuestoService.registrarGasto(presupuestoId, body);
-    // Refrescar detalle para recalcular ejecutado
+    final gasto = await ejecutar(
+      () => PresupuestoService.registrarGasto(presupuestoId, body),
+    );
+    if (gasto == null) throw Exception(error ?? 'Error al registrar gasto');
     await cargarDetalle(presupuestoId);
     return gasto;
   }
 
   Future<void> eliminarGasto(int presupuestoId, int gastoId) async {
-    await PresupuestoService.eliminarGasto(presupuestoId, gastoId);
+    await ejecutar(
+      () => PresupuestoService.eliminarGasto(presupuestoId, gastoId),
+    );
     await cargarDetalle(presupuestoId);
   }
 
-  // ── Residente ─────────────────────────────────────────────────────
-
-  Future<void> cargarActivo() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-    try {
-      _activo = await PresupuestoService.presupuestoActivo();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> cargarListaResidente() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-    try {
-      _presupuestos = await PresupuestoService.listarResidente();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Helpers privados
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   void _reemplazarEnLista(PresupuestoModel p) {
     _presupuestos = _presupuestos.map((e) => e.id == p.id ? p : e).toList();

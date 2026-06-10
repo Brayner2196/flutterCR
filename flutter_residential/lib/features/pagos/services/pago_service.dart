@@ -6,14 +6,10 @@ import '../models/pago_model.dart';
 class PagoService {
   // ─── Residente ───────────────────────────────────
 
-  static Future<PagoModel> registrarPago(Map<String, dynamic> data) async {
-    final res = await ApiClient.post(ApiConstants.misPagos, data, requiresAuth: true);
-    return BaseApiService.parseSingle(res, PagoModel.fromJson,
-        successCodes: [200, 201], fallbackMsg: 'Error al registrar pago');
-  }
-
-  static Future<List<PagoModel>> getMisPagos() async {
-    final res = await ApiClient.get(ApiConstants.misPagos);
+  static Future<List<PagoModel>> getMisPagos({int? propiedadId}) async {
+    String url = ApiConstants.misPagos;
+    if (propiedadId != null) url += '?propiedadId=$propiedadId';
+    final res = await ApiClient.get(url);
     return BaseApiService.parseList(res, PagoModel.fromJson, 'Error al obtener pagos');
   }
 

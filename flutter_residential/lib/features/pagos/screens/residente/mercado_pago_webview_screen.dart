@@ -1,13 +1,21 @@
+// ignore_for_file: deprecated_member_use_from_same_package
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../models/pasarela_disponible_model.dart';
 import '../../services/pasarela_service.dart';
 
+/// @deprecated Usar [PasarelaWebViewScreen] + [ResultadoPago] en su lugar.
+/// Este archivo se mantiene solo para no romper llamadas existentes fuera
+/// de [DetalleCobroScreen]. Eliminar una vez que todas las referencias
+/// hayan sido migradas a pasarela_webview_screen.dart.
+@Deprecated('Usar PasarelaWebViewScreen. Ver pasarela_webview_screen.dart')
 enum ResultadoPagoMP { exito, fallo, pendiente, cancelado }
 
+/// @deprecated Ver [PasarelaWebViewScreen].
 /// WebView genérico de pago. Funciona para MercadoPago, Wompi y Bold.
 /// Solo llama al endpoint de confirmación cuando [tipoPasarela] es MP,
 /// ya que Wompi/Bold se confirman automáticamente vía webhook.
+@Deprecated('Usar PasarelaWebViewScreen. Ver pasarela_webview_screen.dart')
 class MercadoPagoWebViewScreen extends StatefulWidget {
   final String checkoutUrl;
   final String tituloCobro;

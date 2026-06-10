@@ -14,6 +14,7 @@ import '../../widgets/pasarela_logo_widget.dart';
 import 'mercado_pago_webview_screen.dart';
 import '../../../../features/plan_pago/providers/plan_pago_provider.dart';
 import '../../../../features/plan_pago/screens/residente/residente_solicitar_plan_screen.dart';
+import '../../../../features/propiedades/providers/propiedad_provider.dart';
 
 class EstadoCuentaScreen extends StatefulWidget {
   const EstadoCuentaScreen({super.key});
@@ -23,6 +24,8 @@ class EstadoCuentaScreen extends StatefulWidget {
 }
 
 class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
+  int? _propiedadId;
+
   // Historial paginado — se acumula al hacer scroll
   List<CobroModel> _historial = [];
   int _paginaActual = 0;
@@ -91,13 +94,22 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
   void initState() {
     super.initState();
     _scrollCtrl.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CobrosProvider>().cargarEstadoCuenta();
-      _iniciarHistorial();
-      // Carga silenciosa para mostrar/ocultar botón de plan de pago
-      context.read<PlanPagoProvider>().cargarConfigResidente();
-      context.read<PlanPagoProvider>().cargarMisPlanes();
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nuevaPropiedad = context.watch<PropiedadProvider>().propiedadActual?.propiedadId;
+    if (nuevaPropiedad != _propiedadId) {
+      _propiedadId = nuevaPropiedad;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<CobrosProvider>().cargarEstadoCuenta(propiedadId: _propiedadId);
+        _iniciarHistorial();
+        context.read<PlanPagoProvider>().cargarConfigResidente();
+        context.read<PlanPagoProvider>().cargarMisPlanes();
+      });
+    }
   }
 
   @override
@@ -124,11 +136,13 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
     // 1. Balance header + Situación financiera home — solo endpoints de residente
     // NOTA: NO llamar DashboardProvider.refrescar() aquí porque apunta a
     //       /api/admin/dashboard que requiere rol TENANT_ADMIN (403 para residentes).
-    context.read<CobrosProvider>().cargarEstadoCuenta();
+    context.read<CobrosProvider>().cargarEstadoCuenta(propiedadId: _propiedadId);
     context.read<ResidenteEstadisticasProvider>().refrescar();
 
     // 2. Saldo a favor (puede haber cambiado si hubo exceso)
-    if (_historial.isNotEmpty) {
+    if (_propiedadId != null) {
+      context.read<AbonoProvider>().cargarSaldoFavor(_propiedadId!);
+    } else if (_historial.isNotEmpty) {
       context.read<AbonoProvider>().cargarSaldoFavor(_historial.first.propiedadId);
     }
 
@@ -173,6 +187,7 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
       final PaginatedCobroResponse res = await CobroService.getHistorialPaginado(
         page: pagina,
         size: 5,
+        propiedadId: _propiedadId,
       );
       if (!mounted) return;
       setState(() {
@@ -186,9 +201,12 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         _paginaActual = res.number;
         _hayMasPaginas = res.hayMasPaginas;
       });
-      // Cargar saldo a favor con propiedadId del primer cobro
-      if (esReset && res.content.isNotEmpty) {
-        context.read<AbonoProvider>().cargarSaldoFavor(res.content.first.propiedadId);
+      // Cargar saldo a favor: preferir _propiedadId ya conocido; fallback al primer cobro
+      if (esReset) {
+        final pid = _propiedadId ?? (res.content.isNotEmpty ? res.content.first.propiedadId : null);
+        if (pid != null) {
+          context.read<AbonoProvider>().cargarSaldoFavor(pid);
+        }
       }
     } catch (_) {
     } finally {
@@ -1634,6 +1652,23 @@ class _CobroCardState extends State<_CobroCard> {
                     italica: true,
                   ),
                 ],
+                if (cobro.esParcial) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: cobro.porcentajePagado,
+                      backgroundColor: Colors.grey.shade200,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                      minHeight: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${(cobro.porcentajePagado * 100).toStringAsFixed(0)}% abonado',
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  ),
+                ],
                 const SizedBox(height: 10),
                 Divider(height: 1, color: Colors.grey.shade200),
                 const SizedBox(height: 10),
@@ -1704,12 +1739,14 @@ class _CobroCardState extends State<_CobroCard> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     else
-                      Icon(
-                        _expandido
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: Colors.grey.shade500,
+                      AnimatedRotation(
+                        turns: _expandido ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 220),
+                        child: Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 18,
+                          color: Colors.grey.shade500,
+                        ),
                       ),
                   ],
                 ),
@@ -1717,12 +1754,17 @@ class _CobroCardState extends State<_CobroCard> {
             ),
 
             // ── Mini-timeline de movimientos ─────────────────────────
-            if (_expandido && _movimientos != null)
-              _MovimientosTimeline(
-                movimientos: _movimientos!,
-                formatMonto: widget.formatMonto,
-                esUltimoNivel: !_estaActivo,
-              ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              child: _expandido && _movimientos != null
+                  ? _MovimientosTimeline(
+                      movimientos: _movimientos!,
+                      formatMonto: widget.formatMonto,
+                      esUltimoNivel: !_estaActivo,
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ], // fin if (cobro.tieneMovimientos)
           // ── Botón Liquidar ────────────────────────────────────────
           if (_estaActivo)

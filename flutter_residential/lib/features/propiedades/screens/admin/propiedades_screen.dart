@@ -67,7 +67,7 @@ class _TiposTabState extends State<_TiposTab> {
     final provider = context.watch<PropiedadProvider>();
     final theme = Theme.of(context);
 
-    if (provider.cargando) {
+    if (provider.loading) {
       return const Center(child: CircularProgressIndicator());
     }
 

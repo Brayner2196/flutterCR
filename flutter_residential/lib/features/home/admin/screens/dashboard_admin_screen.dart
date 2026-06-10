@@ -12,6 +12,7 @@ import 'package:flutter_residential/features/reservas/screens/admin/admin_reserv
 import 'package:flutter_residential/features/votaciones/screens/admin/admin_votaciones_screen.dart';
 import 'package:flutter_residential/features/plan_pago/screens/admin/admin_planes_pago_screen.dart';
 import 'package:flutter_residential/features/presupuesto/screens/admin/admin_presupuestos_screen.dart';
+import 'package:flutter_residential/features/parqueaderos/screens/admin/admin_parqueaderos_screen.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
@@ -148,6 +149,15 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   iconColor: AppColors.ok,
                   colorText: AppColors.ok,
                   onTap: () => _abrir(const AdminPresupuestosScreen()),
+                ),
+                QuickAccessCardData(
+                  title: 'Parqueaderos',
+                  icon: Icons.local_parking,
+                  backgroundColor: AppColors.bgBlue,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.blue,
+                  colorText: AppColors.blue,
+                  onTap: () => _abrir(const AdminParqueaderosScreen()),
                 ),
               ],
             ),

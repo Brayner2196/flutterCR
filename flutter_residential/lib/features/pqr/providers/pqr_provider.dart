@@ -1,65 +1,56 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../models/pqr_model.dart';
 import '../services/pqr_service.dart';
 
-class PqrProvider extends ChangeNotifier {
+class PqrProvider extends BaseProvider {
   List<PqrModel> _pqrs = [];
   String? _filtroEstado;
-  bool _loading = false;
-  String? _error;
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Getters públicos (loading y error heredados de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   List<PqrModel> get pqrs => _pqrs;
   String? get filtroEstado => _filtroEstado;
-  bool get loading => _loading;
-  String? get error => _error;
   int get cantidadPendientes =>
       _pqrs.where((p) => p.esPendiente).length;
 
-  // ─── Admin ─────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Cargar datos (usando ejecutar() de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Future<void> cargarAdmin({String? estado}) async {
     _filtroEstado = estado;
-    _setLoading(true);
-    try {
-      _pqrs = await PqrService.listarAdmin(estado: estado);
-      _error = null;
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+    _pqrs = await ejecutar(
+      () => PqrService.listarAdmin(estado: estado),
+    ) ?? [];
   }
 
+  Future<void> cargarMisPqrs() async {
+    _pqrs = await ejecutar(() => PqrService.misPqrs()) ?? [];
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Acciones (usando helpers de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   Future<PqrModel> responder(int id, String respuesta) async {
-    final actualizada = await PqrService.responder(id, respuesta);
-    final idx = _pqrs.indexWhere((p) => p.id == id);
-    if (idx != -1) _pqrs[idx] = actualizada;
-    notifyListeners();
+    final actualizada = await ejecutar(
+      () => PqrService.responder(id, respuesta),
+    );
+    if (actualizada == null) throw Exception(error ?? 'Error al responder PQR');
+    reemplazar(_pqrs, actualizada, (p) => p.id);
     return actualizada;
   }
 
   Future<PqrModel> cambiarEstado(int id, String estado,
       {String? comentario}) async {
-    final actualizada =
-        await PqrService.cambiarEstado(id, estado, comentario: comentario);
-    final idx = _pqrs.indexWhere((p) => p.id == id);
-    if (idx != -1) _pqrs[idx] = actualizada;
-    notifyListeners();
+    final actualizada = await ejecutar(
+      () => PqrService.cambiarEstado(id, estado, comentario: comentario),
+    );
+    if (actualizada == null) throw Exception(error ?? 'Error al cambiar estado');
+    reemplazar(_pqrs, actualizada, (p) => p.id);
     return actualizada;
-  }
-
-  // ─── Residente ────────────────────────────────
-
-  Future<void> cargarMisPqrs() async {
-    _setLoading(true);
-    try {
-      _pqrs = await PqrService.misPqrs();
-      _error = null;
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
   }
 
   Future<PqrModel> crearPqr({
@@ -68,16 +59,20 @@ class PqrProvider extends ChangeNotifier {
     required String descripcion,
     int? propiedadId,
   }) async {
-    final nueva = await PqrService.crear(
+    final nueva = await ejecutar(() => PqrService.crear(
       tipo: tipo,
       asunto: asunto,
       descripcion: descripcion,
       propiedadId: propiedadId,
-    );
-    _pqrs.insert(0, nueva);
-    notifyListeners();
+    ));
+    if (nueva == null) throw Exception(error ?? 'Error al crear PQR');
+    agregarAlInicio(_pqrs, nueva);
     return nueva;
   }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Utilities
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   /// Filtra PQRs localmente por estado (para la vista del residente).
   List<PqrModel> filtrarPorEstado(String? estado) {
@@ -85,9 +80,11 @@ class PqrProvider extends ChangeNotifier {
     return _pqrs.where((p) => p.estado == estado).toList();
   }
 
-  void _setLoading(bool v) {
-    _loading = v;
-    if (v) _error = null;
+  /// Sincroniza la lista interna con las PQRs cargadas por ConsejoProvider.
+  /// Permite que las acciones de responder/cambiarEstado actualicen la lista
+  /// correcta sin necesidad de un reload completo.
+  void sincronizarDesdeConsejo(List<PqrModel> pqrs) {
+    _pqrs = List.of(pqrs);
     notifyListeners();
   }
 }

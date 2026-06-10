@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../config/pasarela_webview_config.dart';
 import '../../models/pasarela_disponible_model.dart';
-import '../../services/pasarela_service.dart';
 
-enum ResultadoPago { exito, fallo, pendiente, cancelado }
+/// Estado del resultado del pago devuelto al hacer pop de esta pantalla.
+///
+/// - [procesando] → el WebView interceptó la URL de éxito y lanzó la
+///   confirmación al back, pero aún no hay confirmación definitiva del webhook.
+///   La pantalla padre debe hacer polling del estado del cobro.
+/// - [exito] → pago confirmado de forma síncrona (raro; reservado para futuros usos).
+/// - [fallo] → el usuario completó el flujo pero el pago fue rechazado.
+/// - [pendiente] → pago en revisión (típico en MP para ciertos medios de pago).
+/// - [cancelado] → el usuario abandonó el WebView explícitamente.
+enum ResultadoPago { procesando, exito, fallo, pendiente, cancelado }
 
 /// WebView genérico reutilizable para todas las pasarelas de pago.
-/// Soporta MercadoPago, Wompi y Bold a través de patrones de URL configurables.
+///
+/// La lógica específica de cada pasarela (detección de URLs, confirmación,
+/// filtro de errores JS) está desacoplada en [PasarelaWebViewConfig].
+/// Este widget solo coordina el ciclo de vida del WebView y el pop con resultado.
+///
+/// Pasarelas soportadas: MercadoPago, Wompi, Bold.
 class PasarelaWebViewScreen extends StatefulWidget {
   final String checkoutUrl;
   final TipoPasarela tipoPasarela;
@@ -25,165 +39,155 @@ class PasarelaWebViewScreen extends StatefulWidget {
 
 class _PasarelaWebViewScreenState extends State<PasarelaWebViewScreen> {
   late final WebViewController _controller;
+
+  /// Configuración específica de la pasarela: URLs, confirmación, filtros JS.
+  late final PasarelaWebViewConfig _config;
+
   bool _cargando = true;
+
+  /// Bandera para evitar procesar el resultado más de una vez
+  /// (puede dispararse tanto en [_interceptarNavegacion] como en [_onPageStarted]).
   bool _procesando = false;
 
-  // ─── Patrones de retorno por pasarela ─────────────────────────────────────
-
-  // MercadoPago
-  static const _mpExitoPath    = '/api/mp/pago-exito';
-  static const _mpFalloPath    = '/api/mp/pago-fallo';
-  static const _mpPendientePath = '/api/mp/pago-pendiente';
-  static const _mpSchemeExito  = 'conjuntosapp://pago/exito';
-  static const _mpSchemeFallo  = 'conjuntosapp://pago/fallo';
-  static const _mpSchemePend   = 'conjuntosapp://pago/pendiente';
-
-  // Wompi — redirige a la redirect_url configurada
-  static const _wompiSchemeExito = 'conjuntosapp://pago/exito';
-  static const _wompiSchemeFallo = 'conjuntosapp://pago/fallo';
-
-  // Bold — redirige a la redirect_url configurada
-  static const _boldSchemeExito = 'conjuntosapp://pago/exito';
-  static const _boldSchemeFallo = 'conjuntosapp://pago/fallo';
+  // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
+    _config = PasarelaWebViewConfig.para(widget.tipoPasarela);
+
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent(
-        'Mozilla/5.0 (Linux; Android 12; Pixel 6) '
-        'AppleWebKit/537.36 (KHTML, like Gecko) '
-        'Chrome/120.0.0.0 Mobile Safari/537.36',
-      )
+      ..setUserAgent(_config.userAgent)
+
+      // Filtrar ruido de consola JS de SDKs terceros (Wompi, MP Bricks, etc.)
+      ..setOnConsoleMessage((msg) {
+        if (_config.debeLoguear(msg)) {
+          debugPrint('[WebView:${widget.tipoPasarela.name}][${msg.level.name}] ${msg.message}');
+        }
+      })
+
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (_) => setState(() => _cargando = true),
+          // Primera línea: bloquea antes de que empiece a cargar
+          onNavigationRequest: _interceptarNavegacion,
+
+          // Segunda línea: para redirects HTTP 302 server-side que en Android
+          // pueden saltarse onNavigationRequest. Cuando ya empezó a cargar y
+          // matchea un patrón de retorno, cortamos con about:blank.
+          onPageStarted: _onPageStarted,
+
           onPageFinished: (_) => setState(() => _cargando = false),
           onWebResourceError: (_) => setState(() => _cargando = false),
-          onNavigationRequest: _interceptarNavegacion,
         ),
       )
       ..loadRequest(Uri.parse(widget.checkoutUrl));
+
+    // Hook para ajustes adicionales según la pasarela
+    _config.aplicarAjustes(_controller);
   }
+
+  // ─── Interceptores ─────────────────────────────────────────────────────────
 
   NavigationDecision _interceptarNavegacion(NavigationRequest request) {
     final url = request.url;
 
-    switch (widget.tipoPasarela) {
-      case TipoPasarela.mercadoPago:
-        return _interceptarMP(url);
-      case TipoPasarela.wompi:
-        return _interceptarWompi(url);
-      case TipoPasarela.bold:
-        return _interceptarBold(url);
-    }
-  }
-
-  // ─── Interceptores específicos ─────────────────────────────────────────────
-
-  NavigationDecision _interceptarMP(String url) {
-    if (url.startsWith(_mpSchemeExito) || url.contains(_mpExitoPath)) {
-      _procesarExitoMP(url);
+    if (_config.esUrlExito(url)) {
+      _procesarExito(url);
       return NavigationDecision.prevent;
     }
-    if (url.startsWith(_mpSchemeFallo) || url.contains(_mpFalloPath)) {
+    if (_config.esUrlFallo(url)) {
       _finalizarPago(ResultadoPago.fallo);
       return NavigationDecision.prevent;
     }
-    if (url.startsWith(_mpSchemePend) || url.contains(_mpPendientePath)) {
-      _procesarPendienteMP(url);
+    if (_config.esUrlPendiente(url)) {
+      _procesarPendiente(url);
       return NavigationDecision.prevent;
     }
+
+    // Bloquear esquemas no-HTTP (deep-links, intents, etc.)
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      debugPrint('WebView MP: esquema externo bloqueado → $url');
+      debugPrint('[WebView:${widget.tipoPasarela.name}] Esquema externo bloqueado → $url');
       return NavigationDecision.prevent;
     }
+
     return NavigationDecision.navigate;
   }
 
-  NavigationDecision _interceptarWompi(String url) {
-    // Wompi redirige a la redirect_url configurada en el backend
-    if (url.startsWith(_wompiSchemeExito) || _esUrlExito(url)) {
-      _finalizarPago(ResultadoPago.exito);
-      return NavigationDecision.prevent;
-    }
-    if (url.startsWith(_wompiSchemeFallo) || _esUrlFallo(url)) {
-      _finalizarPago(ResultadoPago.fallo);
-      return NavigationDecision.prevent;
-    }
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      return NavigationDecision.prevent;
-    }
-    return NavigationDecision.navigate;
-  }
+  /// Segunda línea de defensa: Android puede saltarse [onNavigationRequest]
+  /// para ciertos redirects server-side (HTTP 302 de Wompi/Bold).
+  void _onPageStarted(String url) {
+    setState(() => _cargando = true);
 
-  NavigationDecision _interceptarBold(String url) {
-    if (url.startsWith(_boldSchemeExito) || _esUrlExito(url)) {
-      _finalizarPago(ResultadoPago.exito);
-      return NavigationDecision.prevent;
-    }
-    if (url.startsWith(_boldSchemeFallo) || _esUrlFallo(url)) {
+    // Si ya fue manejado por onNavigationRequest, no duplicar
+    if (_procesando) return;
+
+    if (_config.esUrlExito(url)) {
+      _controller.loadRequest(Uri.parse('about:blank')); // cortar la carga
+      _procesarExito(url);
+    } else if (_config.esUrlFallo(url)) {
+      _controller.loadRequest(Uri.parse('about:blank'));
       _finalizarPago(ResultadoPago.fallo);
-      return NavigationDecision.prevent;
+    } else if (_config.esUrlPendiente(url)) {
+      _controller.loadRequest(Uri.parse('about:blank'));
+      _procesarPendiente(url);
     }
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      return NavigationDecision.prevent;
-    }
-    return NavigationDecision.navigate;
   }
 
   // ─── Procesadores de resultado ─────────────────────────────────────────────
 
-  void _procesarExitoMP(String url) {
+  /// Pago exitoso. Confirma en el back y hace pop con [ResultadoPago.procesando].
+  ///
+  /// - Si [PasarelaWebViewConfig.confirmacionAsincrona] == true (Wompi):
+  ///   espera la respuesta del back antes de hacer pop (confirmación principal).
+  /// - Si false (MP, Bold): fire-and-forget; el webhook es la fuente de verdad.
+  Future<void> _procesarExito(String url) async {
     if (_procesando) return;
     _procesando = true;
-    final paymentId = _extraerQueryParam(url, 'payment_id') ??
-        _extraerQueryParam(url, 'collection_id');
-    if (paymentId != null) {
-      PasarelaService.confirmarPagoMP(paymentId).catchError(
-        (e) => debugPrint('WebView: error confirmando pago MP → $e'),
+
+    final txId = _config.extraerTransactionId(url);
+
+    if (_config.confirmacionAsincrona) {
+      try {
+        await _config.confirmarPago(txId);
+      } catch (e) {
+        debugPrint('[WebView:${widget.tipoPasarela.name}] Error confirmando pago → $e '
+            '(el webhook lo resuelve igualmente)');
+      }
+    } else {
+      // Fire-and-forget intencional: el back es idempotente, el webhook es el fallback
+      _config.confirmarPago(txId).catchError(
+        (Object e) => debugPrint('[WebView:${widget.tipoPasarela.name}] '
+            'Fire-and-forget → $e (el webhook confirma igualmente)'),
       );
     }
-    if (mounted) Navigator.of(context).pop(ResultadoPago.exito);
+
+    if (mounted) Navigator.of(context).pop(ResultadoPago.procesando);
   }
 
-  void _procesarPendienteMP(String url) {
+  /// Pago pendiente (ej. MP con medios de pago en efectivo).
+  /// Intenta confirmar pero hace pop con [ResultadoPago.pendiente] sin esperar.
+  Future<void> _procesarPendiente(String url) async {
     if (_procesando) return;
     _procesando = true;
-    final paymentId = _extraerQueryParam(url, 'payment_id') ??
-        _extraerQueryParam(url, 'collection_id');
-    if (paymentId != null) {
-      PasarelaService.confirmarPagoMP(paymentId).catchError(
-        (e) => debugPrint('WebView: error confirmando pendiente MP → $e'),
-      );
-    }
+
+    final txId = _config.extraerTransactionId(url);
+    _config.confirmarPago(txId).catchError(
+      (Object e) => debugPrint('[WebView:${widget.tipoPasarela.name}] '
+          'Confirmación pendiente fallida → $e'),
+    );
+
     if (mounted) Navigator.of(context).pop(ResultadoPago.pendiente);
   }
 
+  /// Pago fallido o cancelado por la pasarela.
   void _finalizarPago(ResultadoPago resultado) {
     if (_procesando) return;
     _procesando = true;
     if (mounted) Navigator.of(context).pop(resultado);
   }
 
-  // ─── Helpers ───────────────────────────────────────────────────────────────
-
-  bool _esUrlExito(String url) =>
-      url.contains('/pago/exito') || url.contains('status=approved') ||
-      url.contains('resultado=exito');
-
-  bool _esUrlFallo(String url) =>
-      url.contains('/pago/fallo') || url.contains('status=declined') ||
-      url.contains('status=error') || url.contains('resultado=fallo');
-
-  String? _extraerQueryParam(String url, String param) {
-    try {
-      return Uri.parse(url).queryParameters[param];
-    } catch (_) {
-      return null;
-    }
-  }
+  // ─── Diálogo de salida ─────────────────────────────────────────────────────
 
   Future<void> _onWillPop() async {
     final salir = await showDialog<bool>(
@@ -225,7 +229,8 @@ class _PasarelaWebViewScreenState extends State<PasarelaWebViewScreen> {
             children: [
               Text(
                 'Pago seguro · ${widget.tipoPasarela.nombreLegible}',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               Text(
                 widget.tituloCobro,

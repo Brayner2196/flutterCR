@@ -1,15 +1,14 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../models/configuracion_plan_pago_model.dart';
 import '../models/cuota_plan_model.dart';
 import '../models/plan_pago_model.dart';
 import '../services/plan_pago_service.dart';
 
 /// Provider compartido para admin y residente en el módulo de Plan de Pago.
-class PlanPagoProvider extends ChangeNotifier {
-  // ── Estado ───────────────────────────────────────────────────────
-
-  bool _loading = false;
-  String? _error;
+class PlanPagoProvider extends BaseProvider {
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Estado privado
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   List<PlanPagoModel> _planes = [];
   PlanPagoModel? _planDetalle;
@@ -17,73 +16,74 @@ class PlanPagoProvider extends ChangeNotifier {
   ConfiguracionPlanPagoModel _config =
       ConfiguracionPlanPagoModel.defaultConfig;
 
-  // ── Getters ──────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Getters públicos (loading y error heredados de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  bool get loading => _loading;
-  String? get error => _error;
   List<PlanPagoModel> get planes => _planes;
   PlanPagoModel? get planDetalle => _planDetalle;
   PlanPagoModel? get planActivo => _planActivo;
   ConfiguracionPlanPagoModel get config => _config;
 
-  // ── Admin ─────────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Cargar datos (usando ejecutar() de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Future<void> cargarConfigAdmin() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-    try {
-      _config = await PlanPagoService.obtenerConfigAdmin();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
+    _config = await ejecutar(() => PlanPagoService.obtenerConfigAdmin()) ?? _config;
   }
 
-  Future<void> guardarConfig(ConfiguracionPlanPagoModel config) async {
-    _loading = true;
-    notifyListeners();
+  Future<void> cargarConfigResidente() async {
     try {
-      _config = await PlanPagoService.guardarConfig(config);
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
+      _config = await ejecutar(() => PlanPagoService.obtenerConfigResidente()) ?? _config;
+    } catch (_) {}
   }
 
   Future<void> cargarPlanesAdmin({String? estado}) async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-    try {
-      _planes = await PlanPagoService.listarAdmin(estado: estado);
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
+    _planes = await ejecutar(
+      () => PlanPagoService.listarAdmin(estado: estado),
+    ) ?? [];
+  }
+
+  Future<void> cargarMisPlanes() async {
+    _planes = await ejecutar(() => PlanPagoService.misPlanes()) ?? [];
   }
 
   Future<void> cargarDetalle(int id) async {
-    _loading = true;
-    notifyListeners();
+    _planDetalle = await ejecutar(() => PlanPagoService.detalle(id));
+  }
+
+  /// miPlanActivo() retorna Future<PlanPagoModel?> — llamada directa sin ejecutar()
+  /// para evitar inferencia de T nullable. Fallo silencioso: sin plan activo es normal.
+  Future<void> cargarPlanActivo() async {
+    setLoading(true);
     try {
-      _planDetalle = await PlanPagoService.detalle(id);
+      _planActivo = await PlanPagoService.miPlanActivo();
+    } catch (_) {
+      _planActivo = null;
     } finally {
-      _loading = false;
-      notifyListeners();
+      setLoading(false);
     }
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Acciones (usando helpers de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Future<void> guardarConfig(ConfiguracionPlanPagoModel config) async {
+    _config = await ejecutar(() => PlanPagoService.guardarConfig(config)) ?? _config;
   }
 
   Future<PlanPagoModel> decidir(
       int id, bool aprobar, {String? motivo, String? nota}) async {
-    final result =
-        await PlanPagoService.decidir(id, aprobar, motivoRechazo: motivo, nota: nota);
-    // Actualizar en la lista local
-    _planes = _planes.map((p) => p.id == id ? result : p).toList();
+    final result = await ejecutar(() => PlanPagoService.decidir(
+      id,
+      aprobar,
+      motivoRechazo: motivo,
+      nota: nota,
+    ));
+    if (result == null) throw Exception(error ?? 'Error al decidir plan');
+    reemplazar(_planes, result, (p) => p.id);
     _planDetalle = result;
     notifyListeners();
     return result;
@@ -91,48 +91,25 @@ class PlanPagoProvider extends ChangeNotifier {
 
   Future<CuotaPlanModel> marcarCuotaPagada(int planId, int cuotaId,
       {String? nota}) async {
-    final cuota = await PlanPagoService.marcarCuotaPagada(planId, cuotaId, nota: nota);
-    // Refrescar detalle
+    final cuota = await ejecutar(() => PlanPagoService.marcarCuotaPagada(
+      planId,
+      cuotaId,
+      nota: nota,
+    ));
+    if (cuota == null) throw Exception(error ?? 'Error al marcar cuota pagada');
     await cargarDetalle(planId);
     return cuota;
   }
 
   Future<PlanPagoModel> cancelar(int id, {String? nota}) async {
-    final result = await PlanPagoService.cancelarPlan(id, nota: nota);
-    _planes = _planes.map((p) => p.id == id ? result : p).toList();
+    final result = await ejecutar(
+      () => PlanPagoService.cancelarPlan(id, nota: nota),
+    );
+    if (result == null) throw Exception(error ?? 'Error al cancelar plan');
+    reemplazar(_planes, result, (p) => p.id);
     _planDetalle = result;
     notifyListeners();
     return result;
-  }
-
-  // ── Residente ─────────────────────────────────────────────────────
-
-  Future<void> cargarConfigResidente() async {
-    try {
-      _config = await PlanPagoService.obtenerConfigResidente();
-      notifyListeners();
-    } catch (_) {}
-  }
-
-  Future<void> cargarMisPlanes() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-    try {
-      _planes = await PlanPagoService.misPlanes();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> cargarPlanActivo() async {
-    try {
-      _planActivo = await PlanPagoService.miPlanActivo();
-      notifyListeners();
-    } catch (_) {}
   }
 
   Future<PlanPagoModel> solicitar({
@@ -140,14 +117,14 @@ class PlanPagoProvider extends ChangeNotifier {
     required int numeroCuotas,
     String? observaciones,
   }) async {
-    final plan = await PlanPagoService.solicitar(
+    final plan = await ejecutar(() => PlanPagoService.solicitar(
       cobrosIds: cobrosIds,
       numeroCuotas: numeroCuotas,
       observaciones: observaciones,
-    );
-    _planes.insert(0, plan);
+    ));
+    if (plan == null) throw Exception(error ?? 'Error al solicitar plan');
+    agregarAlInicio(_planes, plan);
     if (plan.esActivo) _planActivo = plan;
-    notifyListeners();
     return plan;
   }
 }

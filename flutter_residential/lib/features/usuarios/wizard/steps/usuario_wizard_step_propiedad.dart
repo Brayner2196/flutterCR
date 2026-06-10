@@ -146,7 +146,7 @@ class UsuarioWizardStepPropiedadState
     final theme = Theme.of(context);
     final provider = context.watch<PropiedadProvider>();
     final tiposArbol = provider.tiposArbol;
-    final cargando = provider.cargando;
+    final cargando = provider.loading;
     final esInquilino = widget.rol == 'INQUILINO';
 
     final bannerColor = esInquilino ? Colors.orange : Colors.teal;

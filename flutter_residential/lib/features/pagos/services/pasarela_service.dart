@@ -50,21 +50,27 @@ class PasarelaService {
 
   /// Confirma un pago de MercadoPago desde la app (interceptado en el WebView).
   /// Requiere auth para que el backend pueda resolver la config del tenant desde el JWT.
+  /// suppressSessionExpiry: true → si el JWT expiró durante el checkout no cierra la sesión;
+  /// el webhook ya habrá confirmado el pago de todas formas.
   static Future<void> confirmarPagoMP(String paymentId) async {
     await ApiClient.post(
       ApiConstants.mpConfirmarPago(paymentId),
       {},
       requiresAuth: true,
+      suppressSessionExpiry: true,
     );
   }
 
   /// Confirma un pago de Wompi desde la app consultando la transacción en la API de Wompi.
   /// Se llama cuando el WebView intercepta la URL de éxito antes de que llegue el webhook.
+  /// suppressSessionExpiry: true → si el JWT expiró durante el checkout no cierra la sesión;
+  /// el webhook ya habrá confirmado el pago de todas formas.
   static Future<void> confirmarPagoWompi(String transactionId) async {
     await ApiClient.post(
       ApiConstants.wompiConfirmarPago(transactionId),
       {},
       requiresAuth: true,
+      suppressSessionExpiry: true,
     );
   }
 }

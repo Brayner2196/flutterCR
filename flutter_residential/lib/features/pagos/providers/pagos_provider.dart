@@ -1,81 +1,70 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../models/pago_model.dart';
 import '../services/pago_service.dart';
 
-class PagosProvider extends ChangeNotifier {
+class PagosProvider extends BaseProvider {
   List<PagoModel> _pagos = [];
-  bool _loading = false;
-  String? _error;
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Getters públicos (loading y error heredados de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   List<PagoModel> get pagos => _pagos;
-  bool get loading => _loading;
-  String? get error => _error;
 
-  List<PagoModel> get pendientes =>
-      _pagos.where((p) => p.esPendiente).toList();
+  List<PagoModel> get pendientes => _pagos.where((p) => p.esPendiente).toList();
   List<PagoModel> get verificados =>
       _pagos.where((p) => p.esVerificado).toList();
-  List<PagoModel> get rechazados =>
-      _pagos.where((p) => p.esRechazado).toList();
+  List<PagoModel> get rechazados => _pagos.where((p) => p.esRechazado).toList();
 
-  Future<void> cargarMisPagos() async {
-    _setLoading(true);
-    try {
-      _pagos = await PagoService.getMisPagos();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Cargar datos (usando ejecutar() de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Future<void> cargarMisPagos({int? propiedadId}) async {
+    _pagos = await ejecutar(() => PagoService.getMisPagos(propiedadId: propiedadId)) ?? [];
   }
 
-  Future<void> cargarPagosAdmin(
-      {String estado = 'PENDIENTE_VERIFICACION'}) async {
-    _setLoading(true);
-    try {
-      _pagos = await PagoService.listarPagosAdmin(estado: estado);
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
-    }
+  Future<void> cargarPagosAdmin({
+    String estado = 'PENDIENTE_VERIFICACION',
+  }) async {
+    _pagos = await ejecutar(() => PagoService.listarPagosAdmin(estado: estado)) ?? [];
   }
 
   /// Carga los tres estados a la vez para que los tabs muestren datos
   Future<void> cargarTodosPagosAdmin() async {
-    _setLoading(true);
-    try {
-      final results = await Future.wait([
+    final results = await ejecutar(
+      () => Future.wait([
         PagoService.listarPagosAdmin(estado: 'PENDIENTE_VERIFICACION'),
         PagoService.listarPagosAdmin(estado: 'VERIFICADO'),
         PagoService.listarPagosAdmin(estado: 'RECHAZADO'),
-      ]);
+      ]),
+    );
+    if (results != null) {
       _pagos = [...results[0], ...results[1], ...results[2]];
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _setLoading(false);
+      notifyListeners();
     }
   }
 
-  Future<PagoModel> registrar(Map<String, dynamic> data) async {
-    final nuevo = await PagoService.registrarPago(data);
-    _pagos.add(nuevo);
-    notifyListeners();
-    return nuevo;
-  }
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Acciones (usando helpers de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Future<void> verificar(int id, {String? notas}) async {
-    final actualizado = await PagoService.verificarPago(id, notas: notas);
-    _reemplazar(actualizado);
+    final actualizado = await ejecutar(
+      () => PagoService.verificarPago(id, notas: notas),
+    );
+    if (actualizado != null) _actualizarOAgregar(actualizado);
   }
 
   Future<void> rechazar(int id, String motivo) async {
-    final actualizado = await PagoService.rechazarPago(id, motivo);
-    _reemplazar(actualizado);
+    final actualizado = await ejecutar(
+      () => PagoService.rechazarPago(id, motivo),
+    );
+    if (actualizado != null) _actualizarOAgregar(actualizado);
   }
 
-  void _reemplazar(PagoModel actualizado) {
+  /// Helper privado: reemplaza item existente o agrega si no existe
+  void _actualizarOAgregar(PagoModel actualizado) {
     final idx = _pagos.indexWhere((p) => p.id == actualizado.id);
     if (idx != -1) {
       _pagos[idx] = actualizado;
@@ -85,16 +74,13 @@ class PagosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void limpiar() {
-    _pagos = [];
-    _error = null;
-    _loading = false;
-    notifyListeners();
-  }
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Limpiar estado
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  void _setLoading(bool v) {
-    _loading = v;
-    _error = v ? null : _error;
+  void limpiarDatos() {
+    _pagos.clear();
+    limpiarError();
     notifyListeners();
   }
 }

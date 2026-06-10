@@ -67,15 +67,21 @@ class CobroService {
 
   // ─── Residente ─────────────────────────────────────
 
-  static Future<EstadoCuentaModel> getEstadoCuenta() async {
-    final res = await ApiClient.get(ApiConstants.estadoCuenta);
+  static Future<EstadoCuentaModel> getEstadoCuenta({int? propiedadId}) async {
+    String url = ApiConstants.estadoCuenta;
+    if (propiedadId != null) url += '?propiedadId=$propiedadId';
+    final res = await ApiClient.get(url);
     return BaseApiService.parseSingle(res, EstadoCuentaModel.fromJson,
         fallbackMsg: 'Error al obtener estado de cuenta');
   }
 
-  static Future<List<CobroModel>> getMisCobros({String? estado}) async {
-    String url = ApiConstants.misCobros;
-    if (estado != null) url += '?estado=$estado';
+  static Future<List<CobroModel>> getMisCobros({String? estado, int? propiedadId}) async {
+    final params = <String>[];
+    if (estado != null) params.add('estado=$estado');
+    if (propiedadId != null) params.add('propiedadId=$propiedadId');
+    final url = params.isEmpty
+        ? ApiConstants.misCobros
+        : '${ApiConstants.misCobros}?${params.join('&')}';
     final res = await ApiClient.get(url);
     return BaseApiService.parseList(res, CobroModel.fromJson, 'Error al obtener cobros');
   }
@@ -92,8 +98,10 @@ class CobroService {
         res, MovimientoCobroModel.fromJson, 'Error al obtener movimientos del cobro');
   }
 
-  static Future<List<CobroModel>> getHistorial() async {
-    final res = await ApiClient.get(ApiConstants.historialCobros);
+  static Future<List<CobroModel>> getHistorial({int? propiedadId}) async {
+    String url = ApiConstants.historialCobros;
+    if (propiedadId != null) url += '?propiedadId=$propiedadId';
+    final res = await ApiClient.get(url);
     return BaseApiService.parseList(res, CobroModel.fromJson, 'Error al obtener historial');
   }
 
@@ -101,8 +109,11 @@ class CobroService {
   static Future<PaginatedCobroResponse> getHistorialPaginado({
     int page = 0,
     int size = 5,
+    int? propiedadId,
   }) async {
-    final url = '${ApiConstants.historialCobrosPageable}?page=$page&size=$size';
+    final params = ['page=$page', 'size=$size'];
+    if (propiedadId != null) params.add('propiedadId=$propiedadId');
+    final url = '${ApiConstants.historialCobrosPageable}?${params.join('&')}';
     final res = await ApiClient.get(url);
     return BaseApiService.parseSingle(
       res,

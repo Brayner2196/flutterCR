@@ -33,7 +33,7 @@
       "request": "launch",
       "type": "dart",
       "args": [
-        "--dart-define=API_BASE_URL=https://backendcr-production-991c.up.railway.app",
+        "--dart-define=API_BASE_URL=https://cr-dev.up.railway.app",
         "--dart-define=APP_ENV=prod"
       ]
     }

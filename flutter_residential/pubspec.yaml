@@ -1,7 +1,7 @@
 name: flutter_residential
 description: "A new Flutter project."
 
-version: 1.0.0+1
+version: 1.1.0+15
 
 environment:
   sdk: ^3.9.2
@@ -50,6 +50,8 @@ flutter:
     - assets/icons/logo_wompi.png
     - assets/icons/icono_wompi_black.png
     - assets/icons/logo_bold.png
+    - assets/icons/logocr.png
+    - assets/images/
 
   fonts:
     - family: GoogleSans

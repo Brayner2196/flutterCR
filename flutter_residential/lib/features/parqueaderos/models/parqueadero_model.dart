@@ -1,0 +1,82 @@
+/// Tipos de parqueadero: privado (pertenece a una propiedad) o común (conteo en configuración).
+enum TipoParqueadero { COMUN, PRIVADO }
+
+/// Modelo de un parqueadero PRIVADO:
+/// INDEPENDIENTE → es una propiedad facturable propia (propiedadParqueaderoId apunta a ella).
+/// ACCESORIO     → complemento de un apartamento (propiedadId apunta al apartamento).
+enum ModeloParqueaderoPrivado { INDEPENDIENTE, ACCESORIO }
+
+class ParqueaderoModel {
+  final int id;
+  final String identificador;
+  final TipoParqueadero tipo;
+
+  /// Solo aplica a PRIVADO. Determina cómo se gestiona este parqueadero.
+  final ModeloParqueaderoPrivado? modeloPropiedad;
+
+  /// ACCESORIO: ID del apartamento dueño.
+  /// INDEPENDIENTE: null o ID de apartamento relacionado (opcional).
+  final int? propiedadId;
+  final String? propiedadIdentificador;
+
+  /// INDEPENDIENTE únicamente: ID de la Propiedad de tipo parqueadero en el árbol.
+  final int? propiedadParqueaderoId;
+
+  final int? vehiculoId;
+  final String? vehiculoPlaca;
+  final String? vehiculoTipo;
+
+  const ParqueaderoModel({
+    required this.id,
+    required this.identificador,
+    required this.tipo,
+    this.modeloPropiedad,
+    this.propiedadId,
+    this.propiedadIdentificador,
+    this.propiedadParqueaderoId,
+    this.vehiculoId,
+    this.vehiculoPlaca,
+    this.vehiculoTipo,
+  });
+
+  bool get tienePropiedad    => propiedadId != null;
+  bool get tieneVehiculo     => vehiculoId != null;
+  bool get esIndependiente   => modeloPropiedad == ModeloParqueaderoPrivado.INDEPENDIENTE;
+  bool get esAccesorio       => modeloPropiedad == ModeloParqueaderoPrivado.ACCESORIO;
+
+  factory ParqueaderoModel.fromJson(Map<String, dynamic> json) {
+    return ParqueaderoModel(
+      id:                     json['id'] as int,
+      identificador:          json['identificador'] as String,
+      tipo:                   TipoParqueadero.values.firstWhere(
+                                (e) => e.name == json['tipo'],
+                                orElse: () => TipoParqueadero.PRIVADO,
+                              ),
+      modeloPropiedad:        json['modeloPropiedad'] != null
+                                ? ModeloParqueaderoPrivado.values.firstWhere(
+                                    (e) => e.name == json['modeloPropiedad'],
+                                    orElse: () => ModeloParqueaderoPrivado.ACCESORIO,
+                                  )
+                                : null,
+      propiedadId:            json['propiedadId'] as int?,
+      propiedadIdentificador: json['propiedadIdentificador'] as String?,
+      propiedadParqueaderoId: json['propiedadParqueaderoId'] as int?,
+      vehiculoId:             json['vehiculoId'] as int?,
+      vehiculoPlaca:          json['vehiculoPlaca'] as String?,
+      vehiculoTipo:           json['vehiculoTipo'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id':                      id,
+    'identificador':           identificador,
+    'tipo':                    tipo.name,
+    'modeloPropiedad':         modeloPropiedad?.name,
+    'propiedadId':             propiedadId,
+    'propiedadIdentificador':  propiedadIdentificador,
+    'propiedadParqueaderoId':  propiedadParqueaderoId,
+    'vehiculoId':              vehiculoId,
+    'vehiculoPlaca':           vehiculoPlaca,
+    'vehiculoTipo':            vehiculoTipo,
+  };
+}

@@ -6,6 +6,7 @@ class LogoutDialog {
     BuildContext context,
     AuthProvider auth,
   ) async {
+    final cs = Theme.of(context).colorScheme;
     final confirmado = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -20,7 +21,7 @@ class LogoutDialog {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Salir'),
+            child: Text('Salir', style: TextStyle(color: cs.onPrimaryContainer)),
           ),
         ],
       ),

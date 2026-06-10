@@ -27,10 +27,12 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
       _zonas = await ReservaService.listarZonasAdmin();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString().replaceFirst('Exception: ', '')),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     } finally {
       setState(() => _cargando = false);
     }
@@ -39,9 +41,7 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
   void _abrirFormulario({ZonaComunModel? zona}) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => AdminZonaFormScreen(zona: zona),
-      ),
+      MaterialPageRoute(builder: (_) => AdminZonaFormScreen(zona: zona)),
     ).then((guardado) {
       if (guardado == true) _cargar();
     });
@@ -59,15 +59,18 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
             controller: ctrl,
             decoration: InputDecoration(
               labelText: 'Motivo de suspensión',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onChanged: (v) => motivo = v,
             maxLines: 2,
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar')),
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
               style: FilledButton.styleFrom(backgroundColor: Colors.orange),
@@ -83,10 +86,12 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
       await _cargar();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString().replaceFirst('Exception: ', '')),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -96,10 +101,12 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
       await _cargar();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString().replaceFirst('Exception: ', '')),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -109,7 +116,8 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (_) => _ExcepcionesSheet(zona: zona),
     );
   }
@@ -124,33 +132,37 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _cargar),
+          _zonas.isEmpty
+              ? const SizedBox()
+              : IconButton(icon: const Icon(Icons.refresh), onPressed: _cargar),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _abrirFormulario(),
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva zona'),
-      ),
+      floatingActionButton: _zonas.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _abrirFormulario(),
+              icon: const Icon(Icons.add),
+              label: const Text('Nueva zona'),
+            ),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
           : _zonas.isEmpty
-              ? _EmptyView(onCrear: () => _abrirFormulario())
-              : RefreshIndicator(
-                  onRefresh: _cargar,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                    itemCount: _zonas.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) => _ZonaTile(
-                      zona: _zonas[i],
-                      onEditar: () => _abrirFormulario(zona: _zonas[i]),
-                      onSuspender: () => _suspender(_zonas[i]),
-                      onReactivar: () => _reactivar(_zonas[i]),
-                      onExcepciones: () => _verExcepciones(_zonas[i]),
-                    ),
-                  ),
+          ? _EmptyView(onCrear: () => _abrirFormulario())
+          : RefreshIndicator(
+              onRefresh: _cargar,
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                itemCount: _zonas.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (_, i) => _ZonaTile(
+                  zona: _zonas[i],
+                  onEditar: () => _abrirFormulario(zona: _zonas[i]),
+                  onSuspender: () => _suspender(_zonas[i]),
+                  onReactivar: () => _reactivar(_zonas[i]),
+                  onExcepciones: () => _verExcepciones(_zonas[i]),
                 ),
+              ),
+            ),
     );
   }
 }
@@ -204,8 +216,10 @@ class _ZonaTile extends StatelessWidget {
       child: Column(
         children: [
           ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 4,
+            ),
             leading: Container(
               width: 44,
               height: 44,
@@ -218,14 +232,19 @@ class _ZonaTile extends StatelessWidget {
             title: Row(
               children: [
                 Flexible(
-                  child: Text(zona.nombre,
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600)),
+                  child: Text(
+                    zona.nombre,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: estadoColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
@@ -235,11 +254,14 @@ class _ZonaTile extends StatelessWidget {
                     children: [
                       Icon(estadoIcon, size: 11, color: estadoColor),
                       const SizedBox(width: 3),
-                      Text(estadoLabel,
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: estadoColor)),
+                      Text(
+                        estadoLabel,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: estadoColor,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -249,9 +271,12 @@ class _ZonaTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (zona.descripcion != null)
-                  Text(zona.descripcion!,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(
+                    zona.descripcion!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 8,
@@ -259,14 +284,20 @@ class _ZonaTile extends StatelessWidget {
                   children: [
                     if (zona.capacidad > 0)
                       _Chip(Icons.group_outlined, '${zona.capacidad} personas'),
-                    if (zona.horaAperturaCorta != null && zona.horaCierreCorta != null)
-                      _Chip(Icons.schedule_outlined,
-                          '${zona.horaAperturaCorta} - ${zona.horaCierreCorta}'),
+                    if (zona.horaAperturaCorta != null &&
+                        zona.horaCierreCorta != null)
+                      _Chip(
+                        Icons.schedule_outlined,
+                        '${zona.horaAperturaCorta} - ${zona.horaCierreCorta}',
+                      ),
                     if (zona.requiereAprobacion)
                       _Chip(Icons.verified_outlined, 'Aprobación requerida'),
                     if (zona.motivoSuspension != null)
-                      _Chip(Icons.warning_amber_outlined,
-                          zona.motivoSuspension!, color: Colors.orange),
+                      _Chip(
+                        Icons.warning_amber_outlined,
+                        zona.motivoSuspension!,
+                        color: Colors.orange,
+                      ),
                   ],
                 ),
               ],
@@ -281,40 +312,60 @@ class _ZonaTile extends StatelessWidget {
               },
               itemBuilder: (_) => [
                 const PopupMenuItem(
-                    value: 'editar',
-                    child: Row(children: [
+                  value: 'editar',
+                  child: Row(
+                    children: [
                       Icon(Icons.edit_outlined, size: 16),
                       SizedBox(width: 8),
-                      Text('Editar zona')
-                    ])),
+                      Text('Editar zona'),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
-                    value: 'excepciones',
-                    child: Row(children: [
+                  value: 'excepciones',
+                  child: Row(
+                    children: [
                       Icon(Icons.event_busy_outlined, size: 16),
                       SizedBox(width: 8),
-                      Text('Excepciones de horario')
-                    ])),
+                      Text('Excepciones de horario'),
+                    ],
+                  ),
+                ),
                 if (!zona.suspendida && zona.activa)
                   const PopupMenuItem(
                     value: 'suspender',
-                    child: Row(children: [
-                      Icon(Icons.pause_circle_outline,
-                          size: 16, color: Colors.orange),
-                      SizedBox(width: 8),
-                      Text('Suspender',
-                          style: TextStyle(color: Colors.orange)),
-                    ]),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.pause_circle_outline,
+                          size: 16,
+                          color: Colors.orange,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Suspender',
+                          style: TextStyle(color: Colors.orange),
+                        ),
+                      ],
+                    ),
                   ),
                 if (zona.suspendida)
                   PopupMenuItem(
                     value: 'reactivar',
-                    child: Row(children: [
-                      Icon(Icons.play_circle_outline,
-                          size: 16, color: AppColors.ok),
-                      const SizedBox(width: 8),
-                      Text('Reactivar',
-                          style: TextStyle(color: AppColors.ok)),
-                    ]),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.play_circle_outline,
+                          size: 16,
+                          color: AppColors.ok,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Reactivar',
+                          style: TextStyle(color: AppColors.ok),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
@@ -402,8 +453,14 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
               children: [
                 SegmentedButton<String>(
                   segments: const [
-                    ButtonSegment(value: 'CIERRE_ESPECIAL', label: Text('Cierre')),
-                    ButtonSegment(value: 'APERTURA_ESPECIAL', label: Text('Apertura especial')),
+                    ButtonSegment(
+                      value: 'CIERRE_ESPECIAL',
+                      label: Text('Cierre'),
+                    ),
+                    ButtonSegment(
+                      value: 'APERTURA_ESPECIAL',
+                      label: Text('Apertura especial'),
+                    ),
                   ],
                   selected: {tipoLocal},
                   onSelectionChanged: (s) => setDlg(() => tipoLocal = s.first),
@@ -421,14 +478,16 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
             ),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancelar')),
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
               FilledButton(
-                  onPressed: () {
-                    tipo = tipoLocal;
-                    Navigator.pop(context, true);
-                  },
-                  child: const Text('Agregar')),
+                onPressed: () {
+                  tipo = tipoLocal;
+                  Navigator.pop(context, true);
+                },
+                child: const Text('Agregar'),
+              ),
             ],
           ),
         );
@@ -438,17 +497,20 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
     if (ok != true || !mounted) return;
     try {
       await ReservaService.agregarExcepcion(widget.zona.id, {
-        'fecha': '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}',
+        'fecha':
+            '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}',
         'tipo': tipo,
         if (motivo != null && motivo!.isNotEmpty) 'motivo': motivo,
       });
       await _cargar();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString().replaceFirst('Exception: ', '')),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -458,10 +520,12 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
       await _cargar();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString().replaceFirst('Exception: ', '')),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -478,10 +542,12 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
         children: [
           Center(
             child: Container(
-              width: 36, height: 4,
+              width: 36,
+              height: 4,
               decoration: BoxDecoration(
-                  color: cs.outlineVariant,
-                  borderRadius: BorderRadius.circular(2)),
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -491,12 +557,18 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Excepciones de horario',
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold)),
-                    Text(widget.zona.nombre,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: cs.onSurfaceVariant)),
+                    Text(
+                      'Excepciones de horario',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      widget.zona.nombre,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -514,9 +586,12 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text('Sin excepciones registradas',
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: cs.onSurfaceVariant)),
+                child: Text(
+                  'Sin excepciones registradas',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
               ),
             )
           else
@@ -540,14 +615,21 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
                           : Icons.event_available_outlined,
                       color: exc.esCierre ? Colors.red : Colors.green,
                     ),
-                    title: Text(exc.fecha,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    title: Text(
+                      exc.fecha,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     subtitle: Text(
-                      exc.esCierre ? 'Cierre especial${exc.motivo != null ? ' · ${exc.motivo}' : ''}' : 'Apertura especial',
+                      exc.esCierre
+                          ? 'Cierre especial${exc.motivo != null ? ' · ${exc.motivo}' : ''}'
+                          : 'Apertura especial',
                     ),
                     trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline,
-                          size: 18, color: Colors.red),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: Colors.red,
+                      ),
                       onPressed: () => _eliminar(exc),
                     ),
                   );
@@ -577,12 +659,16 @@ class _EmptyView extends StatelessWidget {
           children: [
             Icon(Icons.pool_outlined, size: 56, color: cs.outlineVariant),
             const SizedBox(height: 16),
-            const Text('Sin zonas comunes',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+            const Text(
+              'Sin zonas comunes',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
             const SizedBox(height: 6),
-            Text('Crea la primera zona para que los residentes puedan hacer reservas',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
+            Text(
+              'Crea la primera zona para que los residentes puedan hacer reservas',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+            ),
             const SizedBox(height: 20),
             FilledButton.icon(
               onPressed: onCrear,

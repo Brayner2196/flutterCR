@@ -22,6 +22,9 @@ import 'features/marketplace/providers/publicacion_provider.dart';
 import 'features/inquilinos/providers/inquilino_permisos_provider.dart';
 import 'features/plan_pago/providers/plan_pago_provider.dart';
 import 'features/presupuesto/providers/presupuesto_provider.dart';
+import 'features/parqueaderos/providers/parqueadero_provider.dart';
+import 'features/parqueaderos/providers/vehiculo_provider.dart';
+import 'features/consejo/providers/consejo_provider.dart';
 import 'core/config/app_env.dart';
 import 'core/network/api_client.dart';
 import 'core/providers/connectivity_provider.dart';
@@ -93,12 +96,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => InquilinoPermisosProvider()),
         ChangeNotifierProvider(create: (_) => PlanPagoProvider()),
         ChangeNotifierProvider(create: (_) => PresupuestoProvider()),
+        ChangeNotifierProvider(create: (_) => ParqueaderoProvider()),
+        ChangeNotifierProvider(create: (_) => VehiculoProvider()),
+        ChangeNotifierProvider(create: (_) => ConsejoProvider()),
       ],
       child: ToastificationWrapper(
         child: Consumer<AppProvider>(
           builder: (_, AppProvider appProvider, __) {
             return MaterialApp(
-              title: 'Conjunto Residencial',
+              title: 'My CR app',
               debugShowCheckedModeBanner: false,
               navigatorKey: navigatorKey,
               themeMode: appProvider.themeMode,

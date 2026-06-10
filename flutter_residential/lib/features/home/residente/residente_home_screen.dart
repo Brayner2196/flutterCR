@@ -3,12 +3,17 @@ import 'package:flutter_residential/features/home/residente/app_bar_residente.da
 import 'package:provider/provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../propiedades/providers/propiedad_provider.dart';
-import '../../propiedades/screens/residente/mi_propiedad_screen.dart';
 import '../../pagos/screens/residente/estado_cuenta_screen.dart';
 import '../../inquilinos/screens/mis_inquilinos_screen.dart';
 import '../../inquilinos/providers/inquilino_permisos_provider.dart';
+import '../../usuarios/models/usuario_propiedad_response.dart';
+import '../../usuarios/providers/residente_estadisticas_provider.dart';
+import '../../anuncios/providers/anuncio_provider.dart';
+import '../../pqr/providers/pqr_provider.dart';
+import '../../votaciones/providers/votacion_provider.dart';
 import 'residente_dashboard_screen.dart';
 import 'screens/perfil_residente_screen.dart';
+import '../../consejo/screens/consejo_dashboard_screen.dart';
 
 class ResidenteHomeScreen extends StatefulWidget {
   const ResidenteHomeScreen({super.key});
@@ -27,11 +32,10 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PropiedadProvider>().cargarMisPropiedades();
 
-      // Limpiar permisos anteriores (por si cambia el usuario logueado)
-      // y cargar los propios si es inquilino
+      // Limpiar permisos anteriores y cargar los propios si es inquilino
       final auth = context.read<AuthProvider>();
       final permisosProvider = context.read<InquilinoPermisosProvider>();
-      permisosProvider.limpiar();
+      permisosProvider.limpiarDatos();
       if (auth.isInquilino) {
         permisosProvider.cargar();
       }
@@ -39,6 +43,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
   }
 
   bool get _esPropietario => context.read<AuthProvider>().isPropietario;
+  bool get _esConsejero => context.read<AuthProvider>().esConsejero;
 
   /// El inquilino puede ver Finanzas solo si tiene el permiso ESTADO_CUENTA
   bool get _tieneFinanzas {
@@ -47,109 +52,125 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     return permisos.tienePermiso('ESTADO_CUENTA');
   }
 
+  /// Llamado desde el AppBar al cambiar de propiedad.
+  /// Recarga todos los providers que dependen de la propiedad activa.
+  void _onPropiedadCambiada(UsuarioPropiedadResponse propiedad) {
+    final auth = context.read<AuthProvider>();
+    final permisos = context.read<InquilinoPermisosProvider>();
+    final esPropietario = auth.isPropietario;
+    final esParqueadero = propiedad.esParqueadero;
+
+    // Estadísticas / estado de cuenta — filtradas por la propiedad seleccionada
+    if (esPropietario || permisos.tienePermiso('ESTADO_CUENTA')) {
+      context.read<ResidenteEstadisticasProvider>()
+          .cargar(propiedadId: propiedad.propiedadId);
+    }
+
+    // Anuncios (permitidos siempre para parqueaderos)
+    if (esPropietario || permisos.tienePermiso('ANUNCIOS')) {
+      context.read<AnuncioProvider>().cargarResidente();
+    }
+
+    // PQRs (permitidos para parqueaderos)
+    if (esPropietario || permisos.tienePermiso('PQRS')) {
+      context.read<PqrProvider>().cargarMisPqrs();
+    }
+
+    // Votaciones — bloqueadas para parqueaderos
+    if (!esParqueadero && (esPropietario || permisos.tienePermiso('VOTAR'))) {
+      context.read<VotacionProvider>().cargarResidente();
+    }
+
+    // Volver a la pestaña de inicio al cambiar propiedad
+    if (_tabActual != 0) setState(() => _tabActual = 0);
+  }
+
   void _onTabSelected(int index) {
-    // Mapear el índice de navegación considerando si Finanzas está o no
-    if (_tieneFinanzas && index == 1) {
-      // Finanzas → push
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const EstadoCuentaScreen()),
-      );
-      return;
-    }
-
-    // Si Finanzas está visible: los índices son 0=Inicio, 1=Finanzas(push), 2=Propiedad, 3=[Inquilinos|Perfil], 4=Perfil
-    // Si Finanzas NO está visible: los índices son 0=Inicio, 1=Propiedad, 2=Perfil
-    final stackIndex = _calcularStackIndex(index);
-    setState(() => _tabActual = stackIndex);
+    setState(() => _tabActual = index);
   }
 
-  int _calcularStackIndex(int navIndex) {
-    if (_tieneFinanzas) {
-      // nav: 0=Inicio, 1=Finanzas(push), 2=Propiedad, 3=[Inquilinos|Perfil], 4=Perfil
-      if (navIndex == 0) return 0;
-      if (navIndex >= 2) return navIndex - 1; // saltar el push de Finanzas
-      return 0; // no debería ocurrir (1 ya fue manejado arriba)
-    } else {
-      // nav: 0=Inicio, 1=Propiedad, 2=Perfil
-      return navIndex;
-    }
-  }
-
-  int get _navIndex {
-    if (_tieneFinanzas) {
-      if (_tabActual == 0) return 0;           // Inicio
-      if (_tabActual == 1) return 2;           // Propiedad
-      if (_tabActual == 2) return _esPropietario ? 3 : 3; // Inquilinos o Perfil
-      return 4;                                // Perfil (solo propietario)
-    } else {
-      // Sin Finanzas: stack y nav coinciden
-      return _tabActual;
-    }
-  }
-
+  /// El stack index coincide directamente con el nav index:
+  /// Propietario:                   [Inicio(0), Finanzas(1), Inquilinos(2), Perfil(3)]
+  /// Propietario + Consejero:       [Inicio(0), Finanzas(1), Inquilinos(2), Consejo(3), Perfil(4)]
+  /// Inquilino con finanzas:        [Inicio(0), Finanzas(1), Perfil(2)]
+  /// Inquilino con finanzas+Cns:    [Inicio(0), Finanzas(1), Consejo(2), Perfil(3)]
+  /// Inquilino sin finanzas:        [Inicio(0), Perfil(1)]
+  /// Inquilino sin finanzas+Cns:    [Inicio(0), Consejo(1), Perfil(2)]
   List<Widget> get _stackScreens {
     if (_esPropietario) {
       return [
         ResidenteDashboardScreen(onNavegar: _onTabSelected),
+        const EstadoCuentaScreen(),
         MisInquilinosScreen(
           onFabRegistrado: (accion) =>
               setState(() => _accionAgregarInquilino = accion),
         ),
+        if (_esConsejero) const ConsejoDashboardScreen(),
+        const PerfilResidenteScreen(),
+      ];
+    }
+    if (_tieneFinanzas) {
+      return [
+        ResidenteDashboardScreen(onNavegar: _onTabSelected),
+        const EstadoCuentaScreen(),
+        if (_esConsejero) const ConsejoDashboardScreen(),
         const PerfilResidenteScreen(),
       ];
     }
     return [
       ResidenteDashboardScreen(onNavegar: _onTabSelected),
+      if (_esConsejero) const ConsejoDashboardScreen(),
       const PerfilResidenteScreen(),
     ];
   }
 
   List<NavigationDestination> get _destinations {
-    final inicio = const NavigationDestination(
+    const inicio = NavigationDestination(
       icon: Icon(Icons.home_outlined),
       selectedIcon: Icon(Icons.home_rounded),
       label: 'Inicio',
     );
-    final finanzas = const NavigationDestination(
+    const finanzas = NavigationDestination(
       icon: Icon(Icons.account_balance_wallet_outlined),
       selectedIcon: Icon(Icons.account_balance_wallet_rounded),
       label: 'Finanzas',
     );
-    final inquilinos = const NavigationDestination(
+    const inquilinos = NavigationDestination(
       icon: Icon(Icons.people_outline),
       selectedIcon: Icon(Icons.people_rounded),
       label: 'Inquilinos',
     );
-    final perfil = const NavigationDestination(
+    const perfil = NavigationDestination(
       icon: Icon(Icons.person_outline_rounded),
       selectedIcon: Icon(Icons.person_rounded),
       label: 'Perfil',
     );
+    const consejo = NavigationDestination(
+      icon: Icon(Icons.gavel_outlined),
+      selectedIcon: Icon(Icons.gavel_rounded),
+      label: 'Consejo',
+    );
 
     if (_esPropietario) {
-      return [inicio, finanzas, inquilinos, perfil];
+      return [inicio, finanzas, inquilinos, if (_esConsejero) consejo, perfil];
     }
 
-    // Inquilino: Finanzas solo si tiene el permiso
     if (_tieneFinanzas) {
-      return [inicio, finanzas, perfil];
+      return [inicio, finanzas, if (_esConsejero) consejo, perfil];
     }
-    return [inicio, perfil];
+    return [inicio, if (_esConsejero) consejo, perfil];
   }
 
   @override
   Widget build(BuildContext context) {
-    // Escuchar cambios de rol y permisos
     context.watch<AuthProvider>();
     context.watch<InquilinoPermisosProvider>();
 
-    // FAB solo en el tab de Inquilinos (índice 2 del stack, solo propietario)
-    final mostrarFabInquilinos =
-        _esPropietario && _tabActual == 1;
+    // Inquilinos siempre en índice 2 para propietario (Finanzas ocupa el índice 1)
+    final mostrarFabInquilinos = _esPropietario && _tabActual == 2;
 
     return Scaffold(
-      appBar: AppBarResidente(),
+      appBar: AppBarResidente(onPropiedadCambiada: _onPropiedadCambiada),
       body: IndexedStack(
         index: _tabActual,
         children: _stackScreens,
@@ -162,7 +183,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
             )
           : null,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _navIndex,
+        selectedIndex: _tabActual,
         onDestinationSelected: _onTabSelected,
         destinations: _destinations,
       ),

@@ -203,7 +203,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
           // ── Lista de publicaciones ─────────────────────────
           Expanded(
-            child: prov.cargando
+            child: prov.loading
                 ? const Center(child: CircularProgressIndicator())
                 : prov.error != null
                     ? Center(
@@ -293,7 +293,7 @@ class _PublicacionCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: cs.outline.withOpacity(0.4)),
+            border: Border.all(color: cs.outline.withValues(alpha: 0.4)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(

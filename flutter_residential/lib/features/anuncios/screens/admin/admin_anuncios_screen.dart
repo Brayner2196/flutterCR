@@ -275,7 +275,7 @@ class _AnuncioAdminCard extends StatelessWidget {
           ],
         ),
       );
-      if (ok == true) await provider.eliminar(anuncio.id);
+      if (ok == true) await provider.eliminarAnuncio(anuncio.id);
     } else if (accion == 'EDITAR') {
       await Navigator.push(
         context,

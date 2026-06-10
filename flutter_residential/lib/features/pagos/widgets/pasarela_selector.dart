@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/pasarela_disponible_model.dart';
+import '../pasarelas/pasarela_factory.dart';
 import '../services/pasarela_service.dart';
 import '../screens/residente/pasarela_webview_screen.dart';
 
@@ -187,48 +188,18 @@ class _PasarelaCard extends StatelessWidget {
   }
 
   Widget _iconoPasarela(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago:
-        return Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: const Color(0xFF009EE3),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(Icons.payment, color: Colors.white),
-        );
-      case TipoPasarela.wompi:
-        return Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: const Color(0xFF00C896),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(Icons.credit_card, color: Colors.white),
-        );
-      case TipoPasarela.bold:
-        return Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(Icons.bolt, color: Colors.white),
-        );
-    }
+    final p = PasarelaFactory.obtener(tipo);
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: p.color,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(p.icono, color: Colors.white),
+    );
   }
 
-  String _subtitulo(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago:
-        return 'Tarjetas, PSE, efectivo';
-      case TipoPasarela.wompi:
-        return 'Tarjetas, Nequi, bancolombia';
-      case TipoPasarela.bold:
-        return 'Tarjetas débito y crédito';
-    }
-  }
+  String _subtitulo(TipoPasarela tipo) =>
+      PasarelaFactory.obtener(tipo).descripcion;
 }

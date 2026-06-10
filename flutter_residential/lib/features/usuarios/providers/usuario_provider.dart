@@ -1,94 +1,66 @@
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../models/usuario_response.dart';
 import '../services/usuario_service.dart';
 
-class UsuarioProvider extends ChangeNotifier {
+class UsuarioProvider extends BaseProvider {
   List<UsuarioResponse> _todos = [];
-  bool _loading = false;
-  String? _error;
 
   List<UsuarioResponse> get usuarios => _todos;
-
   List<UsuarioResponse> get activos =>
       _todos.where((u) => u.estado == 'ACTIVO').toList();
-
   List<UsuarioResponse> get pendientes =>
       _todos.where((u) => u.estado == 'PENDIENTE').toList();
-
   List<UsuarioResponse> get inactivos =>
       _todos.where((u) => u.estado == 'INACTIVO').toList();
-
   List<UsuarioResponse> get rechazados =>
       _todos.where((u) => u.estado == 'RECHAZADO').toList();
 
-  bool get loading => _loading;
-  String? get error => _error;
-
   Future<void> cargarTodos() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _todos = await UsuarioService.listarTodos();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-    } finally {
-      _loading = false;
-      notifyListeners();
+    final resultado = await ejecutar(() => UsuarioService.listarTodos());
+    if (resultado != null) {
+      _todos = resultado;
     }
   }
 
   Future<void> crear(Map<String, dynamic> data) async {
-    try {
-      final nuevo = await UsuarioService.crear(data);
-      _todos.add(nuevo);
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
-      rethrow;
+    final nuevo = await ejecutar(() => UsuarioService.crear(data));
+    if (nuevo != null) {
+      agregarAlFinal(_todos, nuevo);
     }
   }
 
   Future<void> aprobar(int id, {String rolDestino = 'PROPIETARIO'}) async {
-    try {
-      final actualizado =
-          await UsuarioService.aprobar(id, rolDestino: rolDestino);
+    final actualizado = await ejecutar(
+      () => UsuarioService.aprobar(id, rolDestino: rolDestino),
+    );
+    if (actualizado != null) {
       _reemplazar(actualizado);
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
-      rethrow;
     }
   }
 
   Future<void> rechazar(int id) async {
-    try {
-      final actualizado = await UsuarioService.rechazar(id);
+    final actualizado = await ejecutar(() => UsuarioService.rechazar(id));
+    if (actualizado != null) {
       _reemplazar(actualizado);
-    } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
-      rethrow;
     }
   }
 
   Future<void> actualizar(int id, Map<String, dynamic> data) async {
-    final actualizado = await UsuarioService.actualizar(id, data);
-    _reemplazar(actualizado);
+    final actualizado = await ejecutar(
+      () => UsuarioService.actualizar(id, data),
+    );
+    if (actualizado != null) {
+      _reemplazar(actualizado);
+    }
+  }
+
+  void limpiarDatos() {
+    _todos.clear();
+    limpiarError();
+    setLoading(false);
   }
 
   void _reemplazar(UsuarioResponse actualizado) {
-    final index = _todos.indexWhere((u) => u.id == actualizado.id);
-    if (index != -1) _todos[index] = actualizado;
-    notifyListeners();
-  }
-
-  void limpiar() {
-    _todos = [];
-    _error = null;
-    _loading = false;
-    notifyListeners();
+    reemplazar(_todos, actualizado, (u) => u.id);
   }
 }

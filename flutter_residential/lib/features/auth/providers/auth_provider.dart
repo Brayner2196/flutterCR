@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import '../../../core/providers/base_provider.dart';
 import '../../../core/services/notificacion_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../models/login_response.dart';
@@ -8,7 +8,7 @@ import '../services/auth_service.dart';
 
 enum AuthStatus { inicial, cargando, autenticado, noAutenticado, error }
 
-class AuthProvider extends ChangeNotifier {
+class AuthProvider extends BaseProvider {
   AuthStatus _status = AuthStatus.inicial;
   String? _token;
   String? _email;
@@ -17,11 +17,16 @@ class AuthProvider extends ChangeNotifier {
   String? _nombreConjunto;
   String? _nombre;
   String? _timezone;
-  String? _error;
+  bool _esConsejero = false;
+  String? _cargoConsejo;
 
   // Para el flujo multi-tenant: guardamos temporalmente mientras el usuario elige conjunto
   MultiTenantResponse? _multiTenantPendiente;
   String? _passwordTemporal;
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Getters públicos (error heredado de BaseProvider)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   AuthStatus get status => _status;
   String? get token => _token;
@@ -32,7 +37,6 @@ class AuthProvider extends ChangeNotifier {
   String? get nombre => _nombre;
   /// Timezone del tenant activo. Fallback: "America/Bogota".
   String get timezone => _timezone ?? 'America/Bogota';
-  String? get error => _error;
   MultiTenantResponse? get multiTenantPendiente => _multiTenantPendiente;
 
   bool get isLoggedIn => _status == AuthStatus.autenticado;
@@ -40,6 +44,10 @@ class AuthProvider extends ChangeNotifier {
   bool get isSuperAdmin => _rol == 'SUPER_ADMIN';
   bool get isPropietario => _rol == 'PROPIETARIO';
   bool get isInquilino => _rol == 'INQUILINO';
+  /// Verdadero si el usuario tiene membresía activa en el consejo comunal.
+  bool get esConsejero => _esConsejero;
+  /// Cargo en el consejo (PRESIDENTE, VICEPRESIDENTE, etc.) o null.
+  String? get cargoConsejo => _cargoConsejo;
 
   /// Verdadero si el usuario tiene acceso al área de residente (PROPIETARIO o INQUILINO)
   bool get isAreaResidente => isPropietario || isInquilino;
@@ -58,6 +66,8 @@ class AuthProvider extends ChangeNotifier {
       _nombreConjunto = sesion['nombreConjunto'];
       _nombre = sesion['nombre'];
       _timezone = sesion['timezone'];
+      _esConsejero = sesion['esConsejero'] == 'true';
+      _cargoConsejo = sesion['cargoConsejo'];
       _status = AuthStatus.autenticado;
     } else {
       _status = AuthStatus.noAutenticado;
@@ -68,10 +78,10 @@ class AuthProvider extends ChangeNotifier {
 
   /// Paso 1 del login — puede resultar en autenticado o en selección de tenant
   Future<bool> login(String email, String password) async {
-    _error = null;
+    limpiarError();
 
     try {
-      final resultado = await AuthService.login(email, password);
+      final resultado = await ejecutar(() => AuthService.login(email, password));
 
       if (resultado is LoginResponse) {
         await _aplicarSesion(resultado);
@@ -89,7 +99,6 @@ class AuthProvider extends ChangeNotifier {
 
       throw Exception('Respuesta inesperada del servidor');
     } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
       _status = AuthStatus.noAutenticado;
       notifyListeners();
       rethrow;
@@ -98,19 +107,19 @@ class AuthProvider extends ChangeNotifier {
 
   /// Paso 2 del login multi-tenant — el usuario eligió su conjunto
   Future<void> seleccionarTenant(String tenantId) async {
-    _error = null;
+    limpiarError();
 
     try {
-      final resultado = await AuthService.seleccionarTenant(
+      final resultado = await ejecutar(() => AuthService.seleccionarTenant(
         email: _email!,
         password: _passwordTemporal!,
         tenantId: tenantId,
-      );
+      ));
+      if (resultado == null) throw Exception(error ?? 'Error al seleccionar tenant');
       _multiTenantPendiente = null;
       _passwordTemporal = null;
       await _aplicarSesion(resultado);
     } catch (e) {
-      _error = e.toString().replaceFirst('Exception: ', '');
       _status = AuthStatus.noAutenticado;
       notifyListeners();
       rethrow;
@@ -150,16 +159,22 @@ class AuthProvider extends ChangeNotifier {
     _nombreConjunto = null;
     _nombre = null;
     _timezone = null;
+    _esConsejero = false;
+    _cargoConsejo = null;
     _multiTenantPendiente = null;
     _passwordTemporal = null;
-    _error = null;
+    setError(null);
     _status = AuthStatus.noAutenticado;
     notifyListeners();
   }
 
   Future<void> logout() async {
+    // Capturar credenciales ANTES de limpiar para pasarlas al HTTP de notificaciones.
+    // Esto evita el race condition entre el DELETE y borrarSesion() corriendo en paralelo.
+    final tokenActual  = _token;
+    final tenantActual = _tenantId;
+
     // Limpiar estado en memoria y navegar al login INMEDIATAMENTE.
-    // El cleanup pesado (HTTP + storage) corre en background para no bloquear la UI.
     _token = null;
     _email = null;
     _rol = null;
@@ -167,15 +182,23 @@ class AuthProvider extends ChangeNotifier {
     _nombreConjunto = null;
     _nombre = null;
     _timezone = null;
+    _esConsejero = false;
+    _cargoConsejo = null;
     _multiTenantPendiente = null;
     _passwordTemporal = null;
-    _error = null;
+    setError(null);
     _status = AuthStatus.noAutenticado;
     notifyListeners(); // ← El router lleva al login al instante
 
-    // Cleanup en background: si falla no afecta al usuario
-    NotificacionService().eliminarTokenDelBackend(); // fire-and-forget (HTTP)
-    unawaited(TokenStorage.borrarSesion());
+    // Paralelo real sin race: HTTP usa el token capturado (no lee storage),
+    // así borrarSesion() corre al mismo tiempo sin causar 401.
+    unawaited(Future.wait([
+      NotificacionService().eliminarTokenDelBackend(
+        token: tokenActual,
+        tenantId: tenantActual,
+      ),
+      TokenStorage.borrarSesion(),
+    ]));
   }
 
   Future<void> _aplicarSesion(LoginResponse response) async {
@@ -188,6 +211,8 @@ class AuthProvider extends ChangeNotifier {
       nombreConjunto: response.nombreConjunto,
       nombre: response.nombre,
       timezone: response.timezone,
+      esConsejero: response.esConsejero,
+      cargoConsejo: response.cargoConsejo,
     );
     _token = response.token;
     _email = response.email;
@@ -196,6 +221,8 @@ class AuthProvider extends ChangeNotifier {
     _nombreConjunto = response.nombreConjunto;
     _nombre = response.nombre;
     _timezone = response.timezone;
+    _esConsejero = response.esConsejero;
+    _cargoConsejo = response.cargoConsejo;
     _status = AuthStatus.autenticado;
     notifyListeners();
 

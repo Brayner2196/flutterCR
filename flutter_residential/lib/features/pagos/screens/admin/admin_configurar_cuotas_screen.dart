@@ -299,6 +299,9 @@ class _TabActivas extends StatelessWidget {
                       child: _CuotaActivaTile(
                         cuota: c,
                         onDesactivar: () => onDesactivar(c),
+                        condicionLabel: c.tipoPropiedadCondicionId != null
+                            ? nombreTipo(c.tipoPropiedadCondicionId)
+                            : null,
                         esRangoOverride: true,
                       ),
                     )),
@@ -371,6 +374,7 @@ class _CuotaActivaTile extends StatelessWidget {
   final ConfiguracionCuotaModel cuota;
   final VoidCallback onDesactivar;
   final String? nombrePropiedadOverride;
+  final String? condicionLabel;
   final bool esRangoOverride;
   final bool esIndividual;
 
@@ -378,6 +382,7 @@ class _CuotaActivaTile extends StatelessWidget {
     required this.cuota,
     required this.onDesactivar,
     this.nombrePropiedadOverride,
+    this.condicionLabel,
     this.esRangoOverride = false,
     this.esIndividual = false,
   });
@@ -385,10 +390,11 @@ class _CuotaActivaTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final prefijo = condicionLabel != null ? '$condicionLabel ' : 'Nº ';
     final rangoStr = cuota.numeroDesde != null
         ? (cuota.numeroDesde == cuota.numeroHasta
-            ? 'Nº ${cuota.numeroDesde}'
-            : 'Nros ${cuota.numeroDesde}–${cuota.numeroHasta}')
+            ? '$prefijo${cuota.numeroDesde}'
+            : '$prefijo${cuota.numeroDesde}–${cuota.numeroHasta}')
         : null;
 
     return Card(
@@ -527,10 +533,13 @@ class _TabHistorial extends StatelessWidget {
         final titulo = esIndividual
             ? nombrePropiedad(c.propiedadId)
             : nombreTipo(c.tipoPropiedadId);
+        final prefijoH = c.tipoPropiedadCondicionId != null
+            ? '${nombreTipo(c.tipoPropiedadCondicionId)} '
+            : 'Nº ';
         final rangoStr = c.numeroDesde != null
             ? (c.numeroDesde == c.numeroHasta
-                ? 'Nº ${c.numeroDesde}'
-                : 'Nros ${c.numeroDesde}–${c.numeroHasta}')
+                ? '$prefijoH${c.numeroDesde}'
+                : '$prefijoH${c.numeroDesde}–${c.numeroHasta}')
             : null;
 
         return IntrinsicHeight(
@@ -738,10 +747,32 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
   int? _tipoPropiedadId;
   int? _propiedadId;
   String? _propiedadLabel;
+  /// Tipo ancestro sobre cuyo número se evalúa el rango.
+  /// null = la propia unidad facturable.
+  int? _condicionTipoId;
   DateTime _fechaVigencia = DateTime.now();
   DateTime? _fechaVigenciaHasta;
   bool _usarRango = false;
   bool _guardando = false;
+
+  /// Devuelve los tipos ancestros del tipo seleccionado (subiendo por parentId),
+  /// del más cercano (padre directo) al más lejano (raíz).
+  List<TipoPropiedadNodo> _ancestrosDe(int? tipoId) {
+    final result = <TipoPropiedadNodo>[];
+    if (tipoId == null) return result;
+    final actual = widget.tiposFlat.firstWhere(
+      (t) => t.id == tipoId,
+      orElse: () => TipoPropiedadNodo(id: tipoId, nombre: '#$tipoId'),
+    );
+    int? parentId = actual.parentId;
+    while (parentId != null) {
+      final padre = widget.tiposFlat.where((t) => t.id == parentId).toList();
+      if (padre.isEmpty) break;
+      result.add(padre.first);
+      parentId = padre.first.parentId;
+    }
+    return result;
+  }
 
   @override
   void dispose() {
@@ -807,6 +838,9 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
         if (_usarRango) {
           body['numeroDesde'] = int.parse(_desdeCtrl.text);
           body['numeroHasta'] = int.parse(_hastaCtrl.text);
+          if (_condicionTipoId != null) {
+            body['tipoPropiedadCondicionId'] = _condicionTipoId;
+          }
         }
       }
 
@@ -883,6 +917,7 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
                   _propiedadId = null;
                   _propiedadLabel = null;
                   _usarRango = false;
+                  _condicionTipoId = null;
                   _desdeCtrl.clear();
                   _hastaCtrl.clear();
                 }),
@@ -901,7 +936,11 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
                       .map((t) => DropdownMenuItem(
                           value: t.id, child: Text(t.nombre)))
                       .toList(),
-                  onChanged: (v) => setState(() => _tipoPropiedadId = v),
+                  onChanged: (v) => setState(() {
+                    _tipoPropiedadId = v;
+                    // Al cambiar el tipo, los ancestros disponibles cambian
+                    _condicionTipoId = null;
+                  }),
                 ),
                 const SizedBox(height: 4),
                 SwitchListTile(
@@ -917,10 +956,38 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
                     if (!v) {
                       _desdeCtrl.clear();
                       _hastaCtrl.clear();
+                      _condicionTipoId = null;
                     }
                   }),
                 ),
                 if (_usarRango) ...[
+                  // Selector: sobre qué nivel se evalúa el rango numérico.
+                  Builder(builder: (_) {
+                    final ancestros = _ancestrosDe(_tipoPropiedadId);
+                    return DropdownButtonFormField<int?>(
+                      value: _condicionTipoId,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'El rango aplica sobre el número de',
+                        helperText:
+                            'Ej: para "pisos 1–10" elige Piso; el sistema sube por la jerarquía',
+                        helperMaxLines: 2,
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('La propia unidad'),
+                        ),
+                        ...ancestros.map((t) => DropdownMenuItem<int?>(
+                              value: t.id,
+                              child: Text(t.nombre),
+                            )),
+                      ],
+                      onChanged: (v) => setState(() => _condicionTipoId = v),
+                    );
+                  }),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(

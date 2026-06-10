@@ -10,6 +10,8 @@ class TokenStorage {
   static const _keyNombreConjunto = 'nombre_conjunto';
   static const _keyNombre = 'user_nombre';
   static const _keyTimezone = 'tenant_timezone';
+  static const _keyEsConsejero = 'es_consejero';
+  static const _keyCargoConsejo = 'cargo_consejo';
 
   static Future<void> guardarSesion({
     required String token,
@@ -20,6 +22,8 @@ class TokenStorage {
     String? nombreConjunto,
     String? nombre,
     String? timezone,
+    bool esConsejero = false,
+    String? cargoConsejo,
   }) async {
     await _storage.write(key: _keyToken, value: token);
     await _storage.write(key: _keyRefreshToken, value: refreshToken);
@@ -34,6 +38,11 @@ class TokenStorage {
     }
     await _storage.write(
         key: _keyTimezone, value: timezone ?? 'America/Bogota');
+    await _storage.write(
+        key: _keyEsConsejero, value: esConsejero ? 'true' : 'false');
+    if (cargoConsejo != null) {
+      await _storage.write(key: _keyCargoConsejo, value: cargoConsejo);
+    }
   }
 
   /// Actualiza solo los tokens (usado por el interceptor de refresh).
@@ -45,6 +54,20 @@ class TokenStorage {
       _storage.write(key: _keyToken, value: token),
       _storage.write(key: _keyRefreshToken, value: refreshToken),
     ]);
+  }
+
+  /// Actualiza los claims de consejo tras un refresh de token.
+  static Future<void> guardarClaimsConsejo({
+    required bool esConsejero,
+    String? cargoConsejo,
+  }) async {
+    await _storage.write(
+        key: _keyEsConsejero, value: esConsejero ? 'true' : 'false');
+    if (cargoConsejo != null) {
+      await _storage.write(key: _keyCargoConsejo, value: cargoConsejo);
+    } else {
+      await _storage.delete(key: _keyCargoConsejo);
+    }
   }
 
   static Future<String?> leerToken() async {
@@ -69,6 +92,8 @@ class TokenStorage {
       'nombreConjunto': await _storage.read(key: _keyNombreConjunto),
       'nombre': await _storage.read(key: _keyNombre),
       'timezone': await _storage.read(key: _keyTimezone),
+      'esConsejero': await _storage.read(key: _keyEsConsejero),
+      'cargoConsejo': await _storage.read(key: _keyCargoConsejo),
     };
   }
 
@@ -83,6 +108,8 @@ class TokenStorage {
       _storage.delete(key: _keyNombreConjunto),
       _storage.delete(key: _keyNombre),
       _storage.delete(key: _keyTimezone),
+      _storage.delete(key: _keyEsConsejero),
+      _storage.delete(key: _keyCargoConsejo),
     ]);
   }
 }
