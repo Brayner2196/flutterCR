@@ -57,6 +57,18 @@ class ResidenteEstadisticasProvider extends BaseProvider {
     } catch (_) {}
   }
 
+  // ─── Helpers ──────────────────────────────────────────
+
+  Future<double> _obtenerSaldoFavor(int? pid) async {
+    if (pid == null) return 0.0;
+    try {
+      final sf = await AbonoService.getSaldoFavor(pid);
+      return sf.saldo;
+    } catch (_) {
+      return 0.0;
+    }
+  }
+
   // ─── Carga principal ───────────────────────────────────
 
   /// Carga cobros, pagos y saldo a favor en paralelo.
@@ -75,11 +87,7 @@ class ResidenteEstadisticasProvider extends BaseProvider {
       // 3. Las 3 llamadas en paralelo — tiempo total = max(cobros, pagos, saldo)
       final cobrosF = CobroService.getMisCobros(propiedadId: pid);
       final pagosF = PagoService.getMisPagos(propiedadId: pid);
-      final saldoF = pid != null
-          ? AbonoService.getSaldoFavor(pid)
-              .then<double>((sf) => sf.saldo)
-              .catchError<double>((_) => 0.0)
-          : Future<double>.value(0.0);
+      final saldoF = _obtenerSaldoFavor(pid);
 
       final cobros = await cobrosF;
       final pagos = await pagosF;

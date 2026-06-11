@@ -146,18 +146,32 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
       context.read<AbonoProvider>().cargarSaldoFavor(_historial.first.propiedadId);
     }
 
-    // 3. Actualizar solo el cobro puntual en la lista local
+    // 3. Actualizar el cobro en la lista local
     if (cobroActualizado != null) {
-      setState(() {
-        final idx = _historial.indexWhere((c) => c.id == cobroActualizado.id);
-        if (idx != -1) {
-          _historial[idx] = cobroActualizado;
+      final idx = _historial.indexWhere((c) => c.id == cobroActualizado.id);
+      if (idx != -1) {
+        final anterior = _historial[idx];
+        final sinCambioVisible = anterior.estado == cobroActualizado.estado &&
+            anterior.montoPendiente == cobroActualizado.montoPendiente;
+
+        if (sinCambioVisible) {
+          // El backend aún no procesó después de los reintentos.
+          // Actualizar el cobro de todas formas y programar una recarga
+          // completa en 3 segundos para capturar el estado final.
+          setState(() => _historial[idx] = cobroActualizado);
+          Future.delayed(const Duration(seconds: 3), () {
+            if (!mounted) return;
+            context.read<CobrosProvider>().cargarEstadoCuenta(propiedadId: _propiedadId);
+            _iniciarHistorial();
+          });
         } else {
-          // El cobro no estaba en la lista (ej: nuevo estado PAGADO)
-          // Recargar completo para asegurar consistencia
-          _iniciarHistorial();
+          setState(() => _historial[idx] = cobroActualizado);
         }
-      });
+      } else {
+        // El cobro no estaba en la lista visible (puede estar en otra página)
+        // → recargar historial completo para asegurar consistencia
+        _iniciarHistorial();
+      }
     } else {
       // Fallback: recargar desde página 0
       _iniciarHistorial();
@@ -547,15 +561,28 @@ class _BalanceHeader extends StatelessWidget {
     final totalPendiente = ec?.totalDeuda ?? 0;
     final neto = (totalPendiente - saldoFavor).clamp(0.0, double.infinity);
     final estaAlDia = totalPendiente == 0;
+    final tieneVencidos = !estaAlDia && (ec?.cobrosVencidos ?? 0) > 0;
+
+    // ── Paleta dinámica según estado ────────────────────────────────────────
+    // Al día → verde | Solo pendiente → ámbar oscuro | Vencido → rojo oscuro
+    final List<Color> gradientColors = estaAlDia
+        ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
+        : tieneVencidos
+            ? [const Color(0xFF7B1212), const Color(0xFFA31515)]
+            : [const Color(0xFF7A3900), const Color(0xFFBF5000)];
+
+    final Color accentColor = estaAlDia
+        ? const Color(0xFF80CBC4)   // teal suave
+        : tieneVencidos
+            ? const Color(0xFFFF8A80)   // rojo claro
+            : const Color(0xFFFFCC80);  // ámbar claro
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: estaAlDia
-              ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
-              : [const Color(0xFF1A237E), const Color(0xFF283593)],
+          colors: gradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -605,8 +632,8 @@ class _BalanceHeader extends StatelessWidget {
                 ),
                 Text(
                   '− ${formatMonto(saldoFavor)}',
-                  style: const TextStyle(
-                    color: Color(0xFF80CBC4),
+                  style: TextStyle(
+                    color: accentColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -633,19 +660,32 @@ class _BalanceHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   if (ec != null && !estaAlDia)
-                    Text(
-                      '${ec.cobrosVencidos} vencido${ec.cobrosVencidos != 1 ? 's' : ''} · ${ec.cobrosPendientes} pendiente${ec.cobrosPendientes != 1 ? 's' : ''}',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (tieneVencidos) ...[
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            size: 12,
+                            color: Colors.white60,
+                          ),
+                          const SizedBox(width: 3),
+                        ],
+                        Text(
+                          '${ec.cobrosVencidos} vencido${ec.cobrosVencidos != 1 ? 's' : ''} · ${ec.cobrosPendientes} pendiente${ec.cobrosPendientes != 1 ? 's' : ''}',
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
               Text(
                 estaAlDia ? formatMonto(0) : formatMonto(neto),
                 style: TextStyle(
-                  color: estaAlDia ? const Color(0xFF80CBC4) : Colors.white,
+                  color: estaAlDia ? accentColor : Colors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1347,14 +1387,46 @@ class _CobroCardState extends State<_CobroCard> {
   }
 
   /// Obtiene el cobro actualizado del backend y notifica al padre.
-  /// Si la petición falla, notifica con null para que el padre haga fallback.
+  ///
+  /// Incluye reintentos porque el backend puede tardar en reflejar el pago:
+  /// el endpoint de confirmación puede retornar antes de que el webhook procese
+  /// el cambio de estado (ej. PARCIAL → PAGADO). Si tras la primera consulta
+  /// el estado del cobro no cambió, se espera y reintenta hasta 2 veces más.
+  ///
+  /// Si la petición falla o los reintentos se agotan, notifica con null
+  /// para que el padre fuerce una recarga completa del historial.
   Future<void> _notificarPagoExitoso() async {
-    try {
-      final cobroActualizado = await CobroService.getCobro(cobro.id);
-      if (mounted) widget.onPagoExitoso?.call(cobroActualizado);
-    } catch (_) {
-      if (mounted) widget.onPagoExitoso?.call(null);
+    // Pausa inicial: dar tiempo al backend para procesar la confirmación/webhook
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+
+    CobroModel? cobroActualizado;
+
+    for (int intento = 0; intento < 3; intento++) {
+      try {
+        cobroActualizado = await CobroService.getCobro(cobro.id);
+      } catch (_) {
+        // Error de red: notificar con null para que el padre recargue
+        if (mounted) widget.onPagoExitoso?.call(null);
+        return;
+      }
+
+      // Verificar si el backend ya procesó el pago:
+      // – El estado cambió (ej. PARCIAL → PAGADO), o
+      // – El monto pendiente bajó (abono parcial registrado)
+      final estadoCambio = cobroActualizado.estado != cobro.estado;
+      final montoBajo = cobroActualizado.montoPendiente < cobro.montoPendiente;
+
+      if (estadoCambio || montoBajo) break; // procesado → salir del loop
+
+      // Backend aún procesando: esperar antes del siguiente intento
+      if (intento < 2) {
+        await Future.delayed(const Duration(milliseconds: 2000));
+        if (!mounted) return;
+      }
     }
+
+    if (mounted) widget.onPagoExitoso?.call(cobroActualizado);
   }
 
   bool get _estaActivo =>
