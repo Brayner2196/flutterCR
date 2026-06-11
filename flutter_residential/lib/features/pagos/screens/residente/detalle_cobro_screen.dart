@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../../core/utils/celebracion.dart';
 import '../../models/cobro_model.dart';
 import '../../services/cobro_service.dart';
 import '../../widgets/pasarela_selector.dart';
@@ -151,6 +152,7 @@ class _DetalleCobroScreenState extends State<DetalleCobroScreen> {
 
   void _mostrarExito() {
     if (!mounted) return;
+    Celebracion.confeti(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('¡Pago confirmado con éxito!'),

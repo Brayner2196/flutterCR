@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/utils/celebracion.dart';
 import '../../models/simular_abono_model.dart';
 import '../../providers/abono_provider.dart';
 import '../../services/abono_service.dart';
@@ -214,6 +215,7 @@ class _RegistrarAbonoScreenState extends State<RegistrarAbonoScreen> {
         if (_notasCtrl.text.isNotEmpty) 'notas': _notasCtrl.text,
       });
       if (mounted) {
+        Celebracion.confeti(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Abono enviado, pendiente de verificación'),
           backgroundColor: Colors.green,

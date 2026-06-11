@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/utils/celebracion.dart';
 import '../../../../features/usuarios/providers/residente_estadisticas_provider.dart';
 import '../../models/cobro_model.dart';
 import '../../models/estado_cuenta_model.dart';
@@ -1401,6 +1402,7 @@ class _CobroCardState extends State<_CobroCard> {
     if (!mounted) return;
 
     CobroModel? cobroActualizado;
+    bool procesado = false;
 
     for (int intento = 0; intento < 3; intento++) {
       try {
@@ -1417,7 +1419,7 @@ class _CobroCardState extends State<_CobroCard> {
       final estadoCambio = cobroActualizado.estado != cobro.estado;
       final montoBajo = cobroActualizado.montoPendiente < cobro.montoPendiente;
 
-      if (estadoCambio || montoBajo) break; // procesado → salir del loop
+      if (estadoCambio || montoBajo) { procesado = true; break; } // procesado → salir
 
       // Backend aún procesando: esperar antes del siguiente intento
       if (intento < 2) {
@@ -1426,7 +1428,29 @@ class _CobroCardState extends State<_CobroCard> {
       }
     }
 
+    // Pago/abono reflejado: refrescar la trazabilidad (movimientos) y celebrar.
+    if (procesado && mounted) {
+      await _refrescarMovimientos();
+      if (mounted) Celebracion.confeti(context);
+    }
+
     if (mounted) widget.onPagoExitoso?.call(cobroActualizado);
+  }
+
+  /// Re-consulta los movimientos del cobro y los deja expandidos para que la
+  /// trazabilidad del pago/abono recién hecho sea visible de inmediato.
+  Future<void> _refrescarMovimientos() async {
+    try {
+      final movs = await CobroService.getMovimientosCobro(cobro.id);
+      if (mounted) {
+        setState(() {
+          _movimientos = movs;
+          _expandido = true;
+        });
+      }
+    } catch (_) {
+      // Silencioso: el card igual reflejará el estado actualizado del cobro.
+    }
   }
 
   bool get _estaActivo =>
