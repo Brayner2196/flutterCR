@@ -72,7 +72,8 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
       _categoria        = z.categoria ?? 'SALON';
       _usoExclusivo     = z.usoExclusivo;
       _bufferLimpieza   = z.bufferLimpiezaMinutos;
-      _modoAprobacion   = z.modoAprobacion;
+      // MIXTA quedó descontinuada (no soportada en backend) → se trata como MANUAL
+      _modoAprobacion   = z.modoAprobacion == 'MIXTA' ? 'MANUAL' : z.modoAprobacion;
       _tieneCosto       = z.tieneCosto;
       _modoTarifa       = z.modoTarifa ?? 'POR_HORA';
       _soloPropietarios = z.soloPropietarios;
@@ -404,8 +405,8 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
                 children: [
                   _Label('Modo'),
                   _SegmentedRow(
-                    options: const ['AUTOMATICA', 'MANUAL', 'MIXTA'],
-                    labels:  const ['Automática', 'Manual', 'Mixta'],
+                    options: const ['AUTOMATICA', 'MANUAL'],
+                    labels:  const ['Automática', 'Manual'],
                     selected: _modoAprobacion,
                     color: AppColors.green,
                     onChanged: (v) => setState(() => _modoAprobacion = v),
@@ -421,9 +422,7 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
                     child: Text(
                       _modoAprobacion == 'AUTOMATICA'
                           ? 'Toda reserva se aprueba automáticamente al crearla.'
-                          : _modoAprobacion == 'MANUAL'
-                              ? 'Toda reserva requiere aprobación manual del administrador.'
-                              : 'Puedes configurar reglas: auto si dura <2h, manual en fines de semana, etc.',
+                          : 'Toda reserva requiere aprobación manual del administrador.',
                       style: TextStyle(fontSize: 12.5, color: AppColors.ok, height: 1.4),
                     ),
                   ),

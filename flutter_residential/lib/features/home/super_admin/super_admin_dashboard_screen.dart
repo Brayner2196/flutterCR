@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../tenants/services/tenant_service.dart';
 
 class SuperAdminDashboardScreen extends StatelessWidget {
   final void Function(int index) onNavegar;
@@ -39,11 +40,71 @@ class SuperAdminDashboardScreen extends StatelessWidget {
                 color: Colors.indigo,
                 onTap: () => onNavegar(1),
               ),
+              _tarjeta(
+                theme: theme,
+                label: 'Re-provisionar tablas',
+                icono: Icons.dns_outlined,
+                color: Colors.teal,
+                onTap: () => _confirmarReprovision(context),
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  // ── Re-provisión de tablas de todos los tenants ──────────────────────────
+  Future<void> _confirmarReprovision(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Re-provisionar tablas'),
+        content: const Text(
+          'Se crearán las tablas que falten en TODOS los conjuntos. '
+          'La operación es segura e idempotente: no modifica datos ni tablas existentes.\n\n'
+          '¿Deseas continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Ejecutar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true || !context.mounted) return;
+
+    // Diálogo de carga
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final procesados = await TenantService.reprovisionar();
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop(); // cierra carga
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Re-provisión completada · $procesados conjunto(s) procesado(s)'),
+          backgroundColor: Colors.teal,
+        ));
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop(); // cierra carga
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ));
+      }
+    }
   }
 
   Widget _bannerBienvenida(ThemeData theme, String email) {

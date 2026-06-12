@@ -77,4 +77,21 @@ class TenantService {
     }
   }
 
+  /// Re-provisiona el esquema de todos los tenants (crea tablas faltantes).
+  /// Devuelve la cantidad de tenants procesados.
+  static Future<int> reprovisionar() async {
+    final response = await ApiClient.post(
+      ApiConstants.tenantsReprovisionar,
+      {},
+      requiresAuth: true,
+    );
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return (body['tenantsProcesados'] ?? 0) as int;
+    }
+
+    throw Exception(body['message'] ?? 'Error al reprovisionar tenants');
+  }
+
 }

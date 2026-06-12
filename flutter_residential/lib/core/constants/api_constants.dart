@@ -18,6 +18,7 @@ class ApiConstants {
 
   // Tenants
   static const String tenants = '/api/tenants';
+  static const String tenantsReprovisionar = '/api/tenants/reprovisionar';
 
   // Propiedades — público (registro)
   static const String authTiposPropiedad = '/auth/tiposPropiedad';
