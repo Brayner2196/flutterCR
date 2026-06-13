@@ -51,6 +51,7 @@ class _GrupoDetalle {
   final int cantidad;
   final double montoPorUnidad;
   final double subtotal;
+  final List<_PropiedadDetalle> propiedades;
 
   const _GrupoDetalle({
     required this.nombreTipo,
@@ -58,6 +59,7 @@ class _GrupoDetalle {
     required this.cantidad,
     required this.montoPorUnidad,
     required this.subtotal,
+    required this.propiedades,
   });
 
   factory _GrupoDetalle.fromJson(Map<String, dynamic> j) => _GrupoDetalle(
@@ -66,6 +68,28 @@ class _GrupoDetalle {
         cantidad: j['cantidad'] as int,
         montoPorUnidad: (j['montoPorUnidad'] as num).toDouble(),
         subtotal: (j['subtotal'] as num).toDouble(),
+        propiedades: ((j['propiedades'] as List?) ?? [])
+            .map((p) => _PropiedadDetalle.fromJson(p))
+            .toList(),
+      );
+}
+
+class _PropiedadDetalle {
+  final int propiedadId;
+  final String pathTexto;
+  final double monto;
+
+  const _PropiedadDetalle({
+    required this.propiedadId,
+    required this.pathTexto,
+    required this.monto,
+  });
+
+  factory _PropiedadDetalle.fromJson(Map<String, dynamic> j) =>
+      _PropiedadDetalle(
+        propiedadId: j['propiedadId'] as int,
+        pathTexto: (j['pathTexto'] ?? '') as String,
+        monto: (j['monto'] as num).toDouble(),
       );
 }
 
@@ -441,8 +465,6 @@ class _PasoPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     if (cargando || preview == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -450,119 +472,76 @@ class _PasoPreview extends StatelessWidget {
     final p = preview!;
     final sinNada = p.pendientesDeGenerar == 0;
 
-    return ListView(
-      padding: const EdgeInsets.all(20),
+    return Column(
       children: [
-        _StepIndicator(paso: 1),
-        const SizedBox(height: 24),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            children: [
+              _StepIndicator(paso: 1),
+              const SizedBox(height: AppSpacing.lg),
 
-        Text('${meses[mes - 1]} $anio',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
+              // Tarjeta hero: período + monto total + nº de cobros
+              _HeroResumen(
+                periodo: '${meses[mes - 1]} $anio',
+                pendientes: p.pendientesDeGenerar,
+                montoTotal: p.montoTotalEstimado,
+              ),
+              const SizedBox(height: AppSpacing.md),
 
-        // Resumen numérico
-        Row(
-          children: [
-            Expanded(
-              child: _KpiCard(
-                label: 'Cobros a generar',
-                value: '${p.pendientesDeGenerar}',
-                color: p.pendientesDeGenerar > 0 ? AppColors.ok : cs.onSurfaceVariant,
-                icon: Icons.receipt_long,
+              // Cobertura de propiedades
+              _CoberturaPropiedades(
+                total: p.totalPropiedades,
+                generados: p.yaGenerados,
+                pendientes: p.pendientesDeGenerar,
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _KpiCard(
-                label: 'Ya generados',
-                value: '${p.yaGenerados}',
-                color: cs.onSurfaceVariant,
-                icon: Icons.check_circle_outline,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Monto total estimado',
-                    style: TextStyle(color: cs.onSurfaceVariant)),
-                Text(
-                  '\$${_fmt(p.montoTotalEstimado)}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
+              const SizedBox(height: AppSpacing.md),
+
+              // Advertencias
+              if (p.advertencias.isNotEmpty) ...[
+                ...p.advertencias.map((a) => _AvisoCard(texto: a)),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+
+              // Detalle por tipo de propiedad
+              if (p.grupos.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 2, bottom: AppSpacing.sm, top: AppSpacing.xs),
+                  child: Row(
+                    children: [
+                      Icon(Icons.tune,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 6),
+                      Text('Detalle por tipo de propiedad',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant)),
+                    ],
                   ),
                 ),
+                ...p.grupos.map((g) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: _DetalleGrupoCard(grupo: g),
+                    )),
               ],
-            ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
           ),
         ),
-        const SizedBox(height: 16),
 
-        // Advertencias
-        if (p.advertencias.isNotEmpty) ...[
-          ...p.advertencias.map((a) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.bgOrange,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: AppColors.orange.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.warning_amber_outlined,
-                        size: 16, color: AppColors.orange),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(a,
-                          style: TextStyle(
-                              fontSize: 12, color: AppColors.orange)),
-                    ),
-                  ],
-                ),
-              )),
-          const SizedBox(height: 8),
-        ],
-
-        // Breakdown por tipo y periodicidad
-        if (p.grupos.isNotEmpty) ...[
-          Text('Detalle por tipo',
-              style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurfaceVariant,
-                  fontSize: 13)),
-          const SizedBox(height: 8),
-          ...p.grupos.map((g) => _FilaGrupo(grupo: g)),
-          const SizedBox(height: 16),
-        ],
-
-        // Timeline de recurrencia
-        _TimelinePeriodicidad(grupos: p.grupos, mesActual: mes),
-        const SizedBox(height: 32),
-
-        if (sinNada)
-          OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('No hay cobros pendientes — Volver'),
-          )
-        else
-          FilledButton.icon(
-            onPressed: onConfirmar,
-            icon: const Icon(Icons.auto_awesome),
-            label: Text(
-                'Generar ${p.pendientesDeGenerar} cobros · \$${_fmt(p.montoTotalEstimado)}'),
-          ),
+        // Footer de acción fijo
+        _FooterGenerar(
+          sinNada: sinNada,
+          pendientes: p.pendientesDeGenerar,
+          montoTotal: p.montoTotalEstimado,
+          onConfirmar: onConfirmar,
+        ),
       ],
     );
   }
@@ -671,208 +650,473 @@ class _StepIndicator extends StatelessWidget {
   }
 }
 
-class _KpiCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  final IconData icon;
-  const _KpiCard(
-      {required this.label,
-      required this.value,
-      required this.color,
-      required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(value,
-                    style: TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-                Text(label,
-                    style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FilaGrupo extends StatelessWidget {
-  final _GrupoDetalle grupo;
-  const _FilaGrupo({required this.grupo});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final (badgeLabel, badgeColor, badgeBg) = switch (grupo.periodicidad) {
-      'MENSUAL'    => ('Mensual',    AppColors.blue,   AppColors.bgBlue),
-      'TRIMESTRAL' => ('Trimestral', AppColors.teal,   AppColors.bgTeal),
-      'SEMESTRAL'  => ('Semestral',  AppColors.orange, AppColors.bgOrange),
-      'ANUAL'      => ('Anual',      AppColors.purple, AppColors.bgPurple),
-      _            => ('?',          AppColors.blue,   AppColors.bgBlue),
+/// Etiquetas y colores de cada periodicidad, centralizados para reutilizar.
+({String label, Color color, Color bg}) _periodicidadStyle(String p) =>
+    switch (p) {
+      'MENSUAL' => (label: 'Mensual', color: AppColors.blue, bg: AppColors.bgBlue),
+      'TRIMESTRAL' =>
+        (label: 'Trimestral', color: AppColors.teal, bg: AppColors.bgTeal),
+      'SEMESTRAL' =>
+        (label: 'Semestral', color: AppColors.orange, bg: AppColors.bgOrange),
+      'ANUAL' =>
+        (label: 'Anual', color: AppColors.purple, bg: AppColors.bgPurple),
+      _ => (label: p, color: AppColors.blue, bg: AppColors.bgBlue),
     };
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
+/// Tarjeta hero del preview: período, nº de cobros y monto total destacado.
+class _HeroResumen extends StatelessWidget {
+  final String periodo;
+  final int pendientes;
+  final double montoTotal;
+  const _HeroResumen({
+    required this.periodo,
+    required this.pendientes,
+    required this.montoTotal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final activo = pendientes > 0;
+    final acento = activo ? AppColors.green : cs.onSurfaceVariant;
+    final fondo = activo ? AppColors.bgGreen : cs.surfaceContainerHighest;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: fondo,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: acento.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-            decoration: BoxDecoration(
-                color: badgeBg, borderRadius: BorderRadius.circular(4)),
-            child: Text(badgeLabel,
+          Row(
+            children: [
+              Icon(Icons.event_available, size: 18, color: acento),
+              const SizedBox(width: 6),
+              Text(periodo,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: acento,
+                        fontWeight: FontWeight.w700,
+                      )),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text('Monto total estimado',
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+          const SizedBox(height: 2),
+          Text('\$${_fmt(montoTotal)}',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w700,
+                  )),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              Icon(Icons.receipt_long, size: 15, color: acento),
+              const SizedBox(width: 6),
+              Text(
+                activo
+                    ? '$pendientes cobros por generar'
+                    : 'Sin cobros pendientes',
                 style: TextStyle(
-                    fontSize: 10, color: badgeColor, fontWeight: FontWeight.w700)),
+                    fontSize: 13, color: acento, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${grupo.nombreTipo} · ${grupo.cantidad} unid.',
-              style: const TextStyle(fontSize: 13),
-            ),
-          ),
-          Text('\$${_fmt(grupo.subtotal)}',
-              style: TextStyle(
-                  fontWeight: FontWeight.w600, color: cs.onSurface)),
         ],
       ),
     );
   }
 }
 
-/// Muestra un mini-calendario de los próximos 12 meses indicando en cuáles
-/// aplica cada tipo de cuota según su periodicidad.
-class _TimelinePeriodicidad extends StatelessWidget {
-  final List<_GrupoDetalle> grupos;
-  final int mesActual;
-  const _TimelinePeriodicidad(
-      {required this.grupos, required this.mesActual});
+/// Cobertura del período: barra de progreso generados vs total + chips.
+class _CoberturaPropiedades extends StatelessWidget {
+  final int total;
+  final int generados;
+  final int pendientes;
+  const _CoberturaPropiedades({
+    required this.total,
+    required this.generados,
+    required this.pendientes,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    if (grupos.isEmpty) return const SizedBox.shrink();
-
-    // Agrupar periodicidades únicas
-    final periodicidades = grupos.map((g) => g.periodicidad).toSet();
-    final abrevMeses = ['E', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
-
-    bool aplicaEsteMes(String periodicidad, int offsetMes) {
-      return switch (periodicidad) {
-        'MENSUAL'    => true,
-        'TRIMESTRAL' => offsetMes % 3 == 0,
-        'SEMESTRAL'  => offsetMes % 6 == 0,
-        'ANUAL'      => offsetMes == 0,
-        _            => true,
-      };
-    }
-
-    Color colorPeriodicidad(String p) => switch (p) {
-          'MENSUAL'    => AppColors.blue,
-          'TRIMESTRAL' => AppColors.teal,
-          'SEMESTRAL'  => AppColors.orange,
-          'ANUAL'      => AppColors.purple,
-          _            => AppColors.blue,
-        };
+    final progreso = total == 0 ? 0.0 : (generados / total).clamp(0.0, 1.0);
+    final pct = (progreso * 100).round();
 
     return Card(
-      color: cs.surfaceContainerLow,
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Cobertura del período',
+                    style: Theme.of(context).textTheme.titleSmall),
+                Text('$pct%',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: progreso >= 1 ? AppColors.ok : cs.primary)),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: progreso,
+                minHeight: 8,
+                backgroundColor: cs.surfaceContainerHighest,
+                valueColor: AlwaysStoppedAnimation(
+                    progreso >= 1 ? AppColors.ok : cs.primary),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                _MiniStat(
+                    icon: Icons.check_circle,
+                    color: AppColors.ok,
+                    valor: '$generados',
+                    label: 'Generados'),
+                const SizedBox(width: AppSpacing.sm),
+                _MiniStat(
+                    icon: Icons.pending_actions,
+                    color: pendientes > 0 ? AppColors.orange : cs.onSurfaceVariant,
+                    valor: '$pendientes',
+                    label: 'Pendientes'),
+                const SizedBox(width: AppSpacing.sm),
+                _MiniStat(
+                    icon: Icons.home_work_outlined,
+                    color: cs.onSurfaceVariant,
+                    valor: '$total',
+                    label: 'Propiedades'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String valor;
+  final String label;
+  const _MiniStat({
+    required this.icon,
+    required this.color,
+    required this.valor,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(height: 4),
+            Text(valor,
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface)),
+            Text(label,
+                style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tarjeta de aviso/advertencia con estilo coherente.
+class _AvisoCard extends StatelessWidget {
+  final String texto;
+  const _AvisoCard({required this.texto});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warningSoft,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              size: 18, color: AppColors.warning),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(texto,
+                style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.warning,
+                    height: 1.3)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tarjeta detallada de un grupo: tipo, periodicidad, desglose y lista
+/// expandible de las propiedades con su path y cobro respectivo.
+class _DetalleGrupoCard extends StatefulWidget {
+  final _GrupoDetalle grupo;
+  const _DetalleGrupoCard({required this.grupo});
+
+  @override
+  State<_DetalleGrupoCard> createState() => _DetalleGrupoCardState();
+}
+
+class _DetalleGrupoCardState extends State<_DetalleGrupoCard> {
+  bool _expandido = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final grupo = widget.grupo;
+    final cs = Theme.of(context).colorScheme;
+    final estilo = _periodicidadStyle(grupo.periodicidad);
+    final hayPropiedades = grupo.propiedades.isNotEmpty;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.calendar_view_month, size: 15, color: cs.onSurfaceVariant),
-                const SizedBox(width: 6),
-                Text('Calendario de recurrencia (próximos 12 meses)',
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: cs.onSurfaceVariant,
-                        fontWeight: FontWeight.w600)),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: estilo.bg,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Icon(Icons.apartment, size: 20, color: estilo.color),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(grupo.nombreTipo,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 3),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: estilo.bg,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Text(estilo.label,
+                            style: TextStyle(
+                                fontSize: 10.5,
+                                color: estilo.color,
+                                fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ),
+                ),
+                Text('\$${_fmt(grupo.subtotal)}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        )),
               ],
             ),
-            const SizedBox(height: 12),
-            ...periodicidades.map((perio) {
-              final color = colorPeriodicidad(perio);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 72,
-                      child: Text(
-                        perio[0] + perio.substring(1).toLowerCase(),
-                        style:
-                            TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Expanded(
+            const SizedBox(height: AppSpacing.sm),
+            const Divider(height: 1),
+            const SizedBox(height: AppSpacing.sm),
+
+            // Desglose + toggle de propiedades
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('${grupo.cantidad} unid. × \$${_fmt(grupo.montoPorUnidad)}',
+                    style: TextStyle(fontSize: 12.5, color: cs.onSurfaceVariant)),
+                if (hayPropiedades)
+                  InkWell(
+                    onTap: () => setState(() => _expandido = !_expandido),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
                       child: Row(
-                        children: List.generate(12, (i) {
-                          final mesIdx = (mesActual - 1 + i) % 12;
-                          final aplica = aplicaEsteMes(perio, i);
-                          return Expanded(
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 18,
-                                  height: 18,
-                                  decoration: BoxDecoration(
-                                    color: aplica ? color : Colors.transparent,
-                                    border: Border.all(
-                                        color: aplica
-                                            ? color
-                                            : cs.outlineVariant,
-                                        width: 1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: i == 0
-                                      ? Center(
-                                          child: Container(
-                                            width: 6,
-                                            height: 6,
-                                            decoration: BoxDecoration(
-                                              color: aplica
-                                                  ? Colors.white
-                                                  : cs.outlineVariant,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(abrevMeses[mesIdx],
-                                    style: TextStyle(
-                                        fontSize: 9,
-                                        color: cs.onSurfaceVariant)),
-                              ],
-                            ),
-                          );
-                        }),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _expandido
+                                ? 'Ocultar'
+                                : 'Ver ${grupo.propiedades.length} propiedades',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: cs.primary,
+                                fontWeight: FontWeight.w600),
+                          ),
+                          Icon(
+                            _expandido
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                            size: 18,
+                            color: cs.primary,
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              );
-            }),
+                  )
+                else
+                  Text('Subtotal',
+                      style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
+              ],
+            ),
+
+            // Lista de propiedades
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 200),
+              crossFadeState: _expandido
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              firstChild: const SizedBox(width: double.infinity),
+              secondChild: Column(
+                children: [
+                  const SizedBox(height: AppSpacing.sm),
+                  ...grupo.propiedades.map((prop) => _FilaPropiedad(
+                        prop: prop,
+                        color: estilo.color,
+                      )),
+                ],
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Fila individual de una propiedad: path legible + su cobro.
+class _FilaPropiedad extends StatelessWidget {
+  final _PropiedadDetalle prop;
+  final Color color;
+  const _FilaPropiedad({required this.prop, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.home_outlined, size: 15, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              prop.pathTexto.isEmpty ? 'Propiedad ${prop.propiedadId}' : prop.pathTexto,
+              style: const TextStyle(fontSize: 12.5, height: 1.2),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text('\$${_fmt(prop.monto)}',
+              style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Footer fijo con el resumen y la acción principal de generar.
+class _FooterGenerar extends StatelessWidget {
+  final bool sinNada;
+  final int pendientes;
+  final double montoTotal;
+  final VoidCallback onConfirmar;
+  const _FooterGenerar({
+    required this.sinNada,
+    required this.pendientes,
+    required this.montoTotal,
+    required this.onConfirmar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.md + MediaQuery.of(context).padding.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: cs.outlineVariant)),
+      ),
+      child: sinNada
+          ? OutlinedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.check),
+              label: const Text('Todo al día — Volver'),
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('$pendientes cobros',
+                        style: TextStyle(
+                            fontSize: 13, color: cs.onSurfaceVariant)),
+                    Text('\$${_fmt(montoTotal)}',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                FilledButton.icon(
+                  onPressed: onConfirmar,
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Generar cobros'),
+                ),
+              ],
+            ),
     );
   }
 }

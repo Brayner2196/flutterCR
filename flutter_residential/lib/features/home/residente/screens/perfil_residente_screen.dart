@@ -107,8 +107,8 @@ class PerfilResidenteScreen extends StatelessWidget {
               SeccionAgrupadoraItemToogle(
                 icono: Icons.dark_mode_sharp,
                 label: 'Tema oscuro',
-                valor: appProvider.themeMode == ThemeMode.dark,
-                onChanged: appProvider.toggleTheme,
+                valor: appProvider.esOscuro(context),
+                onChanged: () => appProvider.toggleTheme(context),
               ),
             ],
           ),

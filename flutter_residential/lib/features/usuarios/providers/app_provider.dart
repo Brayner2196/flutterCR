@@ -15,10 +15,23 @@ class AppProvider extends ChangeNotifier {
   /// El SplashScreen lo usa para decidir si mostrar onboarding o login.
   bool? get haVistoOnboarding => _haVistoOnboarding;
 
-  void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.dark
-        ? ThemeMode.light
-        : ThemeMode.dark;
+  /// Brillo efectivo actual. Resuelve [ThemeMode.system] al brillo real del
+  /// dispositivo para que el toggle refleje lo que el usuario ve en pantalla.
+  bool esOscuro(BuildContext context) {
+    switch (_themeMode) {
+      case ThemeMode.dark:
+        return true;
+      case ThemeMode.light:
+        return false;
+      case ThemeMode.system:
+        return MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+    }
+  }
+
+  /// Alterna el tema partiendo del brillo efectivo actual (no del modo crudo),
+  /// así el primer toque siempre produce un cambio visible.
+  void toggleTheme(BuildContext context) {
+    _themeMode = esOscuro(context) ? ThemeMode.light : ThemeMode.dark;
     notifyListeners();
   }
 

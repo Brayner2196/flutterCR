@@ -150,7 +150,16 @@ class TendenciaRecaudoChart extends StatelessWidget {
           ),
           belowBarData: BarAreaData(
             show: true,
-            color: color.withValues(alpha: 0.08),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                color.withValues(alpha: 0.35),
+                color.withValues(alpha: 0.12),
+                color.withValues(alpha: 0.0),
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
           ),
         ),
       ],

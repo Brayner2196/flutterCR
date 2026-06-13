@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/core/services/notificacion_service.dart';
@@ -62,38 +61,13 @@ class _SessionGuardState extends State<_SessionGuard> {
 /// NavigatorKey global — permite que NotificacionService navegue sin BuildContext.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
-  // Errores del framework Flutter (build / layout / render).
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    debugPrint('FlutterError: ${details.exceptionAsString()}');
-    // TODO: reenviar a Crashlytics/Sentry cuando se integre.
-  };
-
-  // Zona que captura cualquier error async no atrapado fuera del árbol Flutter.
-  runZonedGuarded<Future<void>>(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    AppEnv.validate();
-
-    // El navigator se configura siempre, no depende de Firebase.
-    NotificacionService().configurarNavigator(navigatorKey);
-
-    // Un fallo de Firebase o notificaciones NO debe impedir que la app arranque.
-    try {
-      await Firebase.initializeApp();
-      await NotificacionService().inicializar();
-    } catch (e, st) {
-      debugPrint('Fallo al inicializar Firebase/Notificaciones: $e');
-      debugPrint('$st');
-      // TODO: reenviar a Crashlytics/Sentry cuando se integre.
-    }
-
-    runApp(const MyApp());
-  }, (Object error, StackTrace stack) {
-    debugPrint('Error no atrapado: $error');
-    debugPrint('$stack');
-    // TODO: reenviar a Crashlytics/Sentry cuando se integre.
-  });
+void main() async {
+  AppEnv.validate();
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  NotificacionService().configurarNavigator(navigatorKey);
+  await NotificacionService().inicializar();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

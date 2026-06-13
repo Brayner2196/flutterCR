@@ -20,6 +20,12 @@ class ApiConstants {
   static const String tenants = '/api/tenants';
   static const String tenantsReprovisionar = '/api/tenants/reprovisionar';
 
+  // Cartera — configuración de estados (admin)
+  static const String carteraEstados = '/api/admin/cartera/estados';
+  static const String carteraSeed = '/api/admin/cartera/seed';
+  // Estado de cartera vigente de todas las propiedades (badges)
+  static const String carteraEstadosVigentes = '/api/admin/propiedades/estados-cartera';
+
   // Propiedades — público (registro)
   static const String authTiposPropiedad = '/auth/tiposPropiedad';
 

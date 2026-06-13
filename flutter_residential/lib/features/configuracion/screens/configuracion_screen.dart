@@ -9,6 +9,7 @@ import 'package:flutter_residential/features/pagos/screens/admin/admin_configura
 import 'package:flutter_residential/features/pagos/screens/admin/admin_pasarelas_screen.dart';
 import 'package:flutter_residential/features/plan_pago/screens/admin/admin_config_plan_pago_screen.dart';
 import 'package:flutter_residential/features/presupuesto/screens/admin/admin_presupuestos_screen.dart';
+import 'package:flutter_residential/features/cartera/screens/admin_estados_cartera_screen.dart';
 
 class ConfiguracionScreen extends StatelessWidget {
   const ConfiguracionScreen({super.key});
@@ -79,6 +80,16 @@ class ConfiguracionScreen extends StatelessWidget {
                       subtitulo: 'Tipo de cálculo, porcentaje y días de gracia',
                       onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => const AdminConfigurarMoraScreen(),
+                      )),
+                    ),
+                    const SizedBox(height: 10),
+                    ConfigSectionTile(
+                      icono: Icons.account_balance_wallet_outlined,
+                      color: Colors.redAccent,
+                      titulo: 'Estados de cartera',
+                      subtitulo: 'Estados, reglas de entrada y restricciones por mora',
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const AdminEstadosCarteraScreen(),
                       )),
                     ),
                     const SizedBox(height: 10),

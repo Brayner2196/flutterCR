@@ -76,7 +76,9 @@ class ParqueaderoCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       p.esIndependiente
-                          ? 'Propiedad independiente'
+                          ? (p.propiedadIdentificador != null
+                              ? 'Parqueadero: ${p.propiedadIdentificador}'
+                              : 'Propiedad independiente')
                           : p.tienePropiedad
                               ? 'Apto: ${p.propiedadIdentificador}'
                               : 'Sin asignar',

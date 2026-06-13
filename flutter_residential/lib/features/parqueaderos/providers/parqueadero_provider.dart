@@ -15,9 +15,9 @@ class ParqueaderoProvider extends BaseProvider {
   ConfiguracionParqueaderoModel get config => _config;
 
   int get totalAsignados =>
-      _parqueaderos.where((p) => p.tienePropiedad).length;
+      _parqueaderos.where((p) => p.tieneAsignacion).length;
   int get totalLibres =>
-      _parqueaderos.where((p) => !p.tienePropiedad).length;
+      _parqueaderos.where((p) => !p.tieneAsignacion).length;
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // Admin: Configuración

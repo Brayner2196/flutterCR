@@ -87,7 +87,7 @@ class QuickAccessGrid extends StatelessWidget {
     super.key,
     required this.cards,
     this.crossAxisCount = 3,
-    this.spacing = 16,
+    this.spacing = 20,
     this.padding = const EdgeInsets.only(left: 18,right: 18,top:0),
   });
 
@@ -102,7 +102,7 @@ class QuickAccessGrid extends StatelessWidget {
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: spacing,
           mainAxisSpacing: spacing,
-          childAspectRatio: 1.20,
+          childAspectRatio: 1.30,
         ),
         itemCount: cards.length,
         itemBuilder: (context, index) {

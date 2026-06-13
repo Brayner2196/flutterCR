@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cobros_provider.dart';
 import '../../models/cobro_model.dart';
+import '../../../cartera/models/estado_cartera_vigente_model.dart';
+import '../../../cartera/services/cartera_config_service.dart';
+import '../../../cartera/widgets/estado_cartera_badge.dart';
 
 class AdminReporteMorosidadScreen extends StatefulWidget {
   const AdminReporteMorosidadScreen({super.key});
@@ -13,13 +16,24 @@ class AdminReporteMorosidadScreen extends StatefulWidget {
 
 class _AdminReporteMorosidadScreenState
     extends State<AdminReporteMorosidadScreen> {
+  Map<int, EstadoCarteraVigente> _estados = {};
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-        (_) => context
-            .read<CobrosProvider>()
-            .cargarCobrosAdmin(estado: 'VENCIDO'));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CobrosProvider>().cargarCobrosAdmin(estado: 'VENCIDO');
+      _cargarEstadosCartera();
+    });
+  }
+
+  Future<void> _cargarEstadosCartera() async {
+    try {
+      final estados = await CarteraConfigService.estadosVigentes();
+      if (mounted) setState(() => _estados = estados);
+    } catch (_) {
+      // Degradación segura: sin estados, simplemente no se muestran badges.
+    }
   }
 
   @override
@@ -67,8 +81,10 @@ class _AdminReporteMorosidadScreenState
                       : ListView.builder(
                           padding: const EdgeInsets.all(12),
                           itemCount: vencidos.length,
-                          itemBuilder: (_, i) =>
-                              _MorosoTile(cobro: vencidos[i]),
+                          itemBuilder: (_, i) => _MorosoTile(
+                            cobro: vencidos[i],
+                            estado: _estados[vencidos[i].propiedadId],
+                          ),
                         ),
                 ),
               ],
@@ -116,7 +132,8 @@ String _fmt(double v) =>
 
 class _MorosoTile extends StatelessWidget {
   final CobroModel cobro;
-  const _MorosoTile({required this.cobro});
+  final EstadoCarteraVigente? estado;
+  const _MorosoTile({required this.cobro, this.estado});
 
   @override
   Widget build(BuildContext context) {
@@ -133,9 +150,16 @@ class _MorosoTile extends StatelessWidget {
         ),
         title: Text(cobro.propiedadIdentificador,
             style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(
-            cobro.concepto,
-            style: const TextStyle(fontSize: 12)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(cobro.concepto, style: const TextStyle(fontSize: 12)),
+            if (estado != null && estado!.tieneEstado) ...[
+              const SizedBox(height: 4),
+              EstadoCarteraBadge(estado: estado),
+            ],
+          ],
+        ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,

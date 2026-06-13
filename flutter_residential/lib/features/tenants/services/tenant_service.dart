@@ -78,20 +78,29 @@ class TenantService {
   }
 
   /// Re-provisiona el esquema de todos los tenants (crea tablas faltantes).
-  /// Devuelve la cantidad de tenants procesados.
-  static Future<int> reprovisionar() async {
+  /// Devuelve los tenants procesados y la lista de errores por schema (si los hubo).
+  static Future<({int procesados, List<String> errores})> reprovisionar() async {
     final response = await ApiClient.post(
       ApiConstants.tenantsReprovisionar,
       {},
       requiresAuth: true,
     );
-    final body = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return (body['tenantsProcesados'] ?? 0) as int;
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return (
+        procesados: (body['tenantsProcesados'] ?? 0) as int,
+        errores: ((body['errores'] as List?) ?? []).map((e) => e.toString()).toList(),
+      );
     }
 
-    throw Exception(body['message'] ?? 'Error al reprovisionar tenants');
+    // Errores no-200: el body puede no ser JSON (500/HTML). Parse defensivo.
+    String msg = 'Error al reprovisionar tenants (HTTP ${response.statusCode})';
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map && body['message'] != null) msg = body['message'].toString();
+    } catch (_) {}
+    throw Exception(msg);
   }
 
 }

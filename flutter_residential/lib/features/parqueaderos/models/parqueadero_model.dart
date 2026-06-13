@@ -40,6 +40,9 @@ class ParqueaderoModel {
   });
 
   bool get tienePropiedad    => propiedadId != null;
+  /// Asignado a una propiedad por cualquiera de los dos modelos:
+  /// ACCESORIO (propiedadId) o INDEPENDIENTE (propiedadParqueaderoId).
+  bool get tieneAsignacion   => propiedadId != null || propiedadParqueaderoId != null;
   bool get tieneVehiculo     => vehiculoId != null;
   bool get esIndependiente   => modeloPropiedad == ModeloParqueaderoPrivado.INDEPENDIENTE;
   bool get esAccesorio       => modeloPropiedad == ModeloParqueaderoPrivado.ACCESORIO;

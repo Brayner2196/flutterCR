@@ -4,7 +4,6 @@ import 'package:flutter_residential/features/dashboard/providers/dashboard_provi
 import 'package:flutter_residential/features/dashboard/screens/widgets/kpi_carousel.dart';
 import 'package:flutter_residential/features/home/admin/widgets/quick_access_cards.dart';
 import 'package:flutter_residential/features/pagos/screens/admin/admin_cobros_screen.dart';
-import 'package:flutter_residential/features/pagos/screens/admin/admin_configurar_cuotas_screen.dart';
 import 'package:flutter_residential/features/pagos/screens/admin/admin_reporte_morosidad_screen.dart';
 import 'package:flutter_residential/features/pagos/screens/admin/admin_verificar_pagos_screen.dart';
 import 'package:flutter_residential/features/pqr/screens/admin/admin_pqrs_screen.dart';
@@ -134,15 +133,6 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   onTap: () => _abrir(const AdminVotacionesScreen()),
                 ),
                 QuickAccessCardData(
-                  title: 'Planes de pago',
-                  icon: Icons.calendar_month_outlined,
-                  backgroundColor: AppColors.bgOrange,
-                  iconBackgroundColor: Colors.white,
-                  iconColor: AppColors.orange,
-                  colorText: AppColors.orange,
-                  onTap: () => _abrir(const AdminPlanesPagoScreen()),
-                ),
-                QuickAccessCardData(
                   title: 'Presupuesto',
                   icon: Icons.account_balance_outlined,
                   backgroundColor: AppColors.bgGreen,
@@ -168,6 +158,15 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   iconColor: AppColors.purple,
                   colorText: AppColors.purple,
                   onTap: () => _abrir(const AdminConsejoScreen()),
+                ),
+                QuickAccessCardData(
+                  title: 'Planes de pago',
+                  icon: Icons.calendar_month_outlined,
+                  backgroundColor: AppColors.bgOrange,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.orange,
+                  colorText: AppColors.orange,
+                  onTap: () => _abrir(const AdminPlanesPagoScreen()),
                 ),
               ],
             ),

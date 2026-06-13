@@ -88,12 +88,16 @@ class SuperAdminDashboardScreen extends StatelessWidget {
     );
 
     try {
-      final procesados = await TenantService.reprovisionar();
+      final r = await TenantService.reprovisionar();
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop(); // cierra carga
       if (context.mounted) {
+        final hayErrores = r.errores.isNotEmpty;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Re-provisión completada · $procesados conjunto(s) procesado(s)'),
-          backgroundColor: Colors.teal,
+          duration: Duration(seconds: hayErrores ? 8 : 3),
+          backgroundColor: hayErrores ? Colors.orange.shade800 : Colors.teal,
+          content: Text(hayErrores
+              ? '${r.procesados} OK · ${r.errores.length} con error: ${r.errores.first}'
+              : 'Re-provisión completada · ${r.procesados} conjunto(s) procesado(s)'),
         ));
       }
     } catch (e) {
