@@ -75,13 +75,11 @@ class ParqueaderoCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      p.esIndependiente
-                          ? (p.propiedadIdentificador != null
-                              ? 'Parqueadero: ${p.propiedadIdentificador}'
+                      p.tieneAsignacion
+                          ? ((p.propiedadPath ?? p.propiedadIdentificador) != null
+                              ? 'Propiedad: ${p.propiedadPath ?? p.propiedadIdentificador}'
                               : 'Propiedad independiente')
-                          : p.tienePropiedad
-                              ? 'Apto: ${p.propiedadIdentificador}'
-                              : 'Sin asignar',
+                          : 'Sin asignar',
                       style: TextStyle(
                         fontSize: 12,
                         color: cs.onSurfaceVariant,
@@ -90,8 +88,11 @@ class ParqueaderoCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Badge ocupado/libre
-              _EstadoBadge(ocupado: p.tieneVehiculo),
+              // Badge de estado: ocupado (con vehículo) / asignado / sin asignar
+              _EstadoBadge(
+                tieneVehiculo: p.tieneVehiculo,
+                tieneAsignacion: p.tieneAsignacion,
+              ),
             ],
           ),
 
@@ -110,7 +111,7 @@ class ParqueaderoCard extends StatelessWidget {
           ] else ...[
             const SizedBox(height: 8),
             Text(
-              'Parqueadero disponible',
+              'Sin vehículo asignado',
               style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
           ],
@@ -169,24 +170,46 @@ class ParqueaderoCard extends StatelessWidget {
 }
 
 class _EstadoBadge extends StatelessWidget {
-  final bool ocupado;
+  final bool tieneVehiculo;
+  final bool tieneAsignacion;
 
-  const _EstadoBadge({required this.ocupado});
+  const _EstadoBadge({
+    required this.tieneVehiculo,
+    required this.tieneAsignacion,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Prioridad: con vehículo → Ocupado; asignado sin vehículo → Asignado; nada → Sin asignar
+    final String texto;
+    final Color bg;
+    final Color fg;
+    if (tieneVehiculo) {
+      texto = 'Ocupado';
+      bg = AppColors.bgGreen;
+      fg = AppColors.ok;
+    } else if (tieneAsignacion) {
+      texto = 'Asignado';
+      bg = Colors.indigo.withValues(alpha: 0.12);
+      fg = Colors.indigo;
+    } else {
+      texto = 'Sin asignar';
+      bg = AppColors.neutralSoft;
+      fg = AppColors.textLoLight;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: ocupado ? AppColors.bgGreen : AppColors.neutralSoft,
+        color: bg,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        ocupado ? 'Ocupado' : 'Libre',
+        texto,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: ocupado ? AppColors.ok : AppColors.textLoLight,
+          color: fg,
         ),
       ),
     );

@@ -19,6 +19,9 @@ class ParqueaderoModel {
   final int? propiedadId;
   final String? propiedadIdentificador;
 
+  /// Path corto de la propiedad asociada (para mostrar a qué propiedad pertenece).
+  final String? propiedadPath;
+
   /// INDEPENDIENTE únicamente: ID de la Propiedad de tipo parqueadero en el árbol.
   final int? propiedadParqueaderoId;
 
@@ -33,6 +36,7 @@ class ParqueaderoModel {
     this.modeloPropiedad,
     this.propiedadId,
     this.propiedadIdentificador,
+    this.propiedadPath,
     this.propiedadParqueaderoId,
     this.vehiculoId,
     this.vehiculoPlaca,
@@ -63,6 +67,7 @@ class ParqueaderoModel {
                                 : null,
       propiedadId:            json['propiedadId'] as int?,
       propiedadIdentificador: json['propiedadIdentificador'] as String?,
+      propiedadPath:          json['propiedadPath'] as String?,
       propiedadParqueaderoId: json['propiedadParqueaderoId'] as int?,
       vehiculoId:             json['vehiculoId'] as int?,
       vehiculoPlaca:          json['vehiculoPlaca'] as String?,
@@ -77,6 +82,7 @@ class ParqueaderoModel {
     'modeloPropiedad':         modeloPropiedad?.name,
     'propiedadId':             propiedadId,
     'propiedadIdentificador':  propiedadIdentificador,
+    'propiedadPath':           propiedadPath,
     'propiedadParqueaderoId':  propiedadParqueaderoId,
     'vehiculoId':              vehiculoId,
     'vehiculoPlaca':           vehiculoPlaca,
