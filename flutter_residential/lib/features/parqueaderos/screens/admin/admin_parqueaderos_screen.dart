@@ -438,10 +438,14 @@ class _AsignarPropiedadDialogState extends State<_AsignarPropiedadDialog> {
   Future<void> _cargarPropiedades() async {
     try {
       final lista = await PropiedadService.listarPropiedades();
+      // Solo propiedades facturables y que NO sean de tipo parqueadero.
+      final asignables = lista
+          .where((p) => p['esFacturable'] == true && p['esParqueadero'] != true)
+          .toList();
       if (!mounted) return;
       setState(() {
-        _propiedades    = lista;
-        _filtradas      = lista;
+        _propiedades    = asignables;
+        _filtradas      = asignables;
         _cargandoLista  = false;
       });
     } catch (e) {
@@ -459,7 +463,7 @@ class _AsignarPropiedadDialogState extends State<_AsignarPropiedadDialog> {
       _filtradas = q.isEmpty
           ? _propiedades
           : _propiedades.where((p) {
-              final path = (p['path'] as String? ?? '').toLowerCase();
+              final path = (p['pathTextoCorto'] as String? ?? '').toLowerCase();
               final id   = p['id'].toString();
               return path.contains(q) || id.contains(q);
             }).toList();
@@ -565,7 +569,7 @@ class _AsignarPropiedadDialogState extends State<_AsignarPropiedadDialog> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      p['path'] as String? ??
+                                      p['pathTextoCorto'] as String? ??
                                           'Propiedad #${p['id']}',
                                       style: TextStyle(
                                         fontSize: 13,
