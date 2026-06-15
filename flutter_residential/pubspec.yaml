@@ -1,7 +1,7 @@
 name: flutter_residential
 description: "A new Flutter project."
 
-version: 1.1.0+26
+version: 1.1.0+29
 
 environment:
   sdk: ^3.9.2
@@ -25,7 +25,9 @@ dependencies:
   webview_flutter: ^4.10.0
   connectivity_plus: ^6.1.4
   intl: ^0.19.0
+  timezone: ^0.9.4
   flutter_confetti: ^0.5.1
+  flutter_bounce: ^1.1.0
 
   # Firebase / FCM
   firebase_core: ^3.6.0

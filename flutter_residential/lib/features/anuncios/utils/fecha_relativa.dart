@@ -1,15 +1,18 @@
+import '../../../core/utils/date_formatter.dart';
+
 /// Devuelve una representación relativa y compacta de una fecha ISO.
 /// Ejemplos: "hace 5 min", "hace 2h", "ayer", "12 may", "12 may 2024".
+/// El instante se interpreta en la zona del conjunto (no la del teléfono).
 String fechaRelativa(String? iso) {
   if (iso == null || iso.isEmpty) return '';
   DateTime dt;
   try {
-    dt = DateTime.parse(iso).toLocal();
+    dt = DateFormatter.instanteEnZona(iso);
   } catch (_) {
     return iso;
   }
 
-  final now = DateTime.now();
+  final now = DateFormatter.ahoraEnZona();
   final diff = now.difference(dt);
 
   if (diff.inSeconds < 60) return 'hace un momento';

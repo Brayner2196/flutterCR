@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../models/pqr_historial_model.dart';
 import '../../models/pqr_model.dart';
 import '../../services/pqr_service.dart';
@@ -118,17 +119,7 @@ class _DetallePqrScreenState extends State<DetallePqrScreen> {
             ),
             const SizedBox(height: 6),
             Text(pqr.descripcion, style: const TextStyle(fontSize: 14)),
-            const SizedBox(height: 16),
-
-            if (pqr.creadoEn != null) ...[
-              _InfoRow(
-                icono: Icons.access_time_outlined,
-                titulo: 'Creada el',
-                valor: pqr.creadoEn!,
-              ),
-              const SizedBox(height: 12),
-            ],
-
+            
             // ─── Timeline de trazabilidad ────────
             const Divider(height: 32),
             Text(
@@ -367,7 +358,7 @@ class _TimelineEntry extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      entry.fechaCambio!,
+                      DateFormatter.fechaHora12(entry.fechaCambio),
                       style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                     ),
                   ),

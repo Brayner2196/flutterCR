@@ -50,34 +50,18 @@ class AppBarResidente extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                auth.nombreConjunto ?? 'Conjunto Residencial',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  letterSpacing: -0.5,
-                  color: cs.primary,
-                ),
+          Expanded(
+            child: Text(
+              auth.nombreConjunto ?? 'Conjunto Residencial',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                letterSpacing: -0.5,
+                color: cs.primary,
               ),
-              Skeletonizer(
-                enabled: propiedades.loading,
-                child: Tooltip(
-                  message: propiedades.propiedadActual?.pathTexto ?? '',
-                  child: Text(
-                    propiedades.propiedadActual?.pathTexto ??
-                        'Vivienda no seleccionada',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

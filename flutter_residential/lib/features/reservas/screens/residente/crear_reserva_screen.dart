@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:toastification/toastification.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../models/reserva_model.dart';
 import '../../providers/reserva_provider.dart';
@@ -86,21 +86,17 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
         'observaciones': _obsCtrl.text.trim().isEmpty ? null : _obsCtrl.text.trim(),
       });
       if (!mounted) return;
-      toastification.show(
-        context: context,
-        type: ToastificationType.success,
-        title: const Text('Reserva enviada exitosamente'),
-        autoCloseDuration: const Duration(seconds: 3),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Reserva enviada exitosamente'),
+        backgroundColor: Colors.green,
+      ));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        title: Text(e.toString().replaceFirst('Exception: ', '')),
-        autoCloseDuration: const Duration(seconds: 4),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString().replaceFirst('Exception: ', '')),
+        backgroundColor: Colors.red,
+      ));
     } finally {
       if (mounted) setState(() => _enviando = false);
     }
@@ -746,7 +742,7 @@ class _FranjaTile extends StatelessWidget {
               Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${franja.horaInicio}  –  ${franja.horaFin}',
+                  Text('${DateFormatter.hora12Texto(franja.horaInicio)}  –  ${DateFormatter.hora12Texto(franja.horaFin)}',
                       style: TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w700,
                         color: seleccionada ? Colors.white
@@ -797,7 +793,7 @@ class _FranjaTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: AppColors.danger.withOpacity(0.2)),
                 ),
-                child: Text('${r.horaInicio}–${r.horaFin}',
+                child: Text('${DateFormatter.hora12Texto(r.horaInicio)}–${DateFormatter.hora12Texto(r.horaFin)}',
                     style: TextStyle(fontSize: 10, color: AppColors.danger,
                         fontWeight: FontWeight.w500)),
               )).toList(),
@@ -885,7 +881,7 @@ class _ResumenCard extends StatelessWidget {
                     '${fecha.day} ${ZonaDisponibilidadHelper.nombreMes(fecha)} ${fecha.year}'),
             const SizedBox(width: 16),
             _ResumenItem(icon: Icons.schedule_rounded, label: 'Horario',
-                valor: '${franja.horaInicio} – ${franja.horaFin}'),
+                valor: '${DateFormatter.hora12Texto(franja.horaInicio)} – ${DateFormatter.hora12Texto(franja.horaFin)}'),
           ]),
           if (zona.tieneCosto && zona.tarifaMonto != null) ...[
             const SizedBox(height: 10),

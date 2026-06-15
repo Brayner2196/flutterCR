@@ -2,6 +2,7 @@ import 'dart:async';
 import '../../../core/providers/base_provider.dart';
 import '../../../core/services/notificacion_service.dart';
 import '../../../core/storage/token_storage.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../models/login_response.dart';
 import '../models/multi_tenant_response.dart';
 import '../services/auth_service.dart';
@@ -39,6 +40,13 @@ class AuthProvider extends BaseProvider {
   String get timezone => _timezone ?? 'America/Bogota';
   MultiTenantResponse? get multiTenantPendiente => _multiTenantPendiente;
 
+  /// Sincroniza la zona horaria del tenant en memoria y en el formateador
+  /// global, para que todas las fechas se muestren en la zona del conjunto.
+  void _aplicarTimezone(String? tz) {
+    _timezone = tz;
+    DateFormatter.zonaTenant = tz ?? 'America/Bogota';
+  }
+
   bool get isLoggedIn => _status == AuthStatus.autenticado;
   bool get isAdmin => _rol == 'TENANT_ADMIN';
   bool get isSuperAdmin => _rol == 'SUPER_ADMIN';
@@ -65,7 +73,7 @@ class AuthProvider extends BaseProvider {
       _tenantId = sesion['tenantId'];
       _nombreConjunto = sesion['nombreConjunto'];
       _nombre = sesion['nombre'];
-      _timezone = sesion['timezone'];
+      _aplicarTimezone(sesion['timezone']);
       _esConsejero = sesion['esConsejero'] == 'true';
       _cargoConsejo = sesion['cargoConsejo'];
       _status = AuthStatus.autenticado;
@@ -158,7 +166,7 @@ class AuthProvider extends BaseProvider {
     _tenantId = null;
     _nombreConjunto = null;
     _nombre = null;
-    _timezone = null;
+    _aplicarTimezone(null);
     _esConsejero = false;
     _cargoConsejo = null;
     _multiTenantPendiente = null;
@@ -181,7 +189,7 @@ class AuthProvider extends BaseProvider {
     _tenantId = null;
     _nombreConjunto = null;
     _nombre = null;
-    _timezone = null;
+    _aplicarTimezone(null);
     _esConsejero = false;
     _cargoConsejo = null;
     _multiTenantPendiente = null;
@@ -220,7 +228,7 @@ class AuthProvider extends BaseProvider {
     _tenantId = response.tenantId;
     _nombreConjunto = response.nombreConjunto;
     _nombre = response.nombre;
-    _timezone = response.timezone;
+    _aplicarTimezone(response.timezone);
     _esConsejero = response.esConsejero;
     _cargoConsejo = response.cargoConsejo;
     _status = AuthStatus.autenticado;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../models/reserva_model.dart';
 import '../../providers/reserva_provider.dart';
 import '../../../../shared/widgets/estado_badge.dart';
@@ -97,7 +98,7 @@ class _DetalleReservaScreenState extends State<DetalleReservaScreen> {
             _SeccionInfo(
               icono: Icons.schedule_outlined,
               titulo: 'Horario',
-              valor: '${_reserva.horaInicio} — ${_reserva.horaFin}',
+              valor: '${DateFormatter.hora12Texto(_reserva.horaInicio)} — ${DateFormatter.hora12Texto(_reserva.horaFin)}',
             ),
             const SizedBox(height: 16),
 

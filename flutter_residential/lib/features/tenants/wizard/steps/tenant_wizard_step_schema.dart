@@ -109,9 +109,11 @@ class TenantWizardStepSchema extends StatelessWidget {
                       sugerido,
                       style: const TextStyle(
                         fontFamily: 'monospace',
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

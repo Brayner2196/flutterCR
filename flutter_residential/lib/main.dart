@@ -26,6 +26,7 @@ import 'features/parqueaderos/providers/parqueadero_provider.dart';
 import 'features/parqueaderos/providers/vehiculo_provider.dart';
 import 'features/consejo/providers/consejo_provider.dart';
 import 'core/config/app_env.dart';
+import 'core/utils/date_formatter.dart';
 import 'core/network/api_client.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'shared/widgets/offline_banner.dart';
@@ -64,6 +65,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   AppEnv.validate();
   WidgetsFlutterBinding.ensureInitialized();
+  DateFormatter.init(); // carga la base de zonas horarias (IANA)
   await Firebase.initializeApp();
   NotificacionService().configurarNavigator(navigatorKey);
   await NotificacionService().inicializar();

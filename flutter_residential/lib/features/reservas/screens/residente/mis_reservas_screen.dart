@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../models/reserva_model.dart';
 import '../../providers/reserva_provider.dart';
 import '../../../../shared/widgets/estado_badge.dart';
@@ -156,7 +157,7 @@ class _ReservaTile extends StatelessWidget {
                 Icon(Icons.schedule, size: 14, color: cs.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(
-                  '${reserva.horaInicio} — ${reserva.horaFin}',
+                  '${DateFormatter.hora12Texto(reserva.horaInicio)} — ${DateFormatter.hora12Texto(reserva.horaFin)}',
                   style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                 ),
               ],

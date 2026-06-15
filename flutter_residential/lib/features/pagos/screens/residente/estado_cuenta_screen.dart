@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/celebracion.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../features/usuarios/providers/residente_estadisticas_provider.dart';
 import '../../models/cobro_model.dart';
 import '../../models/estado_cuenta_model.dart';
@@ -2069,10 +2071,10 @@ class _FilaMovimiento extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (mov.fecha != null) ...[
+                    if (mov.creadoEn != null || mov.fecha != null) ...[
                       const SizedBox(width: 6),
                       Text(
-                        mov.fecha!,
+                        DateFormatter.fechaHora12(mov.creadoEn ?? mov.fecha),
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade500,

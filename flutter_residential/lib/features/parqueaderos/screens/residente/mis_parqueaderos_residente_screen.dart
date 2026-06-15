@@ -393,8 +393,6 @@ class _RegistrarVehiculoSheetState extends State<_RegistrarVehiculoSheet> {
     super.dispose();
   }
 
-  bool get _valido => _placaCtrl.text.trim().isNotEmpty;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -441,7 +439,6 @@ class _RegistrarVehiculoSheetState extends State<_RegistrarVehiculoSheet> {
                 labelText: 'Placa *',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
 
@@ -475,30 +472,36 @@ class _RegistrarVehiculoSheetState extends State<_RegistrarVehiculoSheet> {
             ),
             const SizedBox(height: 20),
 
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _valido && !_cargando
-                    ? () async {
-                        setState(() => _cargando = true);
-                        await widget.onRegistrar({
-                          'placa':  _placaCtrl.text.trim().toUpperCase(),
-                          'tipo':   _tipo.name,
-                          'marca':  _marcaCtrl.text.trim().isEmpty ? null : _marcaCtrl.text.trim(),
-                          'modelo': _modeloCtrl.text.trim().isEmpty ? null : _modeloCtrl.text.trim(),
-                          'color':  _colorCtrl.text.trim().isEmpty ? null : _colorCtrl.text.trim(),
-                        });
-                        if (mounted) setState(() => _cargando = false);
-                      }
-                    : null,
-                child: _cargando
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Registrar'),
-              ),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _placaCtrl,
+              builder: (_, value, __) {
+                final valido = value.text.trim().isNotEmpty;
+                return SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: valido && !_cargando
+                        ? () async {
+                            setState(() => _cargando = true);
+                            await widget.onRegistrar({
+                              'placa':  _placaCtrl.text.trim().toUpperCase(),
+                              'tipo':   _tipo.name,
+                              'marca':  _marcaCtrl.text.trim().isEmpty ? null : _marcaCtrl.text.trim(),
+                              'modelo': _modeloCtrl.text.trim().isEmpty ? null : _modeloCtrl.text.trim(),
+                              'color':  _colorCtrl.text.trim().isEmpty ? null : _colorCtrl.text.trim(),
+                            });
+                            if (mounted) setState(() => _cargando = false);
+                          }
+                        : null,
+                    child: _cargando
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Registrar'),
+                  ),
+                );
+              },
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../models/reserva_model.dart';
 import '../../providers/reserva_provider.dart';
@@ -243,7 +244,7 @@ class _ReservaTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${reserva.horaInicio.substring(0, 5)} — ${reserva.horaFin.substring(0, 5)}',
+            '${DateFormatter.hora12Texto(reserva.horaInicio)} — ${DateFormatter.hora12Texto(reserva.horaFin)}',
             style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
 

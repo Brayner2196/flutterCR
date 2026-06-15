@@ -958,7 +958,7 @@ class _DetalleGrupoCardState extends State<_DetalleGrupoCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${grupo.cantidad} unid. × \$${_fmt(grupo.montoPorUnidad)}',
+                Text('${grupo.cantidad} unid',
                     style: TextStyle(fontSize: 12.5, color: cs.onSurfaceVariant)),
                 if (hayPropiedades)
                   InkWell(

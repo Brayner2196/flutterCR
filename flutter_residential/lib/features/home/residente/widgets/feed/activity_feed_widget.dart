@@ -10,6 +10,7 @@ import '../../../../pqr/screens/residente/detalle_pqr_screen.dart';
 import '../../../../votaciones/models/votacion_model.dart';
 import '../../../../votaciones/providers/votacion_provider.dart';
 import '../../../../votaciones/screens/residente/mis_votaciones_screen.dart';
+import '../../../../../core/utils/date_formatter.dart';
 import '../../../../../shared/theme/app_theme.dart';
 
 /// Feed de actividad reciente del residente.
@@ -153,8 +154,8 @@ class ActivityFeedWidget extends StatelessWidget {
 
   String _fechaRelativa(String iso) {
     try {
-      final fecha = DateTime.parse(iso);
-      final diff = DateTime.now().difference(fecha);
+      final fecha = DateFormatter.instanteEnZona(iso);
+      final diff = DateFormatter.ahoraEnZona().difference(fecha);
       if (diff.inMinutes < 60) return 'hace ${diff.inMinutes} min';
       if (diff.inHours < 24) return 'hace ${diff.inHours} h';
       if (diff.inDays == 1) return 'ayer';

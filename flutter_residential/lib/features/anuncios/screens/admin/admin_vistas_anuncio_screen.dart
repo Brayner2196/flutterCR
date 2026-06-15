@@ -5,6 +5,7 @@ import '../../providers/anuncio_provider.dart';
 import '../../utils/fecha_relativa.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
+import '../../../../core/utils/date_formatter.dart';
 
 class AdminVistasAnuncioScreen extends StatefulWidget {
   final AnuncioModel anuncio;
@@ -157,7 +158,7 @@ class _VistaTile extends StatelessWidget {
 
   String _formatear(String iso) {
     try {
-      final dt = DateTime.parse(iso).toLocal();
+      final dt = DateFormatter.instanteEnZona(iso);
       return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) {
       return iso;
