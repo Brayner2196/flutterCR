@@ -3,8 +3,7 @@ import 'package:flutter_residential/features/anuncios/screens/admin/admin_anunci
 import 'package:flutter_residential/features/dashboard/providers/dashboard_provider.dart';
 import 'package:flutter_residential/features/dashboard/screens/widgets/kpi_carousel.dart';
 import 'package:flutter_residential/features/home/admin/widgets/quick_access_cards.dart';
-import 'package:flutter_residential/features/pagos/screens/admin/admin_cobros_screen.dart';
-import 'package:flutter_residential/features/pagos/screens/admin/admin_reporte_morosidad_screen.dart';
+import 'package:flutter_residential/features/pagos/screens/admin/cobros_hub_screen.dart';
 import 'package:flutter_residential/features/pagos/screens/admin/admin_verificar_pagos_screen.dart';
 import 'package:flutter_residential/features/pqr/screens/admin/admin_pqrs_screen.dart';
 import 'package:flutter_residential/features/reservas/screens/admin/admin_reservas_screen.dart';
@@ -85,7 +84,7 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   iconBackgroundColor: Colors.white,
                   iconColor: AppColors.green,
                   colorText: AppColors.green,
-                  onTap: () => _abrir(const AdminCobrosScreen()),
+                  onTap: () => _abrir(const CobrosHubScreen()),
                 ),
                 QuickAccessCardData(
                   title: 'PQRs',
@@ -112,7 +111,7 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   iconBackgroundColor: Colors.white,
                   iconColor: _orange,
                   colorText: _orange,
-                  onTap: () => _abrir(const AdminReporteMorosidadScreen()),
+                  onTap: () => _abrir(const CobrosHubScreen(initialTab: 1)),
                 ),
                 QuickAccessCardData(
                   title: 'Anuncios',

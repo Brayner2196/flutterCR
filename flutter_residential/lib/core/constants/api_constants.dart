@@ -25,6 +25,11 @@ class ApiConstants {
   static const String carteraSeed = '/api/admin/cartera/seed';
   // Estado de cartera vigente de todas las propiedades (badges)
   static const String carteraEstadosVigentes = '/api/admin/propiedades/estados-cartera';
+  // Gestión de cobranza — avisos a morosos
+  static String carteraNotificar(int propiedadId) =>
+      '/api/admin/propiedades/$propiedadId/cartera/notificar';
+  static const String carteraNotificarMasivo =
+      '/api/admin/propiedades/cartera/notificar-masivo';
 
   // Propiedades — público (registro)
   static const String authTiposPropiedad = '/auth/tiposPropiedad';

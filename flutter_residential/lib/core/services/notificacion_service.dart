@@ -9,7 +9,7 @@ import '../constants/api_constants.dart';
 import '../network/api_client.dart';
 
 // ─── Pantallas admin ──────────────────────────────────────────────────────────
-import '../../features/pagos/screens/admin/admin_cobros_screen.dart';
+import '../../features/pagos/screens/admin/cobros_hub_screen.dart';
 import '../../features/reservas/screens/admin/admin_reservas_screen.dart';
 import '../../features/pqr/screens/admin/admin_pqrs_screen.dart';
 import '../../features/anuncios/screens/admin/admin_anuncios_screen.dart';
@@ -230,7 +230,7 @@ class NotificacionService {
 
     switch (ruta) {
       case 'pagos':
-        if (esAdmin)     destino = const AdminCobrosScreen();
+        if (esAdmin)     destino = const CobrosHubScreen();
         if (esResidente) destino = const EstadoCuentaScreen();
         break;
 
