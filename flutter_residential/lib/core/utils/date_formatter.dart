@@ -114,6 +114,17 @@ class DateFormatter {
     }
   }
 
+  /// Instante del backend → solo fecha en zona del tenant: "16 jun 2026"
+  /// (UTC→tenant, sin hora). Para mostrar la fecha de un instante en cards/listas.
+  static String fechaInstante(String? iso, [String? timezone]) {
+    if (iso == null || iso.isEmpty) return '-';
+    try {
+      return DateFormat('d MMM y', 'es').format(_parseInstante(iso, timezone));
+    } catch (_) {
+      return iso;
+    }
+  }
+
   /// Instante con hora (zona del tenant): "15 ene 2026, 14:30"
   static String fechaHora(String? iso, [String? timezone]) {
     if (iso == null || iso.isEmpty) return '-';
@@ -203,4 +214,5 @@ class DateFormatter {
       return false;
     }
   }
+
 }

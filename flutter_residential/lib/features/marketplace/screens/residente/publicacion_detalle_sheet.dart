@@ -271,6 +271,7 @@ class _BotonesAccion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = publicacion;
+    final cs = Theme.of(context).colorScheme;
 
     if (p.agotado) {
       return _InfoBanner(
@@ -289,8 +290,8 @@ class _BotonesAccion extends StatelessWidget {
         if (p.aceptaDomicilio)
           FilledButton.icon(
             onPressed: () => _abrirConfirmacion(context, 'DOMICILIO'),
-            icon: const Icon(Icons.delivery_dining_outlined),
-            label: const Text('Solicitar a domicilio'),
+            icon: Icon(Icons.delivery_dining_outlined, color: cs.onPrimaryContainer),
+            label: Text('Solicitar a domicilio', style: TextStyle(fontWeight: FontWeight.w600, color: cs.onPrimaryContainer)),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -339,14 +340,16 @@ class _CategoriaBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: cs.primaryContainer,
+        color: cs.primary,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(categoria,
-          style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: cs.onPrimaryContainer)),
+      child: Text(
+        categoria,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: cs.onPrimaryContainer),
+      ),
     );
   }
 }

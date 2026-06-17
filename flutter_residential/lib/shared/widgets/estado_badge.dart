@@ -27,7 +27,11 @@ class EstadoBadge extends StatelessWidget {
     );
   }
 
-  (Color, Color) _colores(ColorScheme cs) {
+  (Color, Color) _colores(ColorScheme cs) => coloresDe(estado, cs);
+
+  /// Colores (fondo, texto) codificados por estado. Reutilizable para badges,
+  /// sombras, bordes y cualquier indicador que dependa del estado.
+  static (Color, Color) coloresDe(String estado, ColorScheme cs) {
     switch (estado) {
       case 'PENDIENTE':
       case 'INACTIVO':

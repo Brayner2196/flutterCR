@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/pqr_model.dart';
 import '../../providers/pqr_provider.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/widgets/estado_badge.dart';
 import '../../../../shared/widgets/filtro_chips.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
@@ -44,8 +45,8 @@ class _MisPqrsScreenState extends State<MisPqrsScreen> {
       appBar: AppBar(title: const Text('Mis PQRs')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _irACrear(),
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva PQR'),
+        icon: Icon(Icons.add, color: cs.onPrimaryContainer),
+        label: Text('Nueva PQR', style: TextStyle(fontWeight: FontWeight.w600, color: cs.onPrimaryContainer)),
         
       ),
       body: RefreshIndicator(
@@ -115,6 +116,7 @@ class _PqrTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final (_, estadoColor) = EstadoBadge.coloresDe(pqr.estado, cs);
 
     return InkWell(
       onTap: onTap,
@@ -125,6 +127,7 @@ class _PqrTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: cs.outline),
         ),
+        
         padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +143,7 @@ class _PqrTile extends StatelessWidget {
                 const Spacer(),
                 if (pqr.creadoEn != null)
                   Text(
-                    pqr.creadoEn!.substring(0, 10),
+                    DateFormatter.fechaHora12(pqr.creadoEn),
                     style:
                         TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                   ),

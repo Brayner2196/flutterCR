@@ -90,7 +90,7 @@ class _DetalleReservaScreenState extends State<DetalleReservaScreen> {
             _SeccionInfo(
               icono: Icons.calendar_today_outlined,
               titulo: 'Fecha',
-              valor: _reserva.fecha,
+              valor: DateFormatter.fecha(_reserva.fecha),
             ),
             const SizedBox(height: 16),
 
@@ -118,7 +118,7 @@ class _DetalleReservaScreenState extends State<DetalleReservaScreen> {
               _SeccionInfo(
                 icono: Icons.access_time_outlined,
                 titulo: 'Creada el',
-                valor: _reserva.creadoEn!,
+                valor: DateFormatter.fechaHora12(_reserva.creadoEn!),
               ),
               const SizedBox(height: 16),
             ],

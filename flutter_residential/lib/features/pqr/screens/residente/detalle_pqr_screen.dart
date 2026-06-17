@@ -246,7 +246,7 @@ class _RespuestaAdminPanel extends StatelessWidget {
           // ─── Texto de la respuesta ──────────────
           Text(
             pqr.respuestaAdmin!,
-            style: TextStyle(fontSize: 13, color: cs.onSurface),
+            style: TextStyle(fontSize: 13, color: Colors.black87),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
@@ -263,7 +263,7 @@ class _RespuestaAdminPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  pqr.fechaRespuesta!,
+                  DateFormatter.fechaHora12(pqr.fechaRespuesta),
                   style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                 ),
               ],
@@ -293,7 +293,7 @@ class _TimelineEntry extends StatelessWidget {
       case 'RESUELTO':
         return Colors.green;
       case 'CERRADO':
-        return cs.outline;
+        return cs.onPrimary;
       case 'RECHAZADA':
         return cs.error;
       default:

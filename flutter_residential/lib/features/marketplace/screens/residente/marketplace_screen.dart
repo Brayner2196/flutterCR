@@ -523,11 +523,14 @@ class _FiltroChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: activo ? cs.primary : cs.outline),
         ),
-        child: Text(label,
-            style: TextStyle(
-                color: activo ? Colors.white : cs.onSurface,
-                fontSize: 12,
-                fontWeight: FontWeight.w600)),
+        child: Center(
+          heightFactor: 1,
+          child: Text(label,
+              style: TextStyle(
+                  color: activo ? cs.onPrimaryContainer : cs.onSurface,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600)),
+        ),
       ),
     );
   }
@@ -551,8 +554,8 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
   final _precioMaxCtrl = TextEditingController();
 
   static const _radiosLabel = [
-    'Solo mi piso',
-    'Pisos adyacentes',
+    'Mi piso',
+    'Pisos Cercanos',
     'Mi torre',
     'Todo el conjunto',
   ];
@@ -663,7 +666,8 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
                 style: theme.textTheme.labelLarge
                     ?.copyWith(color: cs.primary)),
             const SizedBox(height: 4),
-            Text(_radiosLabel[_radio],
+            Text(
+              _radiosLabel[_radio],
                 style: TextStyle(
                     fontSize: 13, color: cs.onSurfaceVariant)),
             Slider(
@@ -673,15 +677,7 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
               divisions: 3,
               onChanged: (v) => setState(() => _radio = v.round()),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: _radiosLabel
-                  .map((l) => Text(l.split(' ').first,
-                      style: TextStyle(
-                          fontSize: 10, color: cs.onSurfaceVariant)))
-                  .toList(),
-            ),
-            const SizedBox(height: 20),
+            
 
             // ── Precio ────────────────────────────────────────
             Text('Rango de precio',
