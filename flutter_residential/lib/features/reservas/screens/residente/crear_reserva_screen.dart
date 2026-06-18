@@ -76,6 +76,10 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
 
   Future<void> _enviar() async {
     if (!_listo) return;
+    // Capturamos las referencias ANTES del await para no buscar ancestros
+    // sobre un widget que pudo desactivarse durante la operación async.
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     setState(() => _enviando = true);
     try {
       await context.read<ReservaProvider>().crearReserva({
@@ -86,14 +90,14 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
         'observaciones': _obsCtrl.text.trim().isEmpty ? null : _obsCtrl.text.trim(),
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      messenger.showSnackBar(const SnackBar(
         content: Text('Reserva enviada exitosamente'),
         backgroundColor: Colors.green,
       ));
-      Navigator.pop(context);
+      navigator.pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      messenger.showSnackBar(SnackBar(
         content: Text(e.toString().replaceFirst('Exception: ', '')),
         backgroundColor: Colors.red,
       ));

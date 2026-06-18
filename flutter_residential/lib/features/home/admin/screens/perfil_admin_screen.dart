@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
 import 'package:flutter_residential/features/usuarios/providers/app_provider.dart';
 import 'package:flutter_residential/shared/dialogs/confirmar_logout.dart';
-import 'package:flutter_residential/shared/utils/texto_utils.dart';
+import 'package:flutter_residential/core/utils/texto_utils.dart';
 import 'package:flutter_residential/shared/widgets/seccion_agrupadora.dart';
 import 'package:flutter_residential/shared/widgets/seccion_agrupadora_item.dart';
 import 'package:flutter_residential/shared/widgets/seccion_agrupadora_item_accion.dart';

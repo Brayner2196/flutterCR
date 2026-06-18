@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/segmented_pills.dart';
 import 'cobros_tab_view.dart';
 import 'cobranza_tab_view.dart';
 import 'cobros_config_screen.dart';
-import 'admin_cobro_especial_screen.dart';
 
 /// Hub unificado del módulo de cobros para el rol admin.
 ///
-/// Reemplaza la antigua `AdminCobrosScreen` y unifica en pestañas lo que antes
-/// estaba disperso: operación de cobros y gestión de cobranza (morosos).
-/// El AppBar queda limpio: solo un menú con cobro especial y configuración
-/// (cuotas/mora/pasarelas), en lugar de los cinco iconos sueltos anteriores.
+/// Unifica en un control segmentado (Cobros / Cobranza) la operación de
+/// cobros y la gestión de cobranza (morosos). El AppBar queda limpio: lock
+/// para cerrar período (solo en Cobros) y un menú con configuración.
 class CobrosHubScreen extends StatefulWidget {
   /// 0 = Cobros, 1 = Cobranza. Permite abrir directo en una pestaña.
   final int initialTab;
@@ -20,34 +19,15 @@ class CobrosHubScreen extends StatefulWidget {
   State<CobrosHubScreen> createState() => _CobrosHubScreenState();
 }
 
-class _CobrosHubScreenState extends State<CobrosHubScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tab;
+class _CobrosHubScreenState extends State<CobrosHubScreen> {
   final GlobalKey<CobrosTabViewState> _cobrosKey =
       GlobalKey<CobrosTabViewState>();
+  late int _index;
 
   @override
   void initState() {
     super.initState();
-    _tab = TabController(
-      length: 2,
-      vsync: this,
-      initialIndex: widget.initialTab.clamp(0, 1),
-    );
-  }
-
-  @override
-  void dispose() {
-    _tab.dispose();
-    super.dispose();
-  }
-
-  Future<void> _abrirCobroEspecial() async {
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => const AdminCobroEspecialScreen()),
-    );
-    if (result == true) _cobrosKey.currentState?.recargar();
+    _index = widget.initialTab.clamp(0, 1);
   }
 
   void _abrirConfiguracion() => Navigator.push(
@@ -61,45 +41,42 @@ class _CobrosHubScreenState extends State<CobrosHubScreen>
       appBar: AppBar(
         title: const Text('Cobros'),
         actions: [
-          PopupMenuButton<String>(
-            tooltip: 'Más opciones',
-            onSelected: (v) {
-              if (v == 'especial') _abrirCobroEspecial();
-              if (v == 'config') _abrirConfiguracion();
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: 'especial',
-                child: ListTile(
-                  leading: Icon(Icons.receipt_long_outlined),
-                  title: Text('Cobro especial'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'config',
-                child: ListTile(
-                  leading: Icon(Icons.settings_outlined),
-                  title: Text('Configuración'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
+          if (_index == 0)
+            IconButton(
+              icon: const Icon(Icons.lock_outline),
+              tooltip: 'Cerrar período',
+              onPressed: () => _cobrosKey.currentState?.cerrarPeriodoActual(),
+            ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Configuración',
+            onPressed: _abrirConfiguracion,
           ),
         ],
-        bottom: TabBar(
-          controller: _tab,
-          tabs: const [
-            Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Cobros'),
-            Tab(icon: Icon(Icons.gavel_outlined), text: 'Cobranza'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tab,
+      body: Column(
         children: [
-          CobrosTabView(key: _cobrosKey),
-          const CobranzaTabView(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: SegmentedPills(
+              labels: const ['Cobros', 'Cobranza'],
+              icons: const [
+                Icons.receipt_long_outlined,
+                Icons.gavel_outlined,
+              ],
+              selectedIndex: _index,
+              onChanged: (i) => setState(() => _index = i),
+            ),
+          ),
+          Expanded(
+            child: IndexedStack(
+              index: _index,
+              children: [
+                CobrosTabView(key: _cobrosKey),
+                const CobranzaTabView(),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../usuarios/models/usuario_response.dart';
 import '../services/inquilino_service.dart';
-import '../../../shared/utils/texto_utils.dart';
+import '../../../core/utils/texto_utils.dart';
 
 /// Mapa de permiso → etiqueta + icono para mostrar en la UI.
 const _permisosInfo = {

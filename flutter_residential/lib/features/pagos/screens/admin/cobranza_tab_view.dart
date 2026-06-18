@@ -15,7 +15,7 @@ import '../../../../shared/theme/app_theme.dart';
 /// Pestaña "Cobranza" del hub: gestión de morosos.
 ///
 /// Lista los cobros vencidos con su fase de cartera vigente y permite enviar
-/// avisos (recordatorio, paso a cartera, pre-jurídico) de forma individual o
+/// avisos (recordatorio, paso a cartera, pre-juridico) de forma individual o
 /// masiva por fase. Reutiliza el sistema de estados de cartera configurables.
 class CobranzaTabView extends StatefulWidget {
   const CobranzaTabView({super.key});
@@ -28,7 +28,7 @@ class _CobranzaTabViewState extends State<CobranzaTabView>
     with AutomaticKeepAliveClientMixin {
   Map<int, EstadoCarteraVigente> _estados = {};
   List<EstadoCarteraConfig> _fases = [];
-  String? _faseFiltro; // código de la fase; null = todas
+  String? _faseFiltro; // codigo de la fase; null = todas
   bool _enviando = false;
 
   @override
@@ -52,7 +52,7 @@ class _CobranzaTabViewState extends State<CobranzaTabView>
           ..sort((a, b) => b.severidad.compareTo(a.severidad)));
       });
     } catch (_) {
-      // Degradación segura: sin estados no se muestran badges ni filtros por fase.
+      // Degradacion segura: sin estados no se muestran badges ni filtros.
     }
   }
 
@@ -69,15 +69,10 @@ class _CobranzaTabViewState extends State<CobranzaTabView>
             .where((c) => _estadoDe(c)?.estadoCodigo == _faseFiltro)
             .toList();
 
+    final puedeAvisar = vencidos.isNotEmpty && _fases.isNotEmpty;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: vencidos.isEmpty || _fases.isEmpty
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: _enviando ? null : _avisoMasivo,
-              icon: const Icon(Icons.campaign_outlined),
-              label: const Text('Aviso masivo'),
-            ),
+      bottomNavigationBar: puedeAvisar ? _barraAcciones() : null,
       body: provider.loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -125,7 +120,6 @@ class _CobranzaTabViewState extends State<CobranzaTabView>
       );
 
   Widget _filtrosFase(List<CobroModel> vencidos) {
-    // Cuenta morosos por fase de cartera vigente.
     final counts = <String, int>{};
     final colores = <String, Color>{};
     for (final c in vencidos) {
@@ -193,7 +187,29 @@ class _CobranzaTabViewState extends State<CobranzaTabView>
     );
   }
 
-  // ─── Acciones de aviso ─────────────────────────────────────────
+  /// Barra inferior fija con la acción de aviso masivo.
+  Widget _barraAcciones() {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outlineVariant)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          child: FilledButton.icon(
+            onPressed: _enviando ? null : _avisoMasivo,
+            icon: const Icon(Icons.campaign_outlined, size: 18),
+            label: const Text('Aviso masivo'),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Acciones de aviso
 
   Future<void> _avisoIndividual(CobroModel moroso) async {
     final fase = _estadoDe(moroso);
@@ -218,7 +234,7 @@ class _CobranzaTabViewState extends State<CobranzaTabView>
               maxLines: 3,
               decoration: const InputDecoration(
                 labelText: 'Mensaje (opcional)',
-                hintText: 'Si lo dejas vacío se usa el aviso de la fase actual',
+                hintText: 'Si lo dejas vacio se usa el aviso de la fase actual',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -270,7 +286,7 @@ class _CobranzaTabViewState extends State<CobranzaTabView>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Se notificará a todas las propiedades en la fase elegida.',
+              const Text('Se notificara a todas las propiedades en la fase elegida.',
                   style: TextStyle(fontSize: 13)),
               const SizedBox(height: 12),
               InputDecorator(

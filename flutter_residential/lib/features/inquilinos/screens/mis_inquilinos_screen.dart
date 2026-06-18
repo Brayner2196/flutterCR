@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/shared/utils/texto_utils.dart';
+import 'package:flutter_residential/core/utils/texto_utils.dart';
 import 'package:toastification/toastification.dart';
 import '../services/inquilino_service.dart';
 import '../widgets/crear_inquilino_dialog.dart';

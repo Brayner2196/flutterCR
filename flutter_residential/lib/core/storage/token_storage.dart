@@ -36,10 +36,8 @@ class TokenStorage {
     if (nombre != null) {
       await _storage.write(key: _keyNombre, value: nombre);
     }
-    await _storage.write(
-        key: _keyTimezone, value: timezone ?? 'America/Bogota');
-    await _storage.write(
-        key: _keyEsConsejero, value: esConsejero ? 'true' : 'false');
+    await _storage.write( key: _keyTimezone, value: timezone ?? 'America/Bogota');
+    await _storage.write( key: _keyEsConsejero, value: esConsejero ? 'true' : 'false');
     if (cargoConsejo != null) {
       await _storage.write(key: _keyCargoConsejo, value: cargoConsejo);
     }

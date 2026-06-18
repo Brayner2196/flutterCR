@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
-import 'package:flutter_residential/shared/utils/texto_utils.dart';
+import 'package:flutter_residential/core/utils/texto_utils.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class AppBarAdmin extends StatelessWidget implements PreferredSizeWidget {

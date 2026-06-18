@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/shared/utils/format_moneda.dart';
+import 'package:flutter_residential/core/utils/format_moneda.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../models/cobro_model.dart';
 import '../../models/estado_cuenta_model.dart';

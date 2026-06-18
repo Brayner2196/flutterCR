@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
 import 'package:flutter_residential/features/propiedades/providers/propiedad_provider.dart';
 import 'package:flutter_residential/features/home/residente/widgets/propiedad_selector_dropdown.dart';
-import 'package:flutter_residential/shared/utils/texto_utils.dart';
+import 'package:flutter_residential/core/utils/texto_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../usuarios/models/usuario_propiedad_response.dart';
@@ -20,7 +20,7 @@ class AppBarResidente extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final propiedades = context.watch<PropiedadProvider>();
+    context.watch<PropiedadProvider>();
     final cs = Theme.of(context).colorScheme;
 
     return AppBar(

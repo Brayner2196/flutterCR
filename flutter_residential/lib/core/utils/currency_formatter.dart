@@ -15,6 +15,28 @@ class CurrencyFormatter {
     return entero < 0 ? '-\$$str' : '\$$str';
   }
 
+  /// Formato compacto para montos grandes: $6,5M · $850K · $1.234.
+  /// Útil en tarjetas/resúmenes donde el ancho es limitado.
+  static String copCompacto(num value) {
+    final v = value.toInt();
+    final abs = v.abs();
+    String cuerpo;
+    if (abs >= 1000000) {
+      cuerpo = '\$${_decimal(abs / 1000000)}M';
+    } else if (abs >= 10000) {
+      cuerpo = '\$${_decimal(abs / 1000)}K';
+    } else {
+      cuerpo = cop(abs);
+    }
+    return v < 0 ? '-$cuerpo' : cuerpo;
+  }
+
+  /// Un decimal con coma; oculta el ",0" (6.0 -> "6", 6.5 -> "6,5").
+  static String _decimal(double n) {
+    final s = n.toStringAsFixed(n >= 100 ? 0 : 1);
+    return s.replaceAll('.', ',').replaceAll(RegExp(r',0$'), '');
+  }
+
   /// Igual que [cop] pero acepta String (null-safe, devuelve '\$0' si inválido).
   static String copFromString(String? value) {
     if (value == null || value.isEmpty) return '\$0';
