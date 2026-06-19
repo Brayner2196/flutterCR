@@ -153,7 +153,19 @@ class CobrosTabViewState extends State<CobrosTabView>
 
   // ── Acciones de la barra inferior ──────────────────────────────────────
 
-  void _generarCobros() => Navigator.push(
+  /// Crear un nuevo período: asistente completo (elige mes/año → crea período
+  /// y genera los cobros de todas las propiedades). Solo se ofrece cuando
+  /// todos los períodos están cerrados (botón "+" de la barra de meses).
+  void _crearPeriodo() => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminGenerarCobrosScreen()),
+      ).then((_) {
+        if (mounted) context.read<CobrosProvider>().cargarPeriodos();
+        recargar();
+      });
+
+  /// Adicionar cobros al período abierto seleccionado (nuevas propiedades).
+  void _adicionarCobros() => Navigator.push(
         context,
         MaterialPageRoute(
             builder: (_) =>
@@ -209,6 +221,9 @@ class CobrosTabViewState extends State<CobrosTabView>
     final provider = context.watch<CobrosProvider>();
     final tienePeriodo = _periodoSeleccionado != null;
     final hayCobros = tienePeriodo && provider.cobros.isNotEmpty;
+    // El "+" para crear un nuevo período solo aparece cuando todos los
+    // períodos están cerrados (o aún no hay ninguno).
+    final todosCerrados = provider.periodos.every((p) => !p.estaAbierto);
 
     // Carga inicial de períodos: aún no hay barra de meses que mostrar.
     final cargaInicial = provider.loading && provider.periodos.isEmpty;
@@ -223,20 +238,20 @@ class CobrosTabViewState extends State<CobrosTabView>
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                if (provider.periodos.isNotEmpty)
-                  MesSelectorBar(
-                    periodos: provider.periodos,
-                    seleccionado: _periodoSeleccionado,
-                    onSeleccionar: (sel) {
-                      setState(() {
-                        _periodoSeleccionado = sel;
-                        _estadoFiltro = null;
-                      });
-                      context
-                          .read<CobrosProvider>()
-                          .cargarCobrosAdmin(periodoId: sel.id);
-                    },
-                  ),
+                MesSelectorBar(
+                  periodos: provider.periodos,
+                  seleccionado: _periodoSeleccionado,
+                  onCrearPeriodo: todosCerrados ? _crearPeriodo : null,
+                  onSeleccionar: (sel) {
+                    setState(() {
+                      _periodoSeleccionado = sel;
+                      _estadoFiltro = null;
+                    });
+                    context
+                        .read<CobrosProvider>()
+                        .cargarCobrosAdmin(periodoId: sel.id);
+                  },
+                ),
                 Expanded(
                   child: cargandoCobros
                       ? _contenidoSkeleton()
@@ -427,7 +442,7 @@ class CobrosTabViewState extends State<CobrosTabView>
           padding: const EdgeInsets.all(24),
           child: Text(
             provider.periodos.isEmpty
-                ? 'Aún no hay períodos. Genera el primer cobro desde la barra inferior.'
+                ? 'Aún no hay períodos. Crea el primero con el botón "+".'
                 : 'Selecciona un período para ver sus cobros.',
             textAlign: TextAlign.center,
             style: TextStyle(color: cs.onSurfaceVariant),
@@ -446,9 +461,9 @@ class CobrosTabViewState extends State<CobrosTabView>
           const SizedBox(height: 12),
           if (_periodoSeleccionado!.estaAbierto)
             FilledButton.icon(
-              onPressed: _generarCobros,
-              icon: const Icon(Icons.auto_awesome),
-              label: const Text('Generar cobros'),
+              onPressed: _adicionarCobros,
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar cobros'),
             ),
         ],
       ),
@@ -456,8 +471,13 @@ class CobrosTabViewState extends State<CobrosTabView>
   }
 
   /// Barra inferior fija con las acciones del módulo.
+  ///
+  /// "Cobro especial" siempre visible. "Adicionar cobros" solo cuando hay un
+  /// período abierto y seleccionado (lleva a la pantalla de generación para
+  /// adicionar cobros a nuevas propiedades del período).
   Widget _barraAcciones() {
     final cs = Theme.of(context).colorScheme;
+    final mostrarAdicionar = periodoAbierto;
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
@@ -476,14 +496,16 @@ class CobrosTabViewState extends State<CobrosTabView>
                   label: const Text('Cobro especial'),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _generarCobros,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Generar cobros'),
+              if (mostrarAdicionar) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _adicionarCobros,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Adicionar cobros'),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

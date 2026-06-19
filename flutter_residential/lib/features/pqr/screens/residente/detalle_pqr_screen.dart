@@ -263,7 +263,7 @@ class _RespuestaAdminPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  DateFormatter.fechaHora12(pqr.fechaRespuesta),
+                  DateFormatter.fechaHoraMinAmPm(pqr.fechaRespuesta),
                   style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                 ),
               ],
@@ -358,7 +358,7 @@ class _TimelineEntry extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      DateFormatter.fechaHora12(entry.fechaCambio),
+                      DateFormatter.fechaHoraMinAmPm(entry.fechaCambio),
                       style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                     ),
                   ),

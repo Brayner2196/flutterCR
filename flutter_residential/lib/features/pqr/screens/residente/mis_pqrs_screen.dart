@@ -143,7 +143,7 @@ class _PqrTile extends StatelessWidget {
                 const Spacer(),
                 if (pqr.creadoEn != null)
                   Text(
-                    DateFormatter.fechaHora12(pqr.creadoEn),
+                    DateFormatter.fechaHoraMinAmPm(pqr.creadoEn),
                     style:
                         TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                   ),

@@ -143,7 +143,7 @@ class DateFormatter {
 
   /// Instante en formato exacto (zona del tenant): "13 jun 2026 7:23 am"
   /// → día mes(3 letras) año hora:minutos am/pm (12h)
-  static String fechaHora12(String? iso, [String? timezone]) {
+  static String fechaHoraMinAmPm(String? iso, [String? timezone]) {
     if (iso == null || iso.isEmpty) return '-';
     try {
       final dt = _parseInstante(iso, timezone);
@@ -158,6 +158,22 @@ class DateFormatter {
     }
   }
 
+
+static String fechaHoraMinSegAmPm(String? iso, [String? timezone]) {
+    if (iso == null || iso.isEmpty) return '-';
+    try {
+      final dt = _parseInstante(iso, timezone);
+      final mes = _mesesAbrev[dt.month - 1];
+      var hora12 = dt.hour % 12;
+      if (hora12 == 0) hora12 = 12;
+      final min = dt.minute.toString().padLeft(2, '0');
+      final seg = dt.second.toString().padLeft(2, '0');
+      final ampm = dt.hour < 12 ? 'am' : 'pm';
+      return '${dt.day} $mes ${dt.year} $hora12:$min:$seg $ampm';
+    } catch (_) {
+      return iso;
+    }
+  }
   /// Convierte una hora "HH:mm" (24h) a "h:mm am/pm" (12h).
   /// Ej: "14:00" → "2:00 pm", "08:30" → "8:30 am", "00:00" → "12:00 am".
   /// Pensado para franjas horarias que ya vienen como string del backend

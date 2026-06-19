@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/core/utils/date_formatter.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../models/pqr_model.dart';
@@ -226,8 +227,7 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
             else
               Expanded(
                 child: ListView.separated(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   itemCount: p.pqrs.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (_, i) => _PqrTile(
@@ -385,7 +385,7 @@ class _PqrTile extends StatelessWidget {
                       size: 13, color: cs.onSurfaceVariant),
                   const SizedBox(width: 4),
                   Text(
-                    _formatFecha(pqr.creadoEn!),
+                    DateFormatter.fechaHoraMinAmPm(pqr.creadoEn!),
                     style: TextStyle(
                         fontSize: 11, color: cs.onSurfaceVariant),
                   ),
@@ -715,7 +715,7 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                         if (_pqr.creadoEn != null)
                           _InfoChip(
                             icon: Icons.calendar_today_outlined,
-                            label: _pqr.creadoEn!.split(' ')[0],
+                            label: DateFormatter.fechaHoraMinAmPm(_pqr.creadoEn!),
                             cs: cs,
                           ),
                         if (_pqr.propiedadId != null)
@@ -862,7 +862,7 @@ class _PqrDetalleSheetState extends State<_PqrDetalleSheet> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
-                          'Respondida el ${_pqr.fechaRespuesta!.split(' ')[0]}',
+                          'Respondida el ${ DateFormatter.fechaHoraMinAmPm(_pqr.fechaRespuesta)}',
                           style: TextStyle(
                               fontSize: 12, color: cs.onSurfaceVariant),
                         ),

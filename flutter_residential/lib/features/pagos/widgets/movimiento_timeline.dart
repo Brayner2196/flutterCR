@@ -174,7 +174,7 @@ class _FilaMovimiento extends StatelessWidget {
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
-                          DateFormatter.fechaHora12(fecha),
+                          DateFormatter.fechaHoraMinAmPm(fecha),
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                               fontSize: 11, color: cs.onSurfaceVariant),

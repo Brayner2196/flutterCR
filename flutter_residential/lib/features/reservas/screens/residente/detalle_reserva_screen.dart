@@ -118,7 +118,7 @@ class _DetalleReservaScreenState extends State<DetalleReservaScreen> {
               _SeccionInfo(
                 icono: Icons.access_time_outlined,
                 titulo: 'Creada el',
-                valor: DateFormatter.fechaHora12(_reserva.creadoEn!),
+                valor: DateFormatter.fechaHoraMinAmPm(_reserva.creadoEn!),
               ),
               const SizedBox(height: 16),
             ],

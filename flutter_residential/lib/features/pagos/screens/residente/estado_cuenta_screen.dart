@@ -2074,7 +2074,7 @@ class _FilaMovimiento extends StatelessWidget {
                     if (mov.creadoEn != null || mov.fecha != null) ...[
                       const SizedBox(width: 6),
                       Text(
-                        DateFormatter.fechaHora12(mov.creadoEn ?? mov.fecha),
+                        DateFormatter.fechaHoraMinAmPm(mov.creadoEn ?? mov.fecha),
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade500,
