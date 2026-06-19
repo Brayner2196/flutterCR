@@ -2,25 +2,6 @@ import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzdata;
 
-/// Formatea fechas/horas convirtiendo a la zona horaria del tenant activo.
-///
-/// Regla de oro:
-/// - Los *instantes* (cuándo pasó algo: `creadoEn`, `fechaVerificacion`, etc.)
-///   se guardan en UTC en el backend y aquí se convierten a la zona del tenant.
-/// - Las *fechas civiles* (día de calendario: `fechaLimitePago`, `fechaPago`,
-///   vencimientos, periodos) NO se convierten — un "15 jun" debe seguir siendo
-///   "15 jun" en cualquier zona.
-///
-/// La zona del tenant se setea una vez tras el login mediante [zonaTenant]
-/// (ver AuthProvider). Cada método acepta un `timezone` opcional que la
-/// sobreescribe puntualmente.
-///
-/// Uso típico:
-/// ```dart
-/// DateFormatter.fecha(cobro.fechaLimitePago)   // civil  → "15 ene 2026"
-/// DateFormatter.fechaHora(abono.creadoEn)      // UTC→tenant → "15 ene 2026, 14:30"
-/// DateFormatter.fechaHora12(mov.creadoEn)      // UTC→tenant → "15 ene 2026 2:30 pm"
-/// ```
 class DateFormatter {
   DateFormatter._();
 
@@ -108,7 +89,10 @@ class DateFormatter {
   static String fechaCorta(String? isoDate, [String? timezone]) {
     if (isoDate == null || isoDate.isEmpty) return '-';
     try {
-      return DateFormat('dd/MM/y', 'es').format(_parseCivil(isoDate));
+      final dt = _parseInstante(isoDate, timezone);
+      final mes = _mesesAbrev[dt.month - 1];
+      
+      return '${dt.day} $mes ${dt.year}';
     } catch (_) {
       return isoDate;
     }

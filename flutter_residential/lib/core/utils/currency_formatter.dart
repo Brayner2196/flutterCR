@@ -47,4 +47,9 @@ class CurrencyFormatter {
   /// Parsea un String con puntos/comas a double. Retorna null si no es válido.
   static double? parse(String text) =>
       double.tryParse(text.replaceAll('.', '').replaceAll(',', '.').trim());
+
+  //este método es para formatear el valor de un double a un string con formato de moneda, sin decimales y con separador de miles. Ejemplo: 1234567.89 -> $1.234.568
+  static String fmt(double v) =>
+    '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+
 }

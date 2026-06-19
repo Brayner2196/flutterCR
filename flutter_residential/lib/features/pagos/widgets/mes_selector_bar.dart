@@ -87,7 +87,7 @@ class MesSelectorBar extends StatelessWidget {
   Widget _pildora(BuildContext context, PeriodoCobroModel p) {
     final cs = Theme.of(context).colorScheme;
     final activo = seleccionado?.id == p.id;
-    final colorContenido = activo ? Colors.white : cs.onSurfaceVariant;
+    final colorContenido = activo ? cs.onPrimaryContainer : cs.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Material(

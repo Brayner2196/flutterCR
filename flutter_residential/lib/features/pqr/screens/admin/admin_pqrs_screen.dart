@@ -147,15 +147,25 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
                     _FiltroChip(
                       label: 'Todas',
                       activo: _filtro == null,
+                      colorActivo: DashboardTokens.fgTeal,
+                      bgActivo: DashboardTokens.bgTeal,
                       onTap: () => _aplicarFiltro(null),
                     ),
                     const SizedBox(width: 6),
                     _FiltroChip(
                       label: 'Radicadas',
                       activo: _filtro == 'RADICADA',
-                      colorActivo: DashboardTokens.fgOrange,
-                      bgActivo: DashboardTokens.bgOrange,
+                      colorActivo: DashboardTokens.fgPurple,
+                      bgActivo: DashboardTokens.bgPurple,
                       onTap: () => _aplicarFiltro('RADICADA'),
+                    ),
+                    const SizedBox(width: 6),
+                    _FiltroChip(
+                      label: 'Cerradas',
+                      activo: _filtro == 'CERRADO',
+                      colorActivo: cs.onSurfaceVariant,
+                      bgActivo: cs.surfaceContainerHighest,
+                      onTap: () => _aplicarFiltro('CERRADO'),
                     ),
                     const SizedBox(width: 6),
                     _FiltroChip(
@@ -173,14 +183,7 @@ class _AdminPqrsScreenState extends State<AdminPqrsScreen> {
                       bgActivo: DashboardTokens.bgGreen,
                       onTap: () => _aplicarFiltro('RESUELTO'),
                     ),
-                    const SizedBox(width: 6),
-                    _FiltroChip(
-                      label: 'Cerradas',
-                      activo: _filtro == 'CERRADO',
-                      colorActivo: cs.onSurfaceVariant,
-                      bgActivo: cs.surfaceContainerHighest,
-                      onTap: () => _aplicarFiltro('CERRADO'),
-                    ),
+                    
                     const SizedBox(width: 6),
                     _FiltroChip(
                       label: 'Rechazadas',
@@ -375,6 +378,18 @@ class _PqrTile extends StatelessWidget {
                     size: 13, color: cs.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(pqr.residenteNombre,
+                    style: TextStyle(
+                        fontSize: 11, color: cs.onSurfaceVariant)),
+                const SizedBox(width: 8),
+                Text('·', style: TextStyle(color: cs.onSurfaceVariant)),
+                const SizedBox(width: 8),
+                Icon(Icons.home_filled,
+                    size: 13, color: cs.onSurfaceVariant),
+                
+                const SizedBox(width: 4),
+                Text(
+                    pqr.propiedadIdentificador ??
+                        (pqr.propiedadId?.toString() ?? 'N/A'),
                     style: TextStyle(
                         fontSize: 11, color: cs.onSurfaceVariant)),
                 if (pqr.creadoEn != null) ...[

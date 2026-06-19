@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/core/utils/currency_formatter.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cobros_provider.dart';
 import '../../models/cobro_model.dart';
@@ -27,9 +28,6 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
       context.read<CobrosProvider>().cargarPeriodos();
     });
   }
-
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 
   Future<void> _confirmarCerrarPeriodo() async {
     final p = _periodoSeleccionado;
@@ -298,7 +296,7 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _fmt(totalRecaudado),
+                      CurrencyFormatter.fmt(totalRecaudado),
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -306,7 +304,7 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
                       ),
                     ),
                     Text(
-                      'de ${_fmt(totalEsperado)} esperado',
+                      'de ${CurrencyFormatter.fmt(totalEsperado)} esperado',
                       style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                     ),
                   ],

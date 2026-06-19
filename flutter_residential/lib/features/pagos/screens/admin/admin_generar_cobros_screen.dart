@@ -435,8 +435,8 @@ class _PasoPeriodo extends StatelessWidget {
 
         FilledButton.icon(
           onPressed: onSiguiente,
-          icon: const Icon(Icons.preview_outlined),
-          label: const Text('Ver previsualización'),
+          icon: Icon(Icons.preview_outlined, color: cs.onPrimaryContainer),
+          label: Text('Ver previsualización', style: TextStyle(fontWeight: FontWeight.w600, color: cs.onPrimaryContainer)),
         ),
       ],
     );
@@ -587,7 +587,7 @@ class _StepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    const steps = ['Período', 'Previsualización', 'Confirmar'];
+    const steps = ['Período', 'Vista Previa', 'Confirmar'];
     return Row(
       children: List.generate(steps.length, (i) {
         final active = i == paso;
@@ -615,7 +615,7 @@ class _StepIndicator extends StatelessWidget {
                             : Text(
                                 '${i + 1}',
                                 style: TextStyle(
-                                  color: active ? Colors.white : cs.onSurfaceVariant,
+                                  color: active ? cs.onPrimaryContainer : cs.onSurfaceVariant,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -706,9 +706,9 @@ class _HeroResumen extends StatelessWidget {
           Text('Monto total estimado',
               style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
           const SizedBox(height: 2),
-          Text('\$${_fmt(montoTotal)}',
+          Text('\$ ${_fmt(montoTotal)}',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: cs.onSurface,
+                    color: acento,
                     fontWeight: FontWeight.w700,
                   )),
           const SizedBox(height: AppSpacing.xs),
@@ -1112,8 +1112,8 @@ class _FooterGenerar extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 FilledButton.icon(
                   onPressed: onConfirmar,
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Generar cobros'),
+                  icon: Icon(Icons.auto_awesome, color: cs.onPrimaryContainer),
+                  label: Text('Generar cobros', style: TextStyle(color: cs.onPrimaryContainer, fontWeight: FontWeight.w600)),
                 ),
               ],
             ),

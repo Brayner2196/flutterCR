@@ -7,6 +7,7 @@ class PqrModel {
   final int residenteId;
   final String residenteNombre;
   final int? propiedadId;
+  final String? propiedadIdentificador;
   final String? respuestaAdmin;
   final int? respondidoPor;
   final String? fechaRespuesta;
@@ -21,6 +22,7 @@ class PqrModel {
     required this.residenteId,
     required this.residenteNombre,
     this.propiedadId,
+    this.propiedadIdentificador,
     this.respuestaAdmin,
     this.respondidoPor,
     this.fechaRespuesta,
@@ -36,6 +38,7 @@ class PqrModel {
         residenteId: (json['residenteId'] as num).toInt(),
         residenteNombre: json['residenteNombre'] as String? ?? 'N/A',
         propiedadId: (json['propiedadId'] as num?)?.toInt(),
+        propiedadIdentificador: json['propiedadIdentificador'] as String?,
         respuestaAdmin: json['respuestaAdmin'] as String?,
         respondidoPor: (json['respondidoPor'] as num?)?.toInt(),
         fechaRespuesta: json['fechaRespuesta'] as String?,
