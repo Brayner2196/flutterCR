@@ -12,6 +12,7 @@ import 'package:flutter_residential/features/plan_pago/screens/admin/admin_plane
 import 'package:flutter_residential/features/presupuesto/screens/admin/admin_presupuestos_screen.dart';
 import 'package:flutter_residential/features/parqueaderos/screens/admin/admin_parqueaderos_screen.dart';
 import 'package:flutter_residential/features/consejo/screens/admin_consejo_screen.dart';
+import 'package:flutter_residential/features/vigilancia/screens/admin_vigilancia_screen.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
@@ -166,6 +167,15 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   iconColor: AppColors.orange,
                   colorText: AppColors.orange,
                   onTap: () => _abrir(const AdminPlanesPagoScreen()),
+                ),
+                QuickAccessCardData(
+                  title: 'Vigilancia',
+                  icon: Icons.shield_outlined,
+                  backgroundColor: AppColors.bgBlue,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.blue,
+                  colorText: AppColors.blue,
+                  onTap: () => _abrir(const AdminVigilanciaScreen()),
                 ),
               ],
             ),

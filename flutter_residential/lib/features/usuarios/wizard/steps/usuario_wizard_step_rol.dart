@@ -47,13 +47,7 @@ const kRolesConfig = <String, RolConfig>{
     color: Colors.orange,
     requierePropiedad: false,
   ),
-  'PORTERO': RolConfig(
-    icono: Icons.meeting_room_outlined,
-    etiqueta: 'Portero',
-    descripcion: 'Atención en portería',
-    color: Colors.amber,
-    requierePropiedad: false,
-  ),
+  // PORTERO descontinuado: unificado en VIGILANTE. Ya no se ofrece al crear usuarios.
   'PISCINERO': RolConfig(
     icono: Icons.pool_outlined,
     etiqueta: 'Encargado de zonas comunes',
@@ -83,7 +77,7 @@ const _grupos = [
     titulo: 'Personal operativo',
     subtitulo: 'Staff del conjunto',
     icono: Icons.badge_outlined,
-    roles: ['VIGILANTE', 'PORTERO', 'PISCINERO'],
+    roles: ['VIGILANTE', 'PISCINERO'],
   ),
   (
     titulo: 'Gestión',

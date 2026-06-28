@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../providers/pqr_provider.dart';
+import '../../../propiedades/providers/propiedad_provider.dart';
 
 class CrearPqrScreen extends StatefulWidget {
   const CrearPqrScreen({super.key});
@@ -50,10 +51,16 @@ class _CrearPqrScreenState extends State<CrearPqrScreen> {
 
     setState(() => _enviando = true);
     try {
+      // Asocia la PQR a la propiedad ACTIVA seleccionada por el propietario
+      // (relevante cuando tiene más de una propiedad). Si es null, el backend
+      // usa la principal como fallback.
+      final propiedadId =
+          context.read<PropiedadProvider>().propiedadActual?.propiedadId;
       await context.read<PqrProvider>().crearPqr(
             tipo: _tipoSeleccionado!,
             asunto: _asuntoCtrl.text.trim(),
             descripcion: _descripcionCtrl.text.trim(),
+            propiedadId: propiedadId,
           );
       if (!mounted) return;
       toastification.show(

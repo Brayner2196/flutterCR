@@ -258,4 +258,37 @@ class ApiConstants {
         ? '/api/consejo/estadisticas'
         : '/api/consejo/estadisticas?${params.join('&')}';
   }
+
+  // ── Vigilancia (rol VIGILANTE) ──────────────────────────────────────────
+  static String vigilanteAccesoVehicular(String placa) =>
+      '/api/vigilante/acceso-vehicular?placa=$placa';
+  static const String vigilanteAccesoPeatonal   = '/api/vigilante/acceso-peatonal';
+  static String vigilanteValidarVisita(String codigo) =>
+      '/api/vigilante/visitas/validar?codigo=$codigo';
+  static const String vigilantePropiedades      = '/api/vigilante/propiedades';
+  static const String vigilantePaquetes         = '/api/vigilante/paquetes';
+  static const String vigilantePaquetesPendientes = '/api/vigilante/paquetes/pendientes';
+  static String vigilantePaquetesPropiedad(int propiedadId) =>
+      '/api/vigilante/paquetes/propiedad/$propiedadId';
+  static String vigilanteEntregarPaquete(int id) =>
+      '/api/vigilante/paquetes/$id/entregar';
+  static String vigilanteBitacora({int limite = 50}) =>
+      '/api/vigilante/bitacora?limite=$limite';
+
+  // Vigilancia — residente
+  static const String residenteVisitas    = '/api/residente/visitas';
+  static const String misVisitas          = '/api/residente/visitas/me';
+  static String cancelarVisita(int id)    => '/api/residente/visitas/$id/cancelar';
+  static const String misPaquetes         = '/api/residente/paquetes/me';
+
+  // Vigilancia — admin (parametrización + reportes)
+  static const String adminVigilanciaConfig = '/api/admin/vigilancia/config';
+  static String adminVigilanciaBitacora({String? desde, String? hasta}) {
+    final params = <String>[];
+    if (desde != null) params.add('desde=$desde');
+    if (hasta != null) params.add('hasta=$hasta');
+    return params.isEmpty
+        ? '/api/admin/vigilancia/bitacora'
+        : '/api/admin/vigilancia/bitacora?${params.join('&')}';
+  }
 }

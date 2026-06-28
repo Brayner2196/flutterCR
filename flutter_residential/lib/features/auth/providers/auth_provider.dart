@@ -52,6 +52,9 @@ class AuthProvider extends BaseProvider {
   bool get isSuperAdmin => _rol == 'SUPER_ADMIN';
   bool get isPropietario => _rol == 'PROPIETARIO';
   bool get isInquilino => _rol == 'INQUILINO';
+  /// Rol de portería. PORTERO queda soportado solo por compatibilidad con
+  /// usuarios legados; los nuevos se crean siempre como VIGILANTE.
+  bool get isVigilante => _rol == 'VIGILANTE' || _rol == 'PORTERO';
   /// Verdadero si el usuario tiene membresía activa en el consejo comunal.
   bool get esConsejero => _esConsejero;
   /// Cargo en el consejo (PRESIDENTE, VICEPRESIDENTE, etc.) o null.
@@ -59,6 +62,9 @@ class AuthProvider extends BaseProvider {
 
   /// Verdadero si el usuario tiene acceso al área de residente (PROPIETARIO o INQUILINO)
   bool get isAreaResidente => isPropietario || isInquilino;
+
+  /// Verdadero si el usuario opera el área de vigilancia/portería.
+  bool get isAreaVigilancia => isVigilante;
 
   /// Al iniciar la app: intenta restaurar sesión guardada
   Future<void> cargarSesionGuardada() async {

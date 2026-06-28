@@ -7,6 +7,7 @@ import '../../onboarding/screens/onboarding_screen.dart';
 import '../../home/super_admin/super_admin_home_screen.dart';
 import '../../home/admin/admin_home_screen.dart';
 import '../../home/residente/residente_home_screen.dart';
+import '../../vigilancia/screens/vigilante_home_screen.dart';
 
 class InitialRouterScreen extends StatelessWidget {
   const InitialRouterScreen({super.key});
@@ -26,6 +27,7 @@ class InitialRouterScreen extends StatelessWidget {
         if (auth.isLoggedIn) {
           if (auth.isSuperAdmin) return const SuperAdminHomeScreen();
           if (auth.isAdmin) return const AdminHomeScreen();
+          if (auth.isAreaVigilancia) return const VigilanteHomeScreen();
           if (auth.isAreaResidente) return const ResidenteHomeScreen();// Los inquilinos ven la misma pantalla que los propietarios, solo que con menos opciones
           // Fallback por si llega un rol desconocido
           return const LoginScreen();

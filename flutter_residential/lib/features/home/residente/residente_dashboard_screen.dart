@@ -14,6 +14,8 @@ import '../../pqr/screens/residente/mis_pqrs_screen.dart';
 import '../../anuncios/screens/residente/mis_anuncios_screen.dart';
 import '../../votaciones/screens/residente/mis_votaciones_screen.dart';
 import '../../marketplace/screens/residente/marketplace_screen.dart';
+import '../../visitas/screens/mis_visitas_screen.dart';
+import '../../paquetes_residente/screens/mis_paquetes_screen.dart';
 import '../../plan_pago/screens/residente/residente_mi_plan_screen.dart';
 import '../../plan_pago/providers/plan_pago_provider.dart';
 import '../../presupuesto/screens/residente/residente_presupuesto_screen.dart';
@@ -400,6 +402,34 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
         ),
       ));
     }
+
+    // Visitas con QR — disponible para todo residente (propietario e inquilino)
+    if (!esParqueadero) {
+      cards.add(QuickAccessCard(
+        label: 'Visitas',
+        subtitulo: 'Genera el QR de tus invitados',
+        icono: Icons.qr_code_2_outlined,
+        fg: AppColors.blue,
+        bg: AppColors.bgBlue,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MisVisitasScreen()),
+        ),
+      ));
+    }
+
+    // Paquetería recibida en portería
+    cards.add(QuickAccessCard(
+      label: 'Paquetes',
+      subtitulo: 'Correspondencia en portería',
+      icono: Icons.inventory_2_outlined,
+      fg: AppColors.orange,
+      bg: AppColors.bgOrange,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MisPaquetesScreen()),
+      ),
+    ));
 
     if (!esParqueadero && puede('ESTADO_CUENTA')) {
       final planProvider = context.read<PlanPagoProvider>();
