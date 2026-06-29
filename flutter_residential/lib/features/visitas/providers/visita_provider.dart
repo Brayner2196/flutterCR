@@ -18,6 +18,10 @@ class VisitaProvider extends BaseProvider {
     String? documento,
     String? placa,
     String? motivo,
+    int cantidadPersonas = 1,
+    String? acompanantes,
+    String? franjaDesde,
+    String? franjaHasta,
     int? validezHoras,
   }) async {
     final res = await ejecutar(() => VisitaResidenteService.crear(
@@ -26,6 +30,10 @@ class VisitaProvider extends BaseProvider {
           documento: documento,
           placa: placa,
           motivo: motivo,
+          cantidadPersonas: cantidadPersonas,
+          acompanantes: acompanantes,
+          franjaDesde: franjaDesde,
+          franjaHasta: franjaHasta,
           validezHoras: validezHoras,
         ));
     if (res != null) {
@@ -43,7 +51,7 @@ class VisitaProvider extends BaseProvider {
     }
   }
 
-  void limpiar() {
+  void limpiarDatos() {
     _visitas = [];
     notifyListeners();
   }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import '../models/acceso_vehicular_model.dart';
 import '../models/propiedad_opcion_model.dart';
-import '../models/validar_visita_model.dart';
-import '../providers/vigilancia_provider.dart';
 import '../services/vigilancia_service.dart';
+import '../utils/qr_visita.dart';
+import 'visita_resultado_screen.dart';
+import 'widgets/propiedad_selector_field.dart';
 import 'widgets/resultado_acceso_card.dart';
 
 /// Control de acceso con 3 modos: placa vehicular, peatonal y QR de visita.
@@ -152,13 +153,6 @@ class _TabPeatonalState extends State<_TabPeatonal> {
   String? _mensaje;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-        (_) => context.read<VigilanciaProvider>().cargarPropiedades());
-  }
-
-  @override
   void dispose() {
     _nombreCtrl.dispose();
     _docCtrl.dispose();
@@ -203,23 +197,14 @@ class _TabPeatonalState extends State<_TabPeatonal> {
 
   @override
   Widget build(BuildContext context) {
-    final propiedades = context.watch<VigilanciaProvider>().propiedades;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DropdownButtonFormField<PropiedadOpcionModel>(
-            value: _propiedad,
-            isExpanded: true,
-            decoration: const InputDecoration(
-              labelText: 'Unidad de destino',
-              prefixIcon: Icon(Icons.home_work_outlined),
-            ),
-            items: propiedades
-                .map((p) => DropdownMenuItem(value: p, child: Text(p.identificador)))
-                .toList(),
-            onChanged: (v) => setState(() => _propiedad = v),
+          PropiedadSelectorField(
+            seleccionada: _propiedad,
+            onSeleccion: (p) => setState(() => _propiedad = p),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
@@ -276,87 +261,118 @@ class _TabVisita extends StatefulWidget {
 }
 
 class _TabVisitaState extends State<_TabVisita> {
-  final _codigoCtrl = TextEditingController();
-  bool _cargando = false;
-  ValidarVisitaModel? _resultado;
-  String? _error;
+  final _scannerCtrl = MobileScannerController();
+  bool _procesando = false;
 
   @override
   void dispose() {
-    _codigoCtrl.dispose();
+    _scannerCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _validar() async {
-    final codigo = _codigoCtrl.text.trim();
+  Future<void> _procesarCodigo(String raw) async {
+    if (_procesando) return;
+    final codigo = extraerCodigoVisita(raw);
     if (codigo.isEmpty) return;
-    setState(() {
-      _cargando = true;
-      _resultado = null;
-      _error = null;
-    });
+    setState(() => _procesando = true);
     try {
-      final r = await VigilanciaService.validarVisita(codigo);
-      setState(() => _resultado = r);
+      await _scannerCtrl.stop();
+    } catch (_) {}
+    try {
+      final detalle = await VigilanciaService.consultarVisita(codigo);
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => VisitaResultadoScreen(detalle: detalle)),
+      );
     } catch (e) {
-      setState(() => _error = 'Código de visita no válido');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
     } finally {
-      if (mounted) setState(() => _cargando = false);
+      if (mounted) {
+        setState(() => _procesando = false);
+        try {
+          await _scannerCtrl.start();
+        } catch (_) {}
+      }
     }
+  }
+
+  void _onDetect(BarcodeCapture capture) {
+    if (capture.barcodes.isEmpty) return;
+    final raw = capture.barcodes.first.rawValue;
+    if (raw != null && raw.isNotEmpty) _procesarCodigo(raw);
+  }
+
+  Future<void> _ingresarManual() async {
+    final ctrl = TextEditingController();
+    final codigo = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ingresar código'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.characters,
+          decoration: const InputDecoration(hintText: 'Código de la visita'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+              child: const Text('Validar')),
+        ],
+      ),
+    );
+    if (codigo != null && codigo.isNotEmpty) _procesarCodigo(codigo);
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Ingresa o escanea el código del QR que presenta la visita.',
-            style: Theme.of(context).textTheme.bodySmall,
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              MobileScanner(controller: _scannerCtrl, onDetect: _onDetect),
+              Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 3),
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                ),
+              ),
+              if (_procesando)
+                Container(
+                  color: Colors.black54,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _codigoCtrl,
-            textCapitalization: TextCapitalization.characters,
-            decoration: const InputDecoration(
-              labelText: 'Código de la visita',
-              prefixIcon: Icon(Icons.qr_code_2_rounded),
-            ),
-            onSubmitted: (_) => _validar(),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Apunta la cámara al QR de la visita.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.keyboard_rounded),
+                label: const Text('Código manual'),
+                onPressed: _procesando ? null : _ingresarManual,
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          FilledButton.icon(
-            onPressed: _cargando ? null : _validar,
-            icon: _cargando
-                ? const SizedBox(
-                    width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.verified_user_rounded),
-            label: const Text('Validar visita'),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          if (_error != null)
-            ResultadoAccesoCard(
-              permitido: false,
-              titulo: 'No válido',
-              mensaje: _error!,
-            ),
-          if (_resultado != null)
-            ResultadoAccesoCard(
-              permitido: _resultado!.permitido,
-              titulo: _resultado!.permitido ? 'Acceso autorizado' : 'Acceso denegado',
-              mensaje: _resultado!.mensaje ?? '',
-              detalles: {
-                if (_resultado!.nombreVisitante != null)
-                  'Visitante': _resultado!.nombreVisitante!,
-                if (_resultado!.documento != null) 'Documento': _resultado!.documento!,
-                if (_resultado!.propiedadIdentificador != null)
-                  'Unidad': _resultado!.propiedadIdentificador!,
-              },
-            ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

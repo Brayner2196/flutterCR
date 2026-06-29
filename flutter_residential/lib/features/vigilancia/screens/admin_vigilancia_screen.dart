@@ -114,6 +114,15 @@ class _AdminVigilanciaScreenState extends State<AdminVigilanciaScreen> {
                             ),
                           ),
                         ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Aprobar con cartera restringida'),
+                          subtitle: const Text(
+                              'Si la unidad está en mora, permite al vigilante aprobar igual'),
+                          value: cfg.permitirAprobarConCarteraRestringida,
+                          onChanged: (v) => setState(() => _cfg =
+                              cfg.copyWith(permitirAprobarConCarteraRestringida: v)),
+                        ),
                         const Divider(),
                         Text('Acceso peatonal',
                             style: theme.textTheme.titleSmall

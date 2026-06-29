@@ -263,9 +263,19 @@ class ApiConstants {
   static String vigilanteAccesoVehicular(String placa) =>
       '/api/vigilante/acceso-vehicular?placa=$placa';
   static const String vigilanteAccesoPeatonal   = '/api/vigilante/acceso-peatonal';
-  static String vigilanteValidarVisita(String codigo) =>
-      '/api/vigilante/visitas/validar?codigo=$codigo';
-  static const String vigilantePropiedades      = '/api/vigilante/propiedades';
+  static String vigilanteConsultarVisita(String codigo) =>
+      '/api/vigilante/visitas/${Uri.encodeComponent(codigo)}';
+  static String vigilanteAprobarVisita(int id) =>
+      '/api/vigilante/visitas/$id/aprobar';
+  static String vigilanteRechazarVisita(int id) =>
+      '/api/vigilante/visitas/$id/rechazar';
+  static String vigilantePropiedades({String? buscar, int page = 0, int size = 20}) {
+    final params = <String>['page=$page', 'size=$size'];
+    if (buscar != null && buscar.isNotEmpty) {
+      params.add('buscar=${Uri.encodeQueryComponent(buscar)}');
+    }
+    return '/api/vigilante/propiedades?${params.join('&')}';
+  }
   static const String vigilantePaquetes         = '/api/vigilante/paquetes';
   static const String vigilantePaquetesPendientes = '/api/vigilante/paquetes/pendientes';
   static String vigilantePaquetesPropiedad(int propiedadId) =>

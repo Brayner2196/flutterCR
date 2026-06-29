@@ -11,6 +11,10 @@ class VisitaResidenteService {
     String? documento,
     String? placa,
     String? motivo,
+    int cantidadPersonas = 1,
+    String? acompanantes,
+    String? franjaDesde,
+    String? franjaHasta,
     int? validezHoras,
   }) async {
     final res = await ApiClient.post(
@@ -18,9 +22,13 @@ class VisitaResidenteService {
       {
         'propiedadId': propiedadId,
         'nombreVisitante': nombreVisitante,
+        'cantidadPersonas': cantidadPersonas,
         if (documento != null) 'documento': documento,
         if (placa != null) 'placa': placa,
         if (motivo != null) 'motivo': motivo,
+        if (acompanantes != null) 'acompanantes': acompanantes,
+        if (franjaDesde != null) 'franjaDesde': franjaDesde,
+        if (franjaHasta != null) 'franjaHasta': franjaHasta,
         if (validezHoras != null) 'validezHoras': validezHoras,
       },
     );

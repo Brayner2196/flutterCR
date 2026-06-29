@@ -1,26 +1,17 @@
 import '../../../core/providers/base_provider.dart';
 import '../models/bitacora_acceso_model.dart';
 import '../models/paquete_model.dart';
-import '../models/propiedad_opcion_model.dart';
 import '../services/vigilancia_service.dart';
 
-/// Estado del área de vigilancia: bitácora reciente, paquetes pendientes y
-/// catálogo de propiedades para los selectores.
+/// Estado del área de vigilancia: bitácora reciente y paquetes pendientes.
+/// El selector de propiedades busca on-demand (paginado), no se cachea aquí.
 class VigilanciaProvider extends BaseProvider {
   List<BitacoraAccesoModel> _bitacora = [];
   List<PaqueteModel> _paquetesPendientes = [];
-  List<PropiedadOpcionModel> _propiedades = [];
 
   List<BitacoraAccesoModel> get bitacora => _bitacora;
   List<PaqueteModel> get paquetesPendientes => _paquetesPendientes;
-  List<PropiedadOpcionModel> get propiedades => _propiedades;
   int get totalPendientes => _paquetesPendientes.length;
-
-  Future<void> cargarPropiedades() async {
-    if (_propiedades.isNotEmpty) return; // catálogo estable; cargar una vez
-    final res = await ejecutar(() => VigilanciaService.propiedades());
-    if (res != null) _propiedades = res;
-  }
 
   Future<void> cargarBitacora({int limite = 50}) async {
     final res = await ejecutar(() => VigilanciaService.bitacora(limite: limite));
@@ -69,7 +60,7 @@ class VigilanciaProvider extends BaseProvider {
     return res;
   }
 
-  void limpiar() {
+  void limpiarDatos() {
     _bitacora = [];
     _paquetesPendientes = [];
     notifyListeners();

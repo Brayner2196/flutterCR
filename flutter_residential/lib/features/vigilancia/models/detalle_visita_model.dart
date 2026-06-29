@@ -1,82 +1,77 @@
-class VisitaModel {
+/// Detalle de la visita que ve el vigilante al escanear, con el estado de cartera
+/// y si puede decidir/aprobar según la parametrización del conjunto.
+class DetalleVisitaModel {
   final int id;
   final String codigo;
+  final String estado;
   final String nombreVisitante;
+  final int cantidadPersonas;
+  final String? acompanantes;
   final String? documento;
   final String? placa;
   final String? motivo;
-  final int cantidadPersonas;
-  final String? acompanantes;
   final int propiedadId;
   final String? propiedadIdentificador;
-  final String estado;
   final String? franjaDesde;
   final String? franjaHasta;
   final String? expiraEn;
   final String? ingresoEn;
   final String? motivoRechazo;
-  final String? creadoEn;
-  final String? qrPayload;
+  final bool carteraRestringida;
+  final String? carteraMensaje;
+  final bool puedeDecidir;
+  final bool puedeAprobar;
+  final String? mensaje;
 
-  const VisitaModel({
+  const DetalleVisitaModel({
     required this.id,
     required this.codigo,
+    required this.estado,
     required this.nombreVisitante,
+    this.cantidadPersonas = 1,
+    this.acompanantes,
     this.documento,
     this.placa,
     this.motivo,
-    this.cantidadPersonas = 1,
-    this.acompanantes,
     required this.propiedadId,
     this.propiedadIdentificador,
-    required this.estado,
     this.franjaDesde,
     this.franjaHasta,
     this.expiraEn,
     this.ingresoEn,
     this.motivoRechazo,
-    this.creadoEn,
-    this.qrPayload,
+    this.carteraRestringida = false,
+    this.carteraMensaje,
+    this.puedeDecidir = false,
+    this.puedeAprobar = false,
+    this.mensaje,
   });
 
-  /// Contenido a renderizar en el QR: el payload embebido del backend o, si no
-  /// vino, el código simple como respaldo.
-  String get qrData => (qrPayload != null && qrPayload!.isNotEmpty) ? qrPayload! : codigo;
-
-  factory VisitaModel.fromJson(Map<String, dynamic> json) => VisitaModel(
+  factory DetalleVisitaModel.fromJson(Map<String, dynamic> json) =>
+      DetalleVisitaModel(
         id: (json['id'] as num).toInt(),
         codigo: json['codigo'] as String? ?? '',
+        estado: json['estado'] as String? ?? 'PENDIENTE',
         nombreVisitante: json['nombreVisitante'] as String? ?? '',
+        cantidadPersonas: (json['cantidadPersonas'] as num?)?.toInt() ?? 1,
+        acompanantes: json['acompanantes'] as String?,
         documento: json['documento'] as String?,
         placa: json['placa'] as String?,
         motivo: json['motivo'] as String?,
-        cantidadPersonas: (json['cantidadPersonas'] as num?)?.toInt() ?? 1,
-        acompanantes: json['acompanantes'] as String?,
         propiedadId: (json['propiedadId'] as num).toInt(),
         propiedadIdentificador: json['propiedadIdentificador'] as String?,
-        estado: json['estado'] as String? ?? 'PENDIENTE',
         franjaDesde: json['franjaDesde'] as String?,
         franjaHasta: json['franjaHasta'] as String?,
         expiraEn: json['expiraEn'] as String?,
         ingresoEn: json['ingresoEn'] as String?,
         motivoRechazo: json['motivoRechazo'] as String?,
-        creadoEn: json['creadoEn'] as String?,
-        qrPayload: json['qrPayload'] as String?,
+        carteraRestringida: json['carteraRestringida'] as bool? ?? false,
+        carteraMensaje: json['carteraMensaje'] as String?,
+        puedeDecidir: json['puedeDecidir'] as bool? ?? false,
+        puedeAprobar: json['puedeAprobar'] as bool? ?? false,
+        mensaje: json['mensaje'] as String?,
       );
 
-  bool get esPendiente => estado == 'PENDIENTE';
   bool get esIngreso => estado == 'INGRESO';
-  bool get esCancelada => estado == 'CANCELADA';
-  bool get esVencida => estado == 'VENCIDA';
   bool get esRechazada => estado == 'RECHAZADA';
-
-  String get estadoLegible => switch (estado) {
-        'PENDIENTE' => 'Pendiente',
-        'INGRESO' => 'Ingresó',
-        'FINALIZADA' => 'Finalizada',
-        'VENCIDA' => 'Vencida',
-        'CANCELADA' => 'Cancelada',
-        'RECHAZADA' => 'Rechazada',
-        _ => estado,
-      };
 }

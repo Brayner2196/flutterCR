@@ -24,9 +24,7 @@ class _VigilanteHomeScreenState extends State<VigilanteHomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final prov = context.read<VigilanciaProvider>();
-      prov.cargarPropiedades();
-      prov.cargarResumen();
+      context.read<VigilanciaProvider>().cargarResumen();
     });
   }
 

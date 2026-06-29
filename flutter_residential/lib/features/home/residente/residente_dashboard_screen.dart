@@ -403,8 +403,8 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    // Visitas con QR — disponible para todo residente (propietario e inquilino)
-    if (!esParqueadero) {
+    // Visitas con QR — propietario siempre; inquilino con permiso VISITAS
+    if (!esParqueadero && puede('VISITAS')) {
       cards.add(QuickAccessCard(
         label: 'Visitas',
         subtitulo: 'Genera el QR de tus invitados',

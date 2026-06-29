@@ -11,6 +11,7 @@ const _permisosInfo = {
   'PQRS': (label: 'PQR', sublabel: 'Presentar peticiones, quejas o reclamos', icon: Icons.support_agent_outlined),
   'RESERVAS': (label: 'Reservas', sublabel: 'Reservar zonas comunes', icon: Icons.event_available_outlined),
   'MARKETPLACE': (label: 'Marketplace', sublabel: 'Publicar y comprar en el marketplace', icon: Icons.storefront_outlined),
+  'VISITAS': (label: 'Visitas', sublabel: 'Generar códigos QR para visitantes', icon: Icons.qr_code_2_outlined),
 };
 
 class PermisosInquilinoSheet extends StatefulWidget {

@@ -172,7 +172,11 @@ class _CrearVisitaSheetState extends State<_CrearVisitaSheet> {
   final _docCtrl = TextEditingController();
   final _placaCtrl = TextEditingController();
   final _motivoCtrl = TextEditingController();
+  final _acompanantesCtrl = TextEditingController();
   UsuarioPropiedadResponse? _propiedad;
+  int _cantidad = 1;
+  DateTime? _franjaDesde;
+  DateTime? _franjaHasta;
   bool _guardando = false;
 
   @override
@@ -189,13 +193,44 @@ class _CrearVisitaSheetState extends State<_CrearVisitaSheet> {
     _docCtrl.dispose();
     _placaCtrl.dispose();
     _motivoCtrl.dispose();
+    _acompanantesCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _elegirFranja({required bool esDesde}) async {
+    final base = esDesde ? (_franjaDesde ?? DateTime.now()) : (_franjaHasta ?? _franjaDesde ?? DateTime.now());
+    final fecha = await showDatePicker(
+      context: context,
+      initialDate: base,
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (fecha == null || !mounted) return;
+    final hora = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(base),
+    );
+    if (hora == null || !mounted) return;
+    final dt = DateTime(fecha.year, fecha.month, fecha.day, hora.hour, hora.minute);
+    setState(() {
+      if (esDesde) {
+        _franjaDesde = dt;
+      } else {
+        _franjaHasta = dt;
+      }
+    });
   }
 
   Future<void> _guardar() async {
     if (_propiedad == null || _nombreCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Selecciona la unidad e indica el nombre')));
+      return;
+    }
+    if (_franjaDesde != null && _franjaHasta != null &&
+        _franjaHasta!.isBefore(_franjaDesde!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El horario final debe ser posterior al inicial')));
       return;
     }
     setState(() => _guardando = true);
@@ -206,6 +241,10 @@ class _CrearVisitaSheetState extends State<_CrearVisitaSheet> {
       documento: _docCtrl.text.trim().isEmpty ? null : _docCtrl.text.trim(),
       placa: _placaCtrl.text.trim().isEmpty ? null : _placaCtrl.text.trim(),
       motivo: _motivoCtrl.text.trim().isEmpty ? null : _motivoCtrl.text.trim(),
+      cantidadPersonas: _cantidad,
+      acompanantes: _acompanantesCtrl.text.trim().isEmpty ? null : _acompanantesCtrl.text.trim(),
+      franjaDesde: _franjaDesde?.toIso8601String(),
+      franjaHasta: _franjaHasta?.toIso8601String(),
     );
     if (!mounted) return;
     setState(() => _guardando = false);
@@ -258,6 +297,36 @@ class _CrearVisitaSheetState extends State<_CrearVisitaSheet> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
+          // Cantidad de personas
+          Row(
+            children: [
+              const Icon(Icons.groups_outlined, color: AppColors.textMidLight),
+              const SizedBox(width: AppSpacing.md),
+              const Expanded(child: Text('Cantidad de personas')),
+              IconButton(
+                icon: const Icon(Icons.remove_circle_outline),
+                onPressed: _cantidad > 1 ? () => setState(() => _cantidad--) : null,
+              ),
+              Text('$_cantidad',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: _cantidad < 50 ? () => setState(() => _cantidad++) : null,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _acompanantesCtrl,
+            minLines: 1,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Nombres de acompañantes (opcional)',
+              prefixIcon: Icon(Icons.people_outline_rounded),
+              helperText: 'Sepáralos por coma',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _docCtrl,
             decoration: const InputDecoration(
@@ -282,6 +351,39 @@ class _CrearVisitaSheetState extends State<_CrearVisitaSheet> {
               prefixIcon: Icon(Icons.notes_rounded),
             ),
           ),
+          const SizedBox(height: AppSpacing.md),
+          // Horario (opcional)
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.schedule_outlined, size: 18),
+                  label: Text(
+                    _franjaDesde == null
+                        ? 'Desde'
+                        : '${_franjaDesde!.day}/${_franjaDesde!.month} ${_franjaDesde!.hour.toString().padLeft(2, '0')}:${_franjaDesde!.minute.toString().padLeft(2, '0')}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onPressed: () => _elegirFranja(esDesde: true),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.schedule_outlined, size: 18),
+                  label: Text(
+                    _franjaHasta == null
+                        ? 'Hasta'
+                        : '${_franjaHasta!.day}/${_franjaHasta!.month} ${_franjaHasta!.hour.toString().padLeft(2, '0')}:${_franjaHasta!.minute.toString().padLeft(2, '0')}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onPressed: () => _elegirFranja(esDesde: false),
+                ),
+              ),
+            ],
+          ),
+          Text('Horario esperado (opcional). Si lo defines, el QR vence al final.',
+              style: Theme.of(context).textTheme.labelSmall),
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
             onPressed: _guardando ? null : _guardar,

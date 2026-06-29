@@ -4,8 +4,8 @@ import '../../../core/services/base_api_service.dart';
 import '../models/acceso_vehicular_model.dart';
 import '../models/bitacora_acceso_model.dart';
 import '../models/paquete_model.dart';
+import '../models/detalle_visita_model.dart';
 import '../models/propiedad_opcion_model.dart';
-import '../models/validar_visita_model.dart';
 
 /// Operaciones del rol VIGILANTE contra el backend.
 class VigilanciaService {
@@ -36,18 +36,38 @@ class VigilanciaService {
         successCodes: [200, 201], fallbackMsg: 'Error al registrar el ingreso');
   }
 
-  static Future<List<PropiedadOpcionModel>> propiedades() async {
-    final res = await ApiClient.get(ApiConstants.vigilantePropiedades);
-    return BaseApiService.parseList(
-        res, PropiedadOpcionModel.fromJson, 'Error al cargar propiedades');
+  /// Selector paginado de propiedades facturables, con buscador por path corto.
+  static Future<PropiedadOpcionPage> buscarPropiedades({
+    String? buscar,
+    int page = 0,
+    int size = 20,
+  }) async {
+    final res = await ApiClient.get(
+        ApiConstants.vigilantePropiedades(buscar: buscar, page: page, size: size));
+    return BaseApiService.parseSingle(res, PropiedadOpcionPage.fromJson,
+        fallbackMsg: 'Error al cargar propiedades');
   }
 
   // ── Visitas ───────────────────────────────────────────────────────────────
 
-  static Future<ValidarVisitaModel> validarVisita(String codigo) async {
-    final res = await ApiClient.get(ApiConstants.vigilanteValidarVisita(codigo));
-    return BaseApiService.parseSingle(res, ValidarVisitaModel.fromJson,
+  /// Consulta (sin mutar) los datos de la visita escaneada.
+  static Future<DetalleVisitaModel> consultarVisita(String codigo) async {
+    final res = await ApiClient.get(ApiConstants.vigilanteConsultarVisita(codigo));
+    return BaseApiService.parseSingle(res, DetalleVisitaModel.fromJson,
         fallbackMsg: 'Código de visita no válido');
+  }
+
+  static Future<DetalleVisitaModel> aprobarVisita(int id) async {
+    final res = await ApiClient.post(ApiConstants.vigilanteAprobarVisita(id), {});
+    return BaseApiService.parseSingle(res, DetalleVisitaModel.fromJson,
+        successCodes: [200, 201], fallbackMsg: 'Error al aprobar la visita');
+  }
+
+  static Future<DetalleVisitaModel> rechazarVisita(int id, String motivo) async {
+    final res = await ApiClient.post(
+        ApiConstants.vigilanteRechazarVisita(id), {'motivo': motivo});
+    return BaseApiService.parseSingle(res, DetalleVisitaModel.fromJson,
+        successCodes: [200, 201], fallbackMsg: 'Error al rechazar la visita');
   }
 
   // ── Paqueteria ──────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 name: flutter_residential
 description: "A new Flutter project."
 
-version: 1.1.0+38
+version: 1.1.0+41
 
 environment:
   sdk: ^3.9.2
@@ -29,6 +29,9 @@ dependencies:
   flutter_confetti: ^0.5.1
   flutter_bounce: ^1.1.0
   qr_flutter: ^4.1.0  # Generación del QR de visitas (puro Dart)
+  mobile_scanner: ^5.2.3  # Lector de QR del vigilante
+  share_plus: ^10.1.2  # Compartir QR por WhatsApp/otros
+  path_provider: ^2.1.4  # Guardar el QR temporal para compartir
 
   # Firebase / FCM
   firebase_core: ^3.6.0

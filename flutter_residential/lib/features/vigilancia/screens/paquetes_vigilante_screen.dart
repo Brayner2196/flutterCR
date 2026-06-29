@@ -5,6 +5,7 @@ import 'package:flutter_residential/core/utils/date_formatter.dart';
 import '../models/paquete_model.dart';
 import '../models/propiedad_opcion_model.dart';
 import '../providers/vigilancia_provider.dart';
+import 'widgets/propiedad_selector_field.dart';
 
 /// Gestión de paquetería: pendientes por entregar + registro + entrega.
 class PaquetesVigilanteScreen extends StatefulWidget {
@@ -19,9 +20,7 @@ class _PaquetesVigilanteScreenState extends State<PaquetesVigilanteScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final prov = context.read<VigilanciaProvider>();
-      prov.cargarPropiedades();
-      prov.cargarPaquetesPendientes();
+      context.read<VigilanciaProvider>().cargarPaquetesPendientes();
     });
   }
 
@@ -214,7 +213,6 @@ class _RegistrarPaqueteSheetState extends State<_RegistrarPaqueteSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final propiedades = context.watch<VigilanciaProvider>().propiedades;
     return Padding(
       padding: EdgeInsets.only(
         left: AppSpacing.md,
@@ -230,17 +228,9 @@ class _RegistrarPaqueteSheetState extends State<_RegistrarPaqueteSheet> {
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: AppSpacing.md),
-          DropdownButtonFormField<PropiedadOpcionModel>(
-            value: _propiedad,
-            isExpanded: true,
-            decoration: const InputDecoration(
-              labelText: 'Unidad de destino',
-              prefixIcon: Icon(Icons.home_work_outlined),
-            ),
-            items: propiedades
-                .map((p) => DropdownMenuItem(value: p, child: Text(p.identificador)))
-                .toList(),
-            onChanged: (v) => setState(() => _propiedad = v),
+          PropiedadSelectorField(
+            seleccionada: _propiedad,
+            onSeleccion: (p) => setState(() => _propiedad = p),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(

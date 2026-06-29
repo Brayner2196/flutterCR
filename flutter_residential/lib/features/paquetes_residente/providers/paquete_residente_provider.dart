@@ -14,7 +14,7 @@ class PaqueteResidenteProvider extends BaseProvider {
     if (res != null) _paquetes = res;
   }
 
-  void limpiar() {
+  void limpiarDatos() {
     _paquetes = [];
     notifyListeners();
   }

@@ -14,6 +14,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>flutter_residential</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Se usa la cámara para escanear el código QR de las visitas en portería.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
