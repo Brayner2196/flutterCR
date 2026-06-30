@@ -149,7 +149,7 @@ class _PaqueteTile extends StatelessWidget {
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
-                Text('Recibido ${DateFormatter.fechaHora(paquete.recibidoEn)}',
+                Text('Recibido ${DateFormatter.fechaHoraMinAmPm(paquete.recibidoEn)}',
                     style: theme.textTheme.labelSmall
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
               ],
