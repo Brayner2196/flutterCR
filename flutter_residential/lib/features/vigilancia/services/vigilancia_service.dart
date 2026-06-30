@@ -31,6 +31,7 @@ class VigilanciaService {
         if (documento != null) 'documento': documento,
         if (motivo != null) 'motivo': motivo,
       },
+      requiresAuth: true,
     );
     return BaseApiService.parseSingle(res, BitacoraAccesoModel.fromJson,
         successCodes: [200, 201], fallbackMsg: 'Error al registrar el ingreso');
@@ -58,14 +59,16 @@ class VigilanciaService {
   }
 
   static Future<DetalleVisitaModel> aprobarVisita(int id) async {
-    final res = await ApiClient.post(ApiConstants.vigilanteAprobarVisita(id), {});
+    final res = await ApiClient.post(ApiConstants.vigilanteAprobarVisita(id), {},
+        requiresAuth: true);
     return BaseApiService.parseSingle(res, DetalleVisitaModel.fromJson,
         successCodes: [200, 201], fallbackMsg: 'Error al aprobar la visita');
   }
 
   static Future<DetalleVisitaModel> rechazarVisita(int id, String motivo) async {
     final res = await ApiClient.post(
-        ApiConstants.vigilanteRechazarVisita(id), {'motivo': motivo});
+        ApiConstants.vigilanteRechazarVisita(id), {'motivo': motivo},
+        requiresAuth: true);
     return BaseApiService.parseSingle(res, DetalleVisitaModel.fromJson,
         successCodes: [200, 201], fallbackMsg: 'Error al rechazar la visita');
   }
@@ -92,6 +95,7 @@ class VigilanciaService {
         if (remitente != null) 'remitente': remitente,
         if (transportadora != null) 'transportadora': transportadora,
       },
+      requiresAuth: true,
     );
     return BaseApiService.parseSingle(res, PaqueteModel.fromJson,
         successCodes: [200, 201], fallbackMsg: 'Error al registrar el paquete');

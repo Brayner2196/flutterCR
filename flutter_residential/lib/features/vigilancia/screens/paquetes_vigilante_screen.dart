@@ -176,6 +176,7 @@ class _RegistrarPaqueteSheetState extends State<_RegistrarPaqueteSheet> {
   final _transpCtrl = TextEditingController();
   PropiedadOpcionModel? _propiedad;
   bool _guardando = false;
+  String? _errorInline;
 
   @override
   void dispose() {
@@ -186,12 +187,17 @@ class _RegistrarPaqueteSheetState extends State<_RegistrarPaqueteSheet> {
   }
 
   Future<void> _guardar() async {
+    // Capturamos el messenger raíz ANTES de cualquier pop/async, para que el
+    // snackbar de éxito se muestre sobre la pantalla y no detrás del sheet.
+    final messenger = ScaffoldMessenger.of(context);
     if (_propiedad == null || _descCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecciona la unidad y describe el paquete')));
+      setState(() => _errorInline = 'Selecciona la unidad y describe el paquete');
       return;
     }
-    setState(() => _guardando = true);
+    setState(() {
+      _guardando = true;
+      _errorInline = null;
+    });
     final prov = context.read<VigilanciaProvider>();
     final r = await prov.registrarPaquete(
       propiedadId: _propiedad!.id,
@@ -203,11 +209,11 @@ class _RegistrarPaqueteSheetState extends State<_RegistrarPaqueteSheet> {
     setState(() => _guardando = false);
     if (r != null) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
           const SnackBar(content: Text('Paquete registrado y residente notificado')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(prov.error ?? 'Error al registrar')));
+      // Error visible dentro del sheet (un snackbar quedaría oculto tras él).
+      setState(() => _errorInline = prov.error ?? 'Error al registrar');
     }
   }
 
@@ -256,6 +262,22 @@ class _RegistrarPaqueteSheetState extends State<_RegistrarPaqueteSheet> {
               prefixIcon: Icon(Icons.person_outline_rounded),
             ),
           ),
+          if (_errorInline != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                const Icon(Icons.error_outline_rounded,
+                    color: AppColors.danger, size: 18),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    _errorInline!,
+                    style: const TextStyle(color: AppColors.danger),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           FilledButton.icon(
             onPressed: _guardando ? null : _guardar,
