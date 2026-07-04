@@ -68,7 +68,7 @@ class _BitacoraAdminScreenState extends State<BitacoraAdminScreen> {
                             subtitle: Text(
                               '${e.descripcion ?? ''}\n'
                               '${e.propiedadIdentificador != null ? 'Unidad ${e.propiedadIdentificador} · ' : ''}'
-                              '${DateFormatter.fechaHora(e.creadoEn)}',
+                              '${DateFormatter.fechaHoraMinAmPm(e.creadoEn)}',
                             ),
                             isThreeLine: true,
                             trailing: Text(e.resultado,

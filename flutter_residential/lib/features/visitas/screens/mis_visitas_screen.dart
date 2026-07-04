@@ -134,7 +134,7 @@ class _VisitaTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${visita.estadoLegible}'
-                  '${visita.expiraEn != null ? ' · vence ${DateFormatter.fechaHora(visita.expiraEn)}' : ''}',
+                  '${visita.expiraEn != null ? ' · vence ${DateFormatter.fechaHoraMinAmPm(visita.expiraEn)}' : ''}',
                   style: theme.textTheme.labelSmall?.copyWith(color: color),
                 ),
               ],

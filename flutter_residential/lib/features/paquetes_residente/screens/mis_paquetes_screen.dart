@@ -96,8 +96,8 @@ class _PaqueteTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   entregado
-                      ? 'Entregado ${DateFormatter.fechaHora(paquete.entregadoEn)}'
-                      : 'En portería desde ${DateFormatter.fechaHora(paquete.recibidoEn)}',
+                      ? 'Entregado ${DateFormatter.fechaHoraMinAmPm(paquete.entregadoEn)}'
+                      : 'En portería desde ${DateFormatter.fechaHoraMinAmPm(paquete.recibidoEn)}',
                   style: theme.textTheme.labelSmall?.copyWith(color: color),
                 ),
                 if (paquete.transportadora != null)

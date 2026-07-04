@@ -35,22 +35,54 @@ class AppColors {
 
   // Quick access cards
   static const bgBlue  = Color.fromRGBO(230, 247, 255, 1);
+  static const bgBlueModDark = Color.fromRGBO(22, 34, 43, 1);
   static const blue    = Color.fromRGBO(0,   95,  143, 1);
+  static const blueModDark   = Color.fromRGBO(116, 185, 228, 1);
 
   static const bgYellow = Color.fromRGBO(255, 251, 230, 1);
+  static const bgYellowModDark = Color.fromRGBO(40, 33, 17, 1);
   static const yellow   = Color.fromRGBO(140, 109, 0,   1);
+  static const yellowModDark   = Color.fromRGBO(230, 188, 87, 1);
 
   static const bgGreen = Color.fromRGBO(230, 255, 243, 1);
+  static const bgGreenModDark = Color.fromRGBO(20, 37, 25, 1);
   static const green   = Color.fromRGBO(0,   105, 74,  1);
+  static const greenModDark   = Color.fromRGBO(95, 206, 146, 1);
 
   static const bgPurple = Color.fromRGBO(249, 230, 255, 1);
+  static const bgPurpleModDark = Color.fromRGBO(36, 26, 49, 1);
   static const purple   = Color.fromRGBO(110, 40,  145, 1);
+  static const purpleModDark   = Color.fromRGBO(196, 145, 227, 1);
 
   static const bgTeal  = Color.fromRGBO(224, 247, 244, 1);
+  static const bgTealModDark = Color.fromRGBO(16, 36, 31, 1);
   static const teal    = Color.fromRGBO(0,   105, 92,  1);
+  static const tealModDark   = Color.fromRGBO(79, 201, 189, 1);
 
   static const bgOrange = Color.fromRGBO(255, 237, 224, 1);
+  static const bgOrangeModDark = Color.fromRGBO(42, 28, 18, 1);
   static const orange   = Color.fromRGBO(180, 80,  0,   1);
+  static const orangeModDark   = Color.fromRGBO(232, 158, 99, 1);
+
+  static const bgCoral = Color.fromRGBO(255, 234, 228, 1);
+  static const bgCoralModDark = Color.fromRGBO(44, 24, 21, 1);
+  static const coral = Color.fromRGBO(184, 68, 51, 1);
+  static const coralModDark = Color.fromRGBO(235, 125, 116, 1);
+
+  static const bgSlate = Color.fromRGBO(236, 239, 243, 1);
+  static const bgSlateModDark = Color.fromRGBO(27, 32, 41, 1);
+  static const slate = Color.fromRGBO(67, 82, 100, 1);
+  static const slateModDark = Color.fromRGBO(147, 166, 188, 1);
+
+  static const bgLime = Color.fromRGBO(241, 247, 222, 1);
+  static const bgLimeModDark = Color.fromRGBO(32, 38, 17, 1);
+  static const lime = Color.fromRGBO(85, 107, 14, 1);
+  static const limeModDark = Color.fromRGBO(174, 203, 91, 1);
+
+  static const bgCyan = Color.fromRGBO(224, 246, 251, 1);
+  static const bgCyanModDark = Color.fromRGBO(15, 37, 44, 1);
+  static const cyan = Color.fromRGBO(0, 105, 126, 1);
+  static const cyanModDark = Color.fromRGBO(70, 195, 222, 1);
 }
 
 /// Espaciado consistente en toda la app.
@@ -73,6 +105,33 @@ class AppRadius {
   static const double card  = 14;
   static const double btn   = 14;
   static const double input = 10;
+}
+
+class PaletteQuickAccessCard {
+  final Color bg;
+  final Color fg;
+
+  const PaletteQuickAccessCard(this.bg, this.fg);
+
+  static PaletteQuickAccessCard resolve(Color lightBg, Color lightFg, bool isDark) {
+    if (!isDark) return PaletteQuickAccessCard(lightBg, lightFg);
+    return _darkByBg[lightBg.toARGB32()] ??
+        PaletteQuickAccessCard(AppColors.surfaceDark, lightFg); // fallback neutro
+  }
+
+  static final Map<int, PaletteQuickAccessCard> _darkByBg = {
+    AppColors.bgBlue.toARGB32():   const PaletteQuickAccessCard(AppColors.bgBlueModDark,   AppColors.blueModDark),
+    AppColors.bgOrange.toARGB32(): const PaletteQuickAccessCard(AppColors.bgOrangeModDark, AppColors.orangeModDark),
+    AppColors.bgPurple.toARGB32(): const PaletteQuickAccessCard(AppColors.bgPurpleModDark, AppColors.purpleModDark),
+    AppColors.bgYellow.toARGB32(): const PaletteQuickAccessCard(AppColors.bgYellowModDark, AppColors.yellowModDark),
+    AppColors.bgGreen.toARGB32():  const PaletteQuickAccessCard(AppColors.bgGreenModDark,  AppColors.greenModDark),
+    AppColors.bgCoral.toARGB32():  const PaletteQuickAccessCard(AppColors.bgCoralModDark,  AppColors.coralModDark),
+    AppColors.bgTeal.toARGB32():   const PaletteQuickAccessCard(AppColors.bgTealModDark, AppColors.tealModDark),
+    AppColors.bgSlate.toARGB32():  const PaletteQuickAccessCard(AppColors.bgSlateModDark, AppColors.slateModDark),
+    AppColors.bgLime.toARGB32():   const PaletteQuickAccessCard(AppColors.bgLimeModDark,  AppColors.limeModDark),
+    AppColors.bgCyan.toARGB32():   const PaletteQuickAccessCard(AppColors.bgCyanModDark,  AppColors.cyanModDark),
+  };
+
 }
 
 /// Tema Material 3 con paleta neutral + acento azul profundo.
@@ -98,8 +157,7 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
     onError:            Colors.white,
     surface:            surface,
     onSurface:          textHi,
-    surfaceContainerHighest:
-                        isDark ? AppColors.surfaceAltDark : AppColors.surfaceAltLight,
+    surfaceContainerHighest: isDark ? AppColors.surfaceAltDark : AppColors.surfaceAltLight,
     outline:            border,
     outlineVariant:     isDark ? AppColors.hairlineDark  : AppColors.hairlineLight,
     onSurfaceVariant:   textMid,

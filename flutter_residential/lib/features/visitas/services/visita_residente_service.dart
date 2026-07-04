@@ -31,6 +31,7 @@ class VisitaResidenteService {
         if (franjaHasta != null) 'franjaHasta': franjaHasta,
         if (validezHoras != null) 'validezHoras': validezHoras,
       },
+      requiresAuth: true,
     );
     return BaseApiService.parseSingle(res, VisitaModel.fromJson,
         successCodes: [200, 201], fallbackMsg: 'Error al crear la visita');

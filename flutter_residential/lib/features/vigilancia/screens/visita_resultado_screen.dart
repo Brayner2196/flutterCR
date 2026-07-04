@@ -83,6 +83,11 @@ class _VisitaResultadoScreenState extends State<VisitaResultadoScreen> {
       fg = AppColors.warning;
       bg = AppColors.warningSoft;
       icono = Icons.info_outline_rounded;
+    } else if (!d.puedeAprobar) {
+      // Se puede decidir (rechazar) pero no aprobar: QR aún no vigente o cartera.
+      fg = AppColors.warning;
+      bg = AppColors.warningSoft;
+      icono = Icons.info_outline_rounded;
     } else {
       fg = AppColors.blue;
       bg = AppColors.bgBlue;
@@ -133,7 +138,7 @@ class _VisitaResultadoScreenState extends State<VisitaResultadoScreen> {
             if (d.motivo != null && d.motivo!.isNotEmpty) _fila('Motivo', d.motivo!),
             if (d.franjaDesde != null)
               _fila('Horario',
-                  '${DateFormatter.fechaHora(d.franjaDesde)}${d.franjaHasta != null ? ' a ${DateFormatter.fechaHora(d.franjaHasta)}' : ''}'),
+                  '${DateFormatter.fechaHoraMinAmPm(d.franjaDesde)}${d.franjaHasta != null ? ' a ${DateFormatter.fechaHoraMinAmPm(d.franjaHasta)}' : ''}'),
             if (d.motivoRechazo != null && d.motivoRechazo!.isNotEmpty)
               _fila('Motivo rechazo', d.motivoRechazo!),
 

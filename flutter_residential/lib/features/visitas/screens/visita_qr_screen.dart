@@ -108,15 +108,15 @@ class _VisitaQrScreenState extends State<VisitaQrScreen> {
               if (v.franjaDesde != null) ...[
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Horario: ${DateFormatter.fechaHora(v.franjaDesde)}'
-                  '${v.franjaHasta != null ? ' a ${DateFormatter.fechaHora(v.franjaHasta)}' : ''}',
+                  'Horario: ${DateFormatter.fechaHoraMinSegAmPm(v.franjaDesde)}'
+                  '${v.franjaHasta != null ? ' a ${DateFormatter.fechaHoraMinSegAmPm(v.franjaHasta)}' : ''}',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall,
                 ),
               ],
               if (v.expiraEn != null) ...[
                 const SizedBox(height: AppSpacing.xs),
-                Text('Válido hasta ${DateFormatter.fechaHora(v.expiraEn)}',
+                Text('Válido hasta ${DateFormatter.fechaHoraMinSegAmPm(v.expiraEn)}',
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
               ],

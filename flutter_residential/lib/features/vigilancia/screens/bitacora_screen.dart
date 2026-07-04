@@ -120,7 +120,7 @@ class _EventoTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${evento.propiedadIdentificador != null ? 'Unidad ${evento.propiedadIdentificador} · ' : ''}'
-                  '${DateFormatter.fechaHora(evento.creadoEn)}',
+                  '${DateFormatter.fechaHoraMinAmPm(evento.creadoEn)}',
                   style: theme.textTheme.labelSmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),

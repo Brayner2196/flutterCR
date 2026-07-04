@@ -297,6 +297,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     required PqrProvider pqrs,
     required VotacionProvider votaciones,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     bool puede(String permiso) {
       if (esParqueadero) {
         const permitidosParqueadero = {'ESTADO_CUENTA', 'PQRS', 'ANUNCIOS'};
@@ -309,12 +310,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     final propiedadActual = context.read<PropiedadProvider>().propiedadActual;
 
     if (puede('ESTADO_CUENTA')) {
+      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgBlue, AppColors.blue, isDark);
       cards.add(QuickAccessCard(
         label: 'Estado de Cuenta',
-        subtitulo: 'Ver cobros y deuda',
+        subtitulo: 'Ver cobros y deudas',
         icono: Icons.account_balance_wallet_outlined,
-        fg: AppColors.blue,
-        bg: AppColors.bgBlue,
+        bg: palette.bg, //fondo del card
+        fg: palette.fg, //letras del card
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const EstadoCuentaScreen()),
@@ -323,12 +325,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (!esParqueadero && puede('RESERVAS')) {
+      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgOrange, AppColors.orange, isDark);
       cards.add(QuickAccessCard(
         label: 'Reservas',
         subtitulo: 'Areas comunes',
         icono: Icons.event_outlined,
-        fg: AppColors.orange,
-        bg: AppColors.bgOrange,
+        bg: palette.bg,
+        fg: palette.fg,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisReservasScreen()),
@@ -337,14 +340,15 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (puede('PQRS')) {
+      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgPurple, AppColors.purple, isDark);
       cards.add(QuickAccessCard(
         label: 'PQRs',
         subtitulo: pqrs.cantidadPendientes > 0
             ? '${pqrs.cantidadPendientes} pendiente${pqrs.cantidadPendientes == 1 ? '' : 's'}'
             : 'Sin pendientes',
         icono: Icons.support_agent_outlined,
-        fg: AppColors.purple,
-        bg: AppColors.bgPurple,
+        bg: palette.bg,
+        fg: palette.fg,
         badge: pqrs.cantidadPendientes > 0 ? pqrs.cantidadPendientes : null,
         onTap: () => Navigator.push(
           context,
@@ -354,14 +358,15 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (puede('ANUNCIOS')) {
+      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgGreen, AppColors.green, isDark);
       cards.add(QuickAccessCard(
         label: 'Anuncios',
         subtitulo: anuncios.noVistos > 0
             ? '${anuncios.noVistos} nuevo${anuncios.noVistos == 1 ? '' : 's'}'
             : 'Sin novedades',
         icono: Icons.campaign_outlined,
-        fg: AppColors.yellow,
-        bg: AppColors.bgYellow,
+        bg: palette.bg,
+        fg: palette.fg,
         badge: anuncios.noVistos > 0 ? anuncios.noVistos : null,
         onTap: () => Navigator.push(
           context,
@@ -371,14 +376,15 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (!esParqueadero && puede('VOTAR')) {
+      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgYellow, AppColors.yellow, isDark);
       cards.add(QuickAccessCard(
         label: 'Votaciones',
         subtitulo: votaciones.pendientesDeVotar > 0
             ? '${votaciones.pendientesDeVotar} ${votaciones.pendientesDeVotar == 1 ? 'votacion abierta' : 'votaciones abiertas'}'
             : 'Sin votaciones activas',
         icono: Icons.how_to_vote_outlined,
-        fg: AppColors.green,
-        bg: AppColors.bgGreen,
+        bg: palette.bg,
+        fg: palette.fg,
         badge: votaciones.pendientesDeVotar > 0
             ? votaciones.pendientesDeVotar
             : null,
@@ -390,12 +396,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (!esParqueadero && puede('MARKETPLACE')) {
+      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgTeal, AppColors.teal, isDark);
       cards.add(QuickAccessCard(
         label: 'Marketplace',
         subtitulo: 'Compra y vende en el conjunto',
         icono: Icons.storefront_outlined,
-        fg: AppColors.teal,
-        bg: AppColors.bgTeal,
+        bg: palette.bg,
+        fg: palette.fg,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MarketplaceScreen()),
@@ -405,12 +412,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
 
     // Visitas con QR — propietario siempre; inquilino con permiso VISITAS
     if (!esParqueadero && puede('VISITAS')) {
+      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgCoral, AppColors.coral, isDark);
       cards.add(QuickAccessCard(
         label: 'Visitas',
         subtitulo: 'Genera el QR de tus invitados',
         icono: Icons.qr_code_2_outlined,
-        fg: AppColors.blue,
-        bg: AppColors.bgBlue,
+        bg: palette.bg,
+        fg: palette.fg,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisVisitasScreen()),
@@ -419,12 +427,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     // Paquetería recibida en portería
+    final palette =  PaletteQuickAccessCard.resolve(AppColors.bgSlate, AppColors.slate, isDark);
     cards.add(QuickAccessCard(
       label: 'Paquetes',
       subtitulo: 'Correspondencia en portería',
       icono: Icons.inventory_2_outlined,
-      fg: AppColors.orange,
-      bg: AppColors.bgOrange,
+      bg: palette.bg,
+      fg: palette.fg,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const MisPaquetesScreen()),
@@ -457,12 +466,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       final presupuestoProvider = context.read<PresupuestoProvider>();
       if (presupuestoProvider.activo != null) {
         final p = presupuestoProvider.activo!;
+        final palette =  PaletteQuickAccessCard.resolve(AppColors.bgLime, AppColors.lime, isDark);
         cards.add(QuickAccessCard(
           label: 'Presupuesto',
           subtitulo: '${p.porcentajeEjecucionGeneral.toStringAsFixed(0)}% ejecutado - ${p.anio}',
           icono: Icons.account_balance_outlined,
-          fg: AppColors.ok,
-          bg: AppColors.bgGreen,
+          bg: palette.bg,
+          fg: palette.fg,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
@@ -473,14 +483,15 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (propiedadActual != null) {
+      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgCyan, AppColors.cyan, isDark);
       final cardParqueadero = QuickAccessCard(
         label: esParqueadero ? 'Mi Parqueadero' : 'Parqueaderos',
         subtitulo: esParqueadero
             ? 'Gestionar vehiculos y accesos'
             : 'Mis vehiculos y parqueaderos',
         icono: Icons.local_parking,
-        fg: AppColors.blue,
-        bg: AppColors.bgBlue,
+        bg: palette.bg,
+        fg: palette.fg,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
@@ -509,7 +520,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.sm,
-        childAspectRatio: 1.1,
+        childAspectRatio: 1.6,
         children: cards
             .map((c) => QuickAccessCard(
                   key: c.key,
