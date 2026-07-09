@@ -5,6 +5,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../anuncios/screens/admin/admin_anuncios_screen.dart';
 import '../../votaciones/screens/admin/admin_votaciones_screen.dart';
 import '../providers/consejo_provider.dart';
+import 'consejo_actas_screen.dart';
 import 'consejo_estadisticas_screen.dart';
 import 'consejo_pqrs_screen.dart';
 import 'consejo_directorio_screen.dart';
@@ -98,6 +99,18 @@ class _ConsejoDashboardScreenState extends State<ConsejoDashboardScreen> {
               fg: AppColors.green,
               bg: AppColors.bgGreen,
               onTap: () => _ir(context, const AdminVotacionesScreen()),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+
+            _QuickCard(
+              label: 'Actas de Reunión',
+              subtitulo: auth.cargoConsejo == 'PRESIDENTE'
+                  ? 'Grabar y transcribir con Whisper'
+                  : 'Consultar actas del consejo',
+              icono: Icons.mic_rounded,
+              fg: AppColors.danger,
+              bg: AppColors.dangerSoft,
+              onTap: () => _ir(context, const ConsejoActasScreen()),
             ),
             const SizedBox(height: AppSpacing.sm),
 

@@ -249,6 +249,12 @@ class ApiConstants {
   static const String adminConsejoHistorial = '/api/admin/consejo/historial';
   static String adminConsejoId(int id)      => '/api/admin/consejo/$id';
 
+  // Consejo — actas de reunión por voz (lectura: CONSEJERO+ADMIN, escritura: solo PRESIDENTE)
+  static const String consejoActas = '/api/consejo/actas';
+  static String consejoActaId(int id)         => '/api/consejo/actas/$id';
+  static String consejoActaFinalizar(int id)  => '/api/consejo/actas/$id/finalizar';
+  static String consejoActaReintentar(int id) => '/api/consejo/actas/$id/reintentar';
+
   // Consejo — estadísticas (CONSEJERO + TENANT_ADMIN)
   static String consejoEstadisticas({String? desde, String? hasta}) {
     final params = <String>[];

@@ -25,6 +25,7 @@ import 'features/presupuesto/providers/presupuesto_provider.dart';
 import 'features/parqueaderos/providers/parqueadero_provider.dart';
 import 'features/parqueaderos/providers/vehiculo_provider.dart';
 import 'features/consejo/providers/consejo_provider.dart';
+import 'features/consejo/providers/acta_provider.dart';
 import 'features/vigilancia/providers/vigilancia_provider.dart';
 import 'features/visitas/providers/visita_provider.dart';
 import 'features/paquetes_residente/providers/paquete_residente_provider.dart';
@@ -104,6 +105,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ParqueaderoProvider()),
         ChangeNotifierProvider(create: (_) => VehiculoProvider()),
         ChangeNotifierProvider(create: (_) => ConsejoProvider()),
+        ChangeNotifierProvider(create: (_) => ActaProvider()),
         ChangeNotifierProvider(create: (_) => VigilanciaProvider()),
         ChangeNotifierProvider(create: (_) => VisitaProvider()),
         ChangeNotifierProvider(create: (_) => PaqueteResidenteProvider()),

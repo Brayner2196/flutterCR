@@ -97,6 +97,13 @@ class AuthProvider extends BaseProvider {
     try {
       final resultado = await ejecutar(() => AuthService.login(email, password));
 
+      // ejecutar() atrapa la excepción y devuelve null, guardando el mensaje
+      // real (ej: "Credenciales incorrectas") en `error`. Lo propagamos para
+      // que la pantalla muestre el SnackBar correcto.
+      if (resultado == null) {
+        throw Exception(error ?? 'Error al iniciar sesión');
+      }
+
       if (resultado is LoginResponse) {
         await _aplicarSesion(resultado);
         return true; // ir a HomeScreen

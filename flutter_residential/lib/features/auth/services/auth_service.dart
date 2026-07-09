@@ -30,10 +30,14 @@ class AuthService {
     required String password,
     required String tenantId,
   }) async {
+    // Endpoint público (permitAll). Debe ser requiresAuth:false igual que
+    // login/registro: con requiresAuth:true un 401 (datos incorrectos) dispara
+    // el flujo de refresh → SessionExpiredException, ocultando el mensaje real
+    // "Credenciales incorrectas".
     final response = await ApiClient.post(
       ApiConstants.seleccionarTenant,
       {'email': email, 'password': password, 'tenantId': tenantId},
-      requiresAuth: true,
+      requiresAuth: false,
     );
 
     final body = jsonDecode(response.body);

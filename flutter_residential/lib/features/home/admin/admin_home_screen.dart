@@ -26,7 +26,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      // Mismo fondo que el home del rol propietario: hereda scaffoldBackgroundColor
+      // del tema (bgLight/bgDark) en lugar de cs.surface, para unificar el estilo.
       appBar: AppBarAdmin(auth: auth, cs: cs, habilitarlogout: true, habilitarReturnScreen: true,),
       body: IndexedStack(
         index: _tabActual,

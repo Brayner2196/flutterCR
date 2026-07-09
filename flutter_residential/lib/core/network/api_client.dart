@@ -277,6 +277,45 @@ class ApiClient {
     }
   }
 
+  /// POST multipart/form-data reutilizable (subida de archivos).
+  /// [filePath] es la ruta local del archivo; [fileField] el nombre del part.
+  /// Maneja auth, tenant y refresh 401 igual que el resto de métodos.
+  static Future<http.Response> postMultipart(
+    String path, {
+    required String fileField,
+    required String filePath,
+    Map<String, String> fields = const {},
+    Duration timeout = const Duration(minutes: 5),
+  }) async {
+    await _checkConnectivity();
+    final uri = Uri.parse('${ApiConstants.baseUrl}$path');
+
+    Future<http.Response> enviar() async {
+      final headers = await _headers();
+      // MultipartRequest define su propio Content-Type (boundary)
+      headers.remove('Content-Type');
+
+      final req = http.MultipartRequest('POST', uri)
+        ..headers.addAll(headers)
+        ..fields.addAll(fields);
+      req.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+
+      final streamed = await req.send().timeout(timeout);
+      return http.Response.fromStream(streamed);
+    }
+
+    try {
+      final res = await enviar();
+      return await _handleUnauthorized(res, enviar) ?? res;
+    } on SessionExpiredException {
+      rethrow;
+    } on SocketException {
+      throw Exception('Sin conexión a internet. Verifica tu red.');
+    } on TimeoutException {
+      throw Exception('La subida tardó demasiado. Inténtalo de nuevo.');
+    }
+  }
+
   static Future<http.Response> patch(String path, [Map<String, dynamic>? body]) async {
     await _checkConnectivity();
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');
