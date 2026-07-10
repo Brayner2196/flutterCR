@@ -37,7 +37,7 @@ class ConsejoEstadisticasModel {
   });
 
   factory ConsejoEstadisticasModel.fromJson(Map<String, dynamic> json) {
-    Map<String, int> _toIntMap(dynamic raw) {
+    Map<String, int> toIntMap(dynamic raw) {
       if (raw == null) return {};
       return (raw as Map<String, dynamic>)
           .map((k, v) => MapEntry(k, (v as num).toInt()));
@@ -47,15 +47,15 @@ class ConsejoEstadisticasModel {
       desde: json['desde'] as String? ?? '',
       hasta: json['hasta'] as String? ?? '',
       pqrTotal: (json['pqrTotal'] as num?)?.toInt() ?? 0,
-      pqrPorEstado: _toIntMap(json['pqrPorEstado']),
-      pqrPorTipo: _toIntMap(json['pqrPorTipo']),
+      pqrPorEstado: toIntMap(json['pqrPorEstado']),
+      pqrPorTipo: toIntMap(json['pqrPorTipo']),
       pqrResueltas: (json['pqrResueltas'] as num?)?.toInt() ?? 0,
       pqrTiempoPromRespuestaHoras: (json['pqrTiempoPromRespuestaHoras'] as num?)?.toDouble(),
       anuncioTotal: (json['anuncioTotal'] as num?)?.toInt() ?? 0,
       anuncioActivos: (json['anuncioActivos'] as num?)?.toInt() ?? 0,
       anuncioTotalVistas: (json['anuncioTotalVistas'] as num?)?.toInt() ?? 0,
       votacionTotal: (json['votacionTotal'] as num?)?.toInt() ?? 0,
-      votacionPorEstado: _toIntMap(json['votacionPorEstado']),
+      votacionPorEstado: toIntMap(json['votacionPorEstado']),
       votacionParticipantes: (json['votacionParticipantes'] as num?)?.toInt() ?? 0,
     );
   }

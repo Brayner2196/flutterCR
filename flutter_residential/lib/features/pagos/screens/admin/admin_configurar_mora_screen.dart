@@ -195,7 +195,7 @@ class _TabVigente extends StatelessWidget {
                             style: TextStyle(color: cs.onSurface),
                             children: [
                               TextSpan(
-                                text: '${mora!.porcentajeMensual?.toStringAsFixed(1) ?? '?'}',
+                                text: mora!.porcentajeMensual?.toStringAsFixed(1) ?? '?',
                                 style: const TextStyle(
                                     fontSize: 48, fontWeight: FontWeight.bold),
                               ),
@@ -388,7 +388,7 @@ class _PreviewMoraState extends State<_PreviewMora> {
               if (widget.mora.diasGracia > 0) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Días efectivos con mora: $diasEfectivos (${_diasAtraso} − ${widget.mora.diasGracia} de gracia)',
+                  'Días efectivos con mora: $diasEfectivos ($_diasAtraso − ${widget.mora.diasGracia} de gracia)',
                   style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                 ),
               ],

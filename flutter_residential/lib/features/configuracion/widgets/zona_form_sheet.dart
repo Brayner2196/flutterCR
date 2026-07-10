@@ -104,8 +104,11 @@ class _ZonaFormSheetState extends State<ZonaFormSheet> {
     );
     if (picked != null) {
       setState(() {
-        if (esApertura) _horaApertura = picked;
-        else _horaCierre = picked;
+        if (esApertura) {
+          _horaApertura = picked;
+        } else {
+          _horaCierre = picked;
+        }
       });
     }
   }

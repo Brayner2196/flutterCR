@@ -242,43 +242,6 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
       );
 }
 
-// ─── Componentes internos ──────────────────────────────────────────
-
-class _ErrorView extends StatelessWidget {
-  final String mensaje;
-  final VoidCallback onReintentar;
-  const _ErrorView({required this.mensaje, required this.onReintentar});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.cloud_off, size: 52, color: AppColors.danger),
-            const SizedBox(height: 16),
-            Text(
-              mensaje,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color:
-                      Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onReintentar,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ListaPagos extends StatelessWidget {
   final List<PagoModel> pagos;
   final String emptyMessage;

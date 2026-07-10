@@ -372,7 +372,7 @@ class _DesignarSheetState extends State<_DesignarSheet> {
                         _Label('Usuario'),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<UsuarioResponse>(
-                          value: _usuarioSel,
+                          initialValue: _usuarioSel,
                           hint: const Text('Selecciona un residente'),
                           isExpanded: true,
                           decoration: InputDecoration(
@@ -391,7 +391,7 @@ class _DesignarSheetState extends State<_DesignarSheet> {
                         _Label('Cargo'),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: _cargoSel,
+                          initialValue: _cargoSel,
                           hint: const Text('Selecciona un cargo'),
                           decoration: InputDecoration(
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

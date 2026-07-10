@@ -447,37 +447,3 @@ class _MarqueeTextState extends State<_MarqueeText> {
     );
   }
 }
-
-// ─── Info row ────────────────────────────────────────────────────────────────
-
-class _InfoRow extends StatelessWidget {
-  final IconData icono;
-  final String titulo;
-  final String valor;
-
-  const _InfoRow({
-    required this.icono,
-    required this.titulo,
-    required this.valor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Icon(icono, size: 16, color: cs.onSurfaceVariant),
-        const SizedBox(width: 8),
-        Text(
-          '$titulo: ',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: cs.onSurfaceVariant,
-          ),
-        ),
-        Text(valor, style: const TextStyle(fontSize: 12)),
-      ],
-    );
-  }
-}

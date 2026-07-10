@@ -50,9 +50,13 @@ class _AdminConfigurarCuotasScreenState
       final flat = <TipoPropiedadNodo>[];
       void flatten(TipoPropiedadNodo n) {
         flat.add(n);
-        for (final h in n.hijos) flatten(h);
+        for (final h in n.hijos) {
+          flatten(h);
+        }
       }
-      for (final n in nodos) flatten(n);
+      for (final n in nodos) {
+        flatten(n);
+      }
 
       final propiedades = await PropiedadService.listarPropiedades();
       final activas = await CuotaService.listar();
@@ -927,7 +931,7 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
               // ── Campos según modo ─────────────────────────────────
               if (_modo == _ModoAsignacion.porTipo) ...[
                 DropdownButtonFormField<int>(
-                  value: _tipoPropiedadId,
+                  initialValue: _tipoPropiedadId,
                   decoration: const InputDecoration(
                       labelText: 'Tipo de propiedad',
                       border: OutlineInputBorder()),
@@ -965,7 +969,7 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
                   Builder(builder: (_) {
                     final ancestros = _ancestrosDe(_tipoPropiedadId);
                     return DropdownButtonFormField<int?>(
-                      value: _condicionTipoId,
+                      initialValue: _condicionTipoId,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'El rango aplica sobre el número de',
@@ -1091,7 +1095,7 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
 
               // ── Periodicidad ──────────────────────────────────────
               DropdownButtonFormField<String>(
-                value: _periodicidad,
+                initialValue: _periodicidad,
                 decoration: const InputDecoration(
                     labelText: 'Periodicidad', border: OutlineInputBorder()),
                 items: const [
@@ -1138,8 +1142,9 @@ class _NuevaCuotaSheetState extends State<_NuevaCuotaSheet> {
                     firstDate: _fechaVigencia,
                     lastDate: DateTime(2100),
                   );
-                  if (picked != null)
+                  if (picked != null) {
                     setState(() => _fechaVigenciaHasta = picked);
+                  }
                 },
                 child: InputDecorator(
                   decoration: InputDecoration(

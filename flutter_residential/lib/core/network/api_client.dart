@@ -25,7 +25,9 @@ class ApiClient {
       if (parts.length < 2) return;
       // base64url → base64 estándar
       var payload = parts[1].replaceAll('-', '+').replaceAll('_', '/');
-      while (payload.length % 4 != 0) payload += '=';
+      while (payload.length % 4 != 0) {
+        payload += '=';
+      }
       final decoded = utf8.decode(base64Decode(payload));
       final claims = jsonDecode(decoded) as Map<String, dynamic>;
       final esConsejero = claims['esConsejero'] as bool? ?? false;

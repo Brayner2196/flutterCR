@@ -539,7 +539,7 @@ class _TipoNodoFormState extends State<_TipoNodoForm> {
                     Switch(
                       value: _esFacturable,
                       onChanged: (v) => setState(() => _esFacturable = v),
-                      activeColor: Colors.amber.shade700,
+                      activeThumbColor: Colors.amber.shade700,
                     ),
                   ],
                 ),
@@ -590,7 +590,7 @@ class _TipoNodoFormState extends State<_TipoNodoForm> {
                     Switch(
                       value: _esParqueadero,
                       onChanged: (v) => setState(() => _esParqueadero = v),
-                      activeColor: Colors.teal,
+                      activeThumbColor: Colors.teal,
                     ),
                   ],
                 ),

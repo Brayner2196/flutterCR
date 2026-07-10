@@ -1,6 +1,6 @@
 import 'cobro_model.dart';
 
-/// Wrapper del Page<CobroResponse> que devuelve Spring Data.
+/// Wrapper del Page'CobroResponse' que devuelve Spring Data.
 class PaginatedCobroResponse {
   final List<CobroModel> content;
   final int totalElements;

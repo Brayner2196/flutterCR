@@ -762,37 +762,3 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
     TipoPasarela.bold => 'sk_...',
   };
 }
-
-class _FallbackLogo extends StatelessWidget {
-  final Color color;
-  final String label;
-  final double size;
-  const _FallbackLogo({
-    required this.color,
-    required this.label,
-    required this.size,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = label.split(' ').map((w) => w[0]).take(2).join();
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(size * 0.22),
-      ),
-      child: Center(
-        child: Text(
-          initials,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: size * 0.32,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
-  }
-}

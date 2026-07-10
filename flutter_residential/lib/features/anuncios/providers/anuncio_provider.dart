@@ -63,7 +63,7 @@ class AnuncioProvider extends BaseProvider {
     return actualizado;
   }
 
-  /// Renombrado de eliminar() para evitar colisión con BaseProvider.eliminar<T>()
+  /// Renombrado de eliminar() para evitar colisión con BaseProvider.eliminar'T'()
   Future<void> eliminarAnuncio(int id) async {
     await ejecutar(() => AnuncioService.eliminar(id));
     super.eliminar(_anuncios, (a) => a.id == id);

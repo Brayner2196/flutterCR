@@ -364,7 +364,7 @@ class _ReglaEditorState extends State<_ReglaEditor> {
           Expanded(
             flex: 4,
             child: DropdownButtonFormField<String>(
-              value: c.campo,
+              initialValue: c.campo,
               isExpanded: true,
               decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
               items: CarteraLabels.campos.entries
@@ -377,7 +377,7 @@ class _ReglaEditorState extends State<_ReglaEditor> {
           Expanded(
             flex: 2,
             child: DropdownButtonFormField<String>(
-              value: c.operador,
+              initialValue: c.operador,
               isExpanded: true,
               decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
               items: CarteraLabels.operadores.entries
