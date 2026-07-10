@@ -381,7 +381,7 @@ class _PasoPeriodo extends StatelessWidget {
             children: [
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: anio,
+                  initialValue: anio,
                   decoration: const InputDecoration(
                       labelText: 'Año', border: OutlineInputBorder()),
                   items: List.generate(
@@ -395,7 +395,7 @@ class _PasoPeriodo extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: mes,
+                  initialValue: mes,
                   decoration: const InputDecoration(
                       labelText: 'Mes', border: OutlineInputBorder()),
                   items: List.generate(12, (i) => i + 1)

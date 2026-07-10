@@ -950,10 +950,10 @@ class _DomicilioToggle extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: acepta ? AppColors.bgBlue : cs.surfaceContainerHighest.withOpacity(0.5),
+          color: acepta ? AppColors.bgBlue : cs.surfaceContainerHighest.withValues(alpha:0.5),
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: acepta ? AppColors.blue : cs.outline.withOpacity(0.5),
+            color: acepta ? AppColors.blue : cs.outline.withValues(alpha:0.5),
             width: acepta ? 1.5 : 1,
           ),
         ),
@@ -966,7 +966,7 @@ class _DomicilioToggle extends StatelessWidget {
                 color: acepta ? AppColors.bgBlue : cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 border: Border.all(
-                  color: acepta ? AppColors.blue.withOpacity(0.4) : cs.outline.withOpacity(0.3),
+                  color: acepta ? AppColors.blue.withValues(alpha:0.4) : cs.outline.withValues(alpha:0.3),
                 ),
               ),
               child: Icon(
@@ -1027,7 +1027,7 @@ class _MetodosPagoGrid extends StatelessWidget {
               color: sel ? cs.primaryContainer : cs.surface,
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
-                color: sel ? cs.primary : cs.outline.withOpacity(0.5),
+                color: sel ? cs.primary : cs.outline.withValues(alpha:0.5),
                 width: sel ? 1.5 : 1,
               ),
             ),
@@ -1118,14 +1118,14 @@ class _Paso3Resumen extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.bgGreen,
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(color: AppColors.ok.withOpacity(0.3)),
+              border: Border.all(color: AppColors.ok.withValues(alpha:0.3)),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.ok.withOpacity(0.15),
+                    color: AppColors.ok.withValues(alpha:0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.fact_check_rounded,
@@ -1150,7 +1150,7 @@ class _Paso3Resumen extends StatelessWidget {
                             : 'Revisa que todo esté correcto',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.ok.withOpacity(0.8),
+                          color: AppColors.ok.withValues(alpha:0.8),
                         ),
                       ),
                     ],
@@ -1267,7 +1267,7 @@ class _TarjetaPreview extends StatelessWidget {
         border: Border.all(color: cs.outline),
         boxShadow: [
           BoxShadow(
-            color: cs.shadow.withOpacity(0.05),
+            color: cs.shadow.withValues(alpha:0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

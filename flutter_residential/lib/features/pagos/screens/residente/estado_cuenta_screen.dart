@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/celebracion.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -310,7 +309,6 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
                     saldoFavor: abonos.saldoFavor?.saldo ?? 0,
                     formatMonto: _fmt,
                     onSolicitarPlan: () {
-                      final cfg = context.read<PlanPagoProvider>().config;
                       final cobros = provider.estadoCuenta?.cobrosActivos
                           .where((c) => !c.estado.contains('PAGADO') &&
                               !c.estado.contains('EXONERADO'))
@@ -1018,28 +1016,6 @@ class _CobroCardState extends State<_CobroCard> {
         ),
       ),
     );
-  }
-
-  IconData _iconoPasarela(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago:
-        return Icons.account_balance_wallet_outlined;
-      case TipoPasarela.wompi:
-        return Icons.credit_card_outlined;
-      case TipoPasarela.bold:
-        return Icons.payments_outlined;
-    }
-  }
-
-  Color _colorPasarela(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago:
-        return const Color(0xFF009EE3);
-      case TipoPasarela.wompi:
-        return Colors.purple;
-      case TipoPasarela.bold:
-        return Colors.green;
-    }
   }
 
   void _mostrarOpcionesPago() {
@@ -1981,10 +1957,6 @@ class _FilaMovimiento extends StatelessWidget {
     if (mov.esRechazado) return 'Rechazado';
     return 'Pendiente';
   }
-
-  IconData get _tipoIcon => mov.esPago
-      ? Icons.credit_card_outlined
-      : Icons.account_balance_wallet_outlined;
 
   @override
   Widget build(BuildContext context) {

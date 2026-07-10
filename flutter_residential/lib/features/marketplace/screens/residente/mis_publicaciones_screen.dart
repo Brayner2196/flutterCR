@@ -217,7 +217,7 @@ class _MiPublicacionTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.outline.withOpacity(0.5)),
+        border: Border.all(color: cs.outline.withValues(alpha:0.5)),
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -476,7 +476,7 @@ class _MetodoBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outline.withOpacity(0.3)),
+        border: Border.all(color: cs.outline.withValues(alpha:0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

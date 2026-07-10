@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../../features/pagos/models/pasarela_disponible_model.dart';
 import '../../../../features/pagos/widgets/pasarela_comisiones_widget.dart';
 
@@ -61,7 +60,6 @@ class _TenantWizardStepPasarelasState
     extends State<TenantWizardStepPasarelas> {
   @override
   Widget build(BuildContext context) {
-    final cs    = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
@@ -388,8 +386,8 @@ class _SandboxRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs    = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
+    
     return Row(
       children: [
         Icon(
@@ -409,7 +407,7 @@ class _SandboxRow extends StatelessWidget {
         ),
         Switch(
           value: !sandbox,
-          activeColor: Colors.green,
+          activeThumbColor: Colors.green,
           onChanged: (v) => onChanged(!v),
         ),
       ],

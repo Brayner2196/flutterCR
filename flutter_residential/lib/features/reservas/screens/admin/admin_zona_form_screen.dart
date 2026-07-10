@@ -446,7 +446,7 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
                     title: const Text('Esta zona tiene costo', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                     subtitle: const Text('Se carga al estado de cuenta al aprobar', style: TextStyle(fontSize: 12)),
                     value: _tieneCosto,
-                    activeColor: const Color(0xFF8C6D00),
+                    activeThumbColor: const Color.fromRGBO(140, 109, 0, 1),
                     onChanged: (v) => setState(() => _tieneCosto = v),
                   ),
                   if (_tieneCosto) ...[
@@ -543,7 +543,7 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
                 title: const Text('Zona activa', style: TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: const Text('Los residentes pueden ver y reservar esta zona'),
                 value: _activa,
-                activeColor: AppColors.ok,
+                activeThumbColor: AppColors.ok,
                 onChanged: (v) => setState(() => _activa = v),
               ),
             ),
@@ -560,7 +560,7 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
           border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, -2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha:0.05), blurRadius: 8, offset: const Offset(0, -2))],
         ),
         child: Row(
           children: [
@@ -652,7 +652,7 @@ class _HeroEstado extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: Colors.white.withValues(alpha:0.18),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -675,7 +675,7 @@ class _HeroEstado extends StatelessWidget {
             borderRadius: BorderRadius.circular(3),
             child: LinearProgressIndicator(
               value: completitud / 100,
-              backgroundColor: Colors.white.withOpacity(0.15),
+              backgroundColor: Colors.white.withValues(alpha:0.15),
               valueColor: const AlwaysStoppedAnimation(Color(0xFF7AC890)),
               minHeight: 6,
             ),
@@ -707,7 +707,7 @@ class _MiniKpi extends StatelessWidget {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.10),
+          color: Colors.white.withValues(alpha:0.10),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -757,8 +757,8 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final borderColor = expanded ? iconColor.withOpacity(0.55) : cs.outlineVariant.withOpacity(0.45);
-    final bgColor = expanded ? iconColor.withOpacity(0.04) : cs.surface;
+    final borderColor = expanded ? iconColor.withValues(alpha:0.55) : cs.outlineVariant.withValues(alpha:0.45);
+    final bgColor = expanded ? iconColor.withValues(alpha:0.04) : cs.surface;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -774,7 +774,7 @@ class _SectionCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Borde izquierdo coloreado
-              Container(width: 4, color: iconColor.withOpacity(expanded ? 0.85 : 0.35)),
+              Container(width: 4, color: iconColor.withValues(alpha:expanded ? 0.85 : 0.35)),
 
               // Contenido principal
               Expanded(
@@ -789,7 +789,7 @@ class _SectionCard extends StatelessWidget {
                             Container(
                               width: 36, height: 36,
                               decoration: BoxDecoration(
-                                color: iconColor.withOpacity(0.13),
+                                color: iconColor.withValues(alpha:0.13),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(icon, size: 18, color: iconColor),
@@ -828,8 +828,8 @@ class _SectionCard extends StatelessWidget {
                     if (expanded)
                       Container(
                         decoration: BoxDecoration(
-                          color: cs.surface.withOpacity(0.7),
-                          border: Border(top: BorderSide(color: iconColor.withOpacity(0.18), width: 1)),
+                          color: cs.surface.withValues(alpha:0.7),
+                          border: Border(top: BorderSide(color: iconColor.withValues(alpha:0.18), width: 1)),
                         ),
                         padding: const EdgeInsets.all(14),
                         child: child,
@@ -915,7 +915,7 @@ class _EditorHorarioGrupos extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.orange.withOpacity(0.5), style: BorderStyle.solid, width: 1.5),
+              border: Border.all(color: AppColors.orange.withValues(alpha:0.5), style: BorderStyle.solid, width: 1.5),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1038,7 +1038,7 @@ class _GrupoCard extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 4),
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.06),
+                        color: color.withValues(alpha:0.06),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(children: [
@@ -1174,7 +1174,11 @@ class _GrupoDialogState extends State<_GrupoDialog> {
                   return GestureDetector(
                     onTap: ocupado ? null : () {
                       setState(() {
-                        if (sel) _diasSel.remove(dia); else _diasSel.add(dia);
+                        if (sel) {
+                          _diasSel.remove(dia);
+                        } else {
+                          _diasSel.add(dia);
+                        }
                       });
                     },
                     child: Container(
@@ -1347,7 +1351,7 @@ class _CategoriaSelector extends StatelessWidget {
                   margin: const EdgeInsets.only(right: 4),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                    color: sel ? AppColors.blue.withOpacity(0.10) : Colors.transparent,
+                    color: sel ? AppColors.blue.withValues(alpha:0.10) : Colors.transparent,
                     border: Border.all(color: sel ? AppColors.blue : Theme.of(context).dividerColor),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1421,7 +1425,7 @@ class _ModoCard extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.06) : Colors.transparent,
+          color: selected ? color.withValues(alpha:0.06) : Colors.transparent,
           border: Border.all(color: selected ? color : Theme.of(context).dividerColor, width: selected ? 1.5 : 1),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -1480,7 +1484,7 @@ class _SegmentedRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outlineVariant.withOpacity(0.4)),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha:0.4)),
       ),
       child: Row(
         children: List.generate(options.length, (i) {
@@ -1494,7 +1498,7 @@ class _SegmentedRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: sel ? cs.surface : Colors.transparent,
                   borderRadius: BorderRadius.circular(9),
-                  boxShadow: sel ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 2)] : null,
+                  boxShadow: sel ? [BoxShadow(color: Colors.black.withValues(alpha:0.06), blurRadius: 2)] : null,
                 ),
                 alignment: Alignment.center,
                 child: Text(labels[i],
@@ -1568,18 +1572,18 @@ class _ToggleRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        border: isLast ? null : Border(bottom: BorderSide(color: cs.outlineVariant.withOpacity(0.4))),
+        border: isLast ? null : Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha:0.4))),
       ),
       child: Row(children: [
         Container(width: 32, height: 32,
-          decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(color: color.withValues(alpha:0.12), borderRadius: BorderRadius.circular(8)),
           child: Icon(icon, size: 16, color: color)),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
           Text(subtitle, style: TextStyle(fontSize: 11.5, color: cs.onSurfaceVariant)),
         ])),
-        Switch(value: value, onChanged: onChanged, activeColor: color),
+        Switch(value: value, onChanged: onChanged, activeThumbColor: color),
       ]),
     );
   }

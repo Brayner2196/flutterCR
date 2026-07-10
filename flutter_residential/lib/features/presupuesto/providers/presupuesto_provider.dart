@@ -37,7 +37,7 @@ class PresupuestoProvider extends BaseProvider {
     _detalle = await ejecutar(() => PresupuestoService.detalleAdmin(id));
   }
 
-  /// presupuestoActivo() retorna Future<PresupuestoModel?> — llamada directa sin ejecutar()
+  /// presupuestoActivo() retorna Future'PresupuestoModel' — llamada directa sin ejecutar()
   /// para evitar inferencia de T nullable. Null = sin presupuesto activo, es válido.
   Future<void> cargarActivo() async {
     setLoading(true);

@@ -524,7 +524,6 @@ class _RegistrarGastoSheetState extends State<_RegistrarGastoSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -543,7 +542,7 @@ class _RegistrarGastoSheetState extends State<_RegistrarGastoSheet> {
 
           // ── Categoría ──────────────────────────────────────
           DropdownButtonFormField<int>(
-            value: _categoriaId,
+            initialValue: _categoriaId,
             decoration: InputDecoration(
               labelText: 'Categoría *',
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

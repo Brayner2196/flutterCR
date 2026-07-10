@@ -507,7 +507,7 @@ class _MetodoPagoChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outline.withOpacity(0.35)),
+        border: Border.all(color: cs.outline.withValues(alpha:0.35)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

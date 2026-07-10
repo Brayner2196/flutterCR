@@ -87,17 +87,6 @@ class _ConsejoPqrsScreenState extends State<ConsejoPqrsScreen> {
     }
   }
 
-  static String _estadoLegible(String e) {
-    const map = {
-      'RADICADA': 'Radicada',
-      'EN_PROCESO': 'En proceso',
-      'RESUELTO': 'Resuelta',
-      'CERRADO': 'Cerrada',
-      'RECHAZADA': 'Rechazada',
-    };
-    return map[e] ?? e;
-  }
-
   @override
   Widget build(BuildContext context) {
     final consejo = context.watch<ConsejoProvider>();

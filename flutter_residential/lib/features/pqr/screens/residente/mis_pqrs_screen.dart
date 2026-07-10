@@ -116,7 +116,7 @@ class _PqrTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final (_, estadoColor) = EstadoBadge.coloresDe(pqr.estado, cs);
+    final (_, _) = EstadoBadge.coloresDe(pqr.estado, cs);
 
     return InkWell(
       onTap: onTap,

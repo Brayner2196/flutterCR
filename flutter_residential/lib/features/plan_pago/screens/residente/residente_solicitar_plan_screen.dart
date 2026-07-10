@@ -103,7 +103,6 @@ class _ResidenteSolicitarPlanScreenState
   @override
   Widget build(BuildContext context) {
     final cfg = context.watch<PlanPagoProvider>().config;
-    final cs = Theme.of(context).colorScheme;
     final recargo = _calcularRecargo(cfg);
     final total = _montoSeleccionado + recargo;
     final montoCuota = _cuotas > 0 ? total / _cuotas : 0;
@@ -264,7 +263,6 @@ class _ReglasCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

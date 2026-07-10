@@ -282,7 +282,7 @@ class _ReservaTile extends StatelessWidget {
                   onPressed: onRechazar,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.danger,
-                    side: BorderSide(color: AppColors.danger.withOpacity(0.5)),
+                    side: BorderSide(color: AppColors.danger.withValues(alpha:0.5)),
                     // Evitar que el tema global (Size.fromHeight) force ancho infinito
                     minimumSize: const Size(88, 44),
                   ),

@@ -25,7 +25,6 @@ class _ResidenteMiPlanScreenState extends State<ResidenteMiPlanScreen> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<PlanPagoProvider>();
-    final cs = Theme.of(context).colorScheme;
 
     if (p.loading && p.planes.isEmpty) {
       return Scaffold(

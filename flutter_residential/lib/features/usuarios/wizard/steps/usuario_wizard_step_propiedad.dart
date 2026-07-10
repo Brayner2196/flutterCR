@@ -257,7 +257,7 @@ class UsuarioWizardStepPropiedadState
               children: [
                 // Dropdown muestra el nodo facturable (ej: Apartamento)
                 DropdownButtonFormField<_RutaFacturable>(
-                  value: _rutaSeleccionada,
+                  initialValue: _rutaSeleccionada,
                   decoration: _decor(
                     'Tipo de propiedad',
                     Icons.home_work_outlined,

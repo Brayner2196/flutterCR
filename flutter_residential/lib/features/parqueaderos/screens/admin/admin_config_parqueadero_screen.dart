@@ -29,7 +29,7 @@ class _AdminConfigParqueaderoTabState extends State<AdminConfigParqueaderoTab> {
   bool _permiteBici           = true;
   bool _requiereAprobacion    = false;
   bool _aceptaVisitantes      = false;
-  ModeloParqueaderoPrivado _modeloPrivadoDefault = ModeloParqueaderoPrivado.ACCESORIO;
+  ModeloParqueaderoPrivado _modeloPrivadoDefault = ModeloParqueaderoPrivado.accesorio;
 
   bool _cargando = false;
   bool _iniciado = false;
@@ -204,7 +204,7 @@ class _AdminConfigParqueaderoTabState extends State<AdminConfigParqueaderoTab> {
           _Seccion(titulo: 'Modelo de parqueadero privado'),
           const SizedBox(height: 6),
           _InfoBanner(
-            texto: _modeloPrivadoDefault == ModeloParqueaderoPrivado.INDEPENDIENTE
+            texto: _modeloPrivadoDefault == ModeloParqueaderoPrivado.independiente
                 ? 'Los parqueaderos privados son propiedades facturables independientes. '
                   'Se crean desde el árbol de tipos de propiedad (con "Es parqueadero" activo).'
                 : 'Los parqueaderos privados son accesorios de un apartamento. '
@@ -391,20 +391,20 @@ class _ModeloSelector extends StatelessWidget {
     return Row(
       children: [
         _OpcionModelo(
-          activo: valor == ModeloParqueaderoPrivado.ACCESORIO,
+          activo: valor == ModeloParqueaderoPrivado.accesorio,
           icono: Icons.link_outlined,
           titulo: 'Accesorio',
           subtitulo: 'Del apartamento',
-          onTap: () => onChanged(ModeloParqueaderoPrivado.ACCESORIO),
+          onTap: () => onChanged(ModeloParqueaderoPrivado.accesorio),
           color: cs.primary,
         ),
         const SizedBox(width: 10),
         _OpcionModelo(
-          activo: valor == ModeloParqueaderoPrivado.INDEPENDIENTE,
+          activo: valor == ModeloParqueaderoPrivado.independiente,
           icono: Icons.local_parking,
           titulo: 'Independiente',
           subtitulo: 'Propiedad propia',
-          onTap: () => onChanged(ModeloParqueaderoPrivado.INDEPENDIENTE),
+          onTap: () => onChanged(ModeloParqueaderoPrivado.independiente),
           color: Colors.teal,
         ),
       ],

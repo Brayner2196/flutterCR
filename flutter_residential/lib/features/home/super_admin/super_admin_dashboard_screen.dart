@@ -132,7 +132,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
           Text(
             'Bienvenido',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onPrimary.withOpacity(0.8),
+              color: theme.colorScheme.onPrimary.withValues(alpha:0.8),
             ),
           ),
           const SizedBox(height: 4),
@@ -147,7 +147,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: theme.colorScheme.onPrimary.withOpacity(0.2),
+              color: theme.colorScheme.onPrimary.withValues(alpha:0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(

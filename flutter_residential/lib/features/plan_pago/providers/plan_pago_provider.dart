@@ -53,7 +53,7 @@ class PlanPagoProvider extends BaseProvider {
     _planDetalle = await ejecutar(() => PlanPagoService.detalle(id));
   }
 
-  /// miPlanActivo() retorna Future<PlanPagoModel?> — llamada directa sin ejecutar()
+  /// miPlanActivo() retorna Future'PlanPagoModel' — llamada directa sin ejecutar()
   /// para evitar inferencia de T nullable. Fallo silencioso: sin plan activo es normal.
   Future<void> cargarPlanActivo() async {
     setLoading(true);

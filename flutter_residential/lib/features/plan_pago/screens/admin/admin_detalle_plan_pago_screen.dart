@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../models/cuota_plan_model.dart';
-import '../../models/plan_pago_model.dart';
 import '../../providers/plan_pago_provider.dart';
 
 class AdminDetallePlanPagoScreen extends StatefulWidget {

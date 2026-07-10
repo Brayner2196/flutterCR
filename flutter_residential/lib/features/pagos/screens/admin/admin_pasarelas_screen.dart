@@ -371,7 +371,7 @@ class _PasarelaCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha:0.12),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
@@ -525,7 +525,7 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
                 ),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<TipoPasarela>(
-                  value: _tipo,
+                  initialValue: _tipo,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                   ),
@@ -605,7 +605,7 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
                         ),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<int>(
-                          value: _prioridad,
+                          initialValue: _prioridad,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                           ),
@@ -720,7 +720,7 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.07),
+        color: Colors.blue.withValues(alpha:0.07),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

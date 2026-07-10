@@ -299,8 +299,8 @@ class _ItemResumenPath extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

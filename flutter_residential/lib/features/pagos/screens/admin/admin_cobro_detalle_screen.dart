@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/shared/utils/scrollingText.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -120,7 +121,14 @@ class _AdminCobroDetalleScreenState extends State<AdminCobroDetalleScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_cobro.propiedadIdentificador),
+          title: ScrollingText( 
+          text: _cobro.propiedadIdentificador,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
+          ),
           actions: [
             if (_puedeExonerar)
               PopupMenuButton<String>(

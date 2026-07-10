@@ -276,7 +276,7 @@ class _CrearVisitaSheetState extends State<_CrearVisitaSheet> {
           const SizedBox(height: AppSpacing.md),
           if (props.length > 1)
             DropdownButtonFormField<UsuarioPropiedadResponse>(
-              value: _propiedad,
+              initialValue: _propiedad,
               isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Unidad',

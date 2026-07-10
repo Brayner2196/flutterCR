@@ -1,10 +1,10 @@
 /// Tipos de parqueadero: privado (pertenece a una propiedad) o común (conteo en configuración).
-enum TipoParqueadero { COMUN, PRIVADO }
+enum TipoParqueadero { comun, privado }
 
 /// Modelo de un parqueadero PRIVADO:
 /// INDEPENDIENTE → es una propiedad facturable propia (propiedadParqueaderoId apunta a ella).
 /// ACCESORIO     → complemento de un apartamento (propiedadId apunta al apartamento).
-enum ModeloParqueaderoPrivado { INDEPENDIENTE, ACCESORIO }
+enum ModeloParqueaderoPrivado { independiente, accesorio }
 
 class ParqueaderoModel {
   final int id;
@@ -48,8 +48,8 @@ class ParqueaderoModel {
   /// ACCESORIO (propiedadId) o INDEPENDIENTE (propiedadParqueaderoId).
   bool get tieneAsignacion   => propiedadId != null || propiedadParqueaderoId != null;
   bool get tieneVehiculo     => vehiculoId != null;
-  bool get esIndependiente   => modeloPropiedad == ModeloParqueaderoPrivado.INDEPENDIENTE;
-  bool get esAccesorio       => modeloPropiedad == ModeloParqueaderoPrivado.ACCESORIO;
+  bool get esIndependiente   => modeloPropiedad == ModeloParqueaderoPrivado.independiente;
+  bool get esAccesorio       => modeloPropiedad == ModeloParqueaderoPrivado.accesorio;
 
   factory ParqueaderoModel.fromJson(Map<String, dynamic> json) {
     return ParqueaderoModel(
@@ -57,12 +57,12 @@ class ParqueaderoModel {
       identificador:          json['identificador'] as String,
       tipo:                   TipoParqueadero.values.firstWhere(
                                 (e) => e.name == json['tipo'],
-                                orElse: () => TipoParqueadero.PRIVADO,
+                                orElse: () => TipoParqueadero.privado,
                               ),
       modeloPropiedad:        json['modeloPropiedad'] != null
                                 ? ModeloParqueaderoPrivado.values.firstWhere(
                                     (e) => e.name == json['modeloPropiedad'],
-                                    orElse: () => ModeloParqueaderoPrivado.ACCESORIO,
+                                    orElse: () => ModeloParqueaderoPrivado.accesorio,
                                   )
                                 : null,
       propiedadId:            json['propiedadId'] as int?,

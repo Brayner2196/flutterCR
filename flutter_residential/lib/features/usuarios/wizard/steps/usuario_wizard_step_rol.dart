@@ -102,7 +102,6 @@ class UsuarioWizardStepRol extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
     final info = rolSeleccionado != null ? kRolesConfig[rolSeleccionado] : null;
 
     return SingleChildScrollView(

@@ -1,5 +1,5 @@
-enum TipoVehiculo  { CARRO, MOTO, BICICLETA }
-enum EstadoVehiculo { PENDIENTE, APROBADO, RECHAZADO }
+enum TipoVehiculo  { carro, moto, bicicleta }
+enum EstadoVehiculo { pendiente, aprobado, rechazado }
 
 class VehiculoModel {
   final int id;
@@ -28,23 +28,23 @@ class VehiculoModel {
     this.motivoRechazo,
   });
 
-  bool get esPendiente  => estado == EstadoVehiculo.PENDIENTE;
-  bool get esAprobado   => estado == EstadoVehiculo.APROBADO;
-  bool get esRechazado  => estado == EstadoVehiculo.RECHAZADO;
+  bool get esPendiente  => estado == EstadoVehiculo.pendiente;
+  bool get esAprobado   => estado == EstadoVehiculo.aprobado;
+  bool get esRechazado  => estado == EstadoVehiculo.rechazado;
 
   String get estadoLegible {
     switch (estado) {
-      case EstadoVehiculo.PENDIENTE:  return 'Pendiente';
-      case EstadoVehiculo.APROBADO:   return 'Aprobado';
-      case EstadoVehiculo.RECHAZADO:  return 'Rechazado';
+      case EstadoVehiculo.pendiente:  return 'Pendiente';
+      case EstadoVehiculo.aprobado:   return 'Aprobado';
+      case EstadoVehiculo.rechazado:  return 'Rechazado';
     }
   }
 
   String get tipoLegible {
     switch (tipo) {
-      case TipoVehiculo.CARRO:     return 'Carro';
-      case TipoVehiculo.MOTO:      return 'Moto';
-      case TipoVehiculo.BICICLETA: return 'Bicicleta';
+      case TipoVehiculo.carro:     return 'Carro';
+      case TipoVehiculo.moto:      return 'Moto';
+      case TipoVehiculo.bicicleta: return 'Bicicleta';
     }
   }
 
@@ -62,7 +62,7 @@ class VehiculoModel {
       placa:                    json['placa'] as String,
       tipo:                     TipoVehiculo.values.firstWhere(
                                   (e) => e.name == json['tipo'],
-                                  orElse: () => TipoVehiculo.CARRO,
+                                  orElse: () => TipoVehiculo.carro,
                                 ),
       marca:                    json['marca'] as String?,
       modelo:                   json['modelo'] as String?,
@@ -72,7 +72,7 @@ class VehiculoModel {
       parqueaderoIdentificador: json['parqueaderoIdentificador'] as String?,
       estado:                   EstadoVehiculo.values.firstWhere(
                                   (e) => e.name == json['estado'],
-                                  orElse: () => EstadoVehiculo.PENDIENTE,
+                                  orElse: () => EstadoVehiculo.pendiente,
                                 ),
       motivoRechazo:            json['motivoRechazo'] as String?,
     );

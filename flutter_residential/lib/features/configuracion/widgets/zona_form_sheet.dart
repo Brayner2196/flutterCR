@@ -257,8 +257,11 @@ class _ZonaFormSheetState extends State<ZonaFormSheet> {
                     label: Text(_diasLabel[d]!),
                     selected: sel,
                     onSelected: (_) => setState(() {
-                      if (sel) _dias.remove(d);
-                      else _dias.add(d);
+                      if (sel) {
+                        _dias.remove(d);
+                      } else {
+                        _dias.add(d);
+                      }
                     }),
                     selectedColor: cs.primaryContainer,
                     checkmarkColor: cs.onPrimaryContainer,

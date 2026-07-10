@@ -316,14 +316,14 @@ class _ZonaCard extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: seleccionada ? color.withOpacity(0.07) : cs.surface,
+          color: seleccionada ? color.withValues(alpha:0.07) : cs.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: seleccionada ? color : cs.outlineVariant.withOpacity(0.5),
+            color: seleccionada ? color : cs.outlineVariant.withValues(alpha:0.5),
             width: seleccionada ? 2 : 1,
           ),
           boxShadow: seleccionada
-              ? [BoxShadow(color: color.withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 2))]
+              ? [BoxShadow(color: color.withValues(alpha:0.15), blurRadius: 8, offset: const Offset(0, 2))]
               : [],
         ),
         child: Padding(
@@ -334,7 +334,7 @@ class _ZonaCard extends StatelessWidget {
               Container(
                 width: 46, height: 46,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha:0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 22),
@@ -408,7 +408,7 @@ class _SelectorFechas extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.warningSoft,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+          border: Border.all(color: AppColors.warning.withValues(alpha:0.3)),
         ),
         child: Row(
           children: [
@@ -444,7 +444,7 @@ class _SelectorFechas extends StatelessWidget {
                 Container(
                     width: 1, height: 60,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
-                    color: Colors.grey.withOpacity(0.3)),
+                    color: Colors.grey.withValues(alpha:0.3)),
               _FechaChip(
                 fecha: d, seleccionada: sel, esNuevoMes: esNuevoMes,
                 onTap: () => onFecha(d),
@@ -478,11 +478,11 @@ class _FechaChip extends StatelessWidget {
           color: seleccionada ? cs.primary : cs.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: seleccionada ? cs.primary : cs.outlineVariant.withOpacity(0.5),
+            color: seleccionada ? cs.primary : cs.outlineVariant.withValues(alpha:0.5),
             width: seleccionada ? 2 : 1,
           ),
           boxShadow: seleccionada
-              ? [BoxShadow(color: cs.primary.withOpacity(0.25), blurRadius: 6, offset: const Offset(0,2))]
+              ? [BoxShadow(color: cs.primary.withValues(alpha:0.25), blurRadius: 6, offset: const Offset(0,2))]
               : [],
         ),
         child: Column(
@@ -491,7 +491,7 @@ class _FechaChip extends StatelessWidget {
             if (esNuevoMes)
               Text(ZonaDisponibilidadHelper.nombreMesCorto(fecha).toUpperCase(),
                   style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600,
-                      color: seleccionada ? Colors.white.withOpacity(0.8) : cs.onSurfaceVariant,
+                      color: seleccionada ? Colors.white.withValues(alpha:0.8) : cs.onSurfaceVariant,
                       letterSpacing: 0.5))
             else
               const SizedBox(height: 11),
@@ -500,7 +500,7 @@ class _FechaChip extends StatelessWidget {
                     color: seleccionada ? Colors.white : cs.onSurface, height: 1.1)),
             Text(ZonaDisponibilidadHelper.nombreDiaCorto(fecha).toUpperCase(),
                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-                    color: seleccionada ? Colors.white.withOpacity(0.85) : cs.onSurfaceVariant,
+                    color: seleccionada ? Colors.white.withValues(alpha:0.85) : cs.onSurfaceVariant,
                     letterSpacing: 0.3)),
           ],
         ),
@@ -704,18 +704,18 @@ class _FranjaTile extends StatelessWidget {
                   ? cs.primary
                   : libre
                       ? cs.surface
-                      : cs.surfaceContainerHighest.withOpacity(0.5),
+                      : cs.surfaceContainerHighest.withValues(alpha:0.5),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: seleccionada
                     ? cs.primary
                     : libre
-                        ? cs.outlineVariant.withOpacity(0.6)
-                        : cs.outlineVariant.withOpacity(0.3),
+                        ? cs.outlineVariant.withValues(alpha:0.6)
+                        : cs.outlineVariant.withValues(alpha:0.3),
                 width: seleccionada ? 2 : 1,
               ),
               boxShadow: seleccionada
-                  ? [BoxShadow(color: cs.primary.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 2))]
+                  ? [BoxShadow(color: cs.primary.withValues(alpha:0.2), blurRadius: 6, offset: const Offset(0, 2))]
                   : [],
             ),
             child: Row(children: [
@@ -724,10 +724,10 @@ class _FranjaTile extends StatelessWidget {
                 width: 36, height: 36,
                 decoration: BoxDecoration(
                   color: seleccionada
-                      ? Colors.white.withOpacity(0.15)
+                      ? Colors.white.withValues(alpha:0.15)
                       : libre
-                          ? AppColors.ok.withOpacity(0.1)
-                          : cs.outlineVariant.withOpacity(0.3),
+                          ? AppColors.ok.withValues(alpha:0.1)
+                          : cs.outlineVariant.withValues(alpha:0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -751,7 +751,7 @@ class _FranjaTile extends StatelessWidget {
                         fontSize: 15, fontWeight: FontWeight.w700,
                         color: seleccionada ? Colors.white
                             : libre ? cs.onSurface
-                                : cs.onSurface.withOpacity(0.4),
+                                : cs.onSurface.withValues(alpha:0.4),
                       )),
                   const SizedBox(height: 2),
                   Text(
@@ -760,7 +760,7 @@ class _FranjaTile extends StatelessWidget {
                             : 'Sin cupo disponible',
                     style: TextStyle(
                       fontSize: 11.5,
-                      color: seleccionada ? Colors.white.withOpacity(0.8)
+                      color: seleccionada ? Colors.white.withValues(alpha:0.8)
                           : libre ? AppColors.ok
                               : cs.outline,
                     ),
@@ -774,7 +774,7 @@ class _FranjaTile extends StatelessWidget {
                   Text(durStr,
                       style: TextStyle(
                         fontSize: 11, fontWeight: FontWeight.w600,
-                        color: seleccionada ? Colors.white.withOpacity(0.75) : cs.onSurfaceVariant,
+                        color: seleccionada ? Colors.white.withValues(alpha:0.75) : cs.onSurfaceVariant,
                       )),
                 if (!libre && franja.ocupados > 0)
                   Text('${franja.ocupados}/${franja.capacidad}',
@@ -793,9 +793,9 @@ class _FranjaTile extends StatelessWidget {
               children: franja.rangosOcupados.map((r) => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.danger.withOpacity(0.08),
+                  color: AppColors.danger.withValues(alpha:  0.08),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.danger.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.danger.withValues(alpha:0.2)),
                 ),
                 child: Text('${DateFormatter.hora12Texto(r.horaInicio)}–${DateFormatter.hora12Texto(r.horaFin)}',
                     style: TextStyle(fontSize: 10, color: AppColors.danger,
@@ -809,15 +809,15 @@ class _FranjaTile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 50, bottom: 8),
             child: Row(children: [
-              Container(width: 18, height: 1, color: AppColors.warning.withOpacity(0.4)),
+              Container(width: 18, height: 1, color: AppColors.warning.withValues(alpha:0.4)),
               const SizedBox(width: 6),
-              Icon(Icons.cleaning_services_outlined, size: 11, color: AppColors.warning.withOpacity(0.7)),
+              Icon(Icons.cleaning_services_outlined, size: 11, color: AppColors.warning.withValues(alpha:0.7)),
               const SizedBox(width: 4),
               Text('Limpieza · ${buffer}min',
-                  style: TextStyle(fontSize: 10, color: AppColors.warning.withOpacity(0.8))),
+                  style: TextStyle(fontSize: 10, color: AppColors.warning.withValues(alpha:0.8))),
               Expanded(child: Container(
                   margin: const EdgeInsets.only(left: 6), height: 1,
-                  color: AppColors.warning.withOpacity(0.4))),
+                  color: AppColors.warning.withValues(alpha:0.4))),
             ]),
           ),
       ],
@@ -845,7 +845,6 @@ class _ResumenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final color = ZonaDisponibilidadHelper.colorCategoria(zona.categoria);
     final icon  = ZonaDisponibilidadHelper.iconoCategoria(zona.categoria);
 
@@ -853,11 +852,11 @@ class _ResumenCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.08), color.withOpacity(0.03)],
+          colors: [color.withValues(alpha:0.08), color.withValues(alpha:0.03)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha:0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -917,7 +916,7 @@ class _ResumenItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14, color: c.withOpacity(0.7)),
+          Icon(icon, size: 14, color: c.withValues(alpha:0.7)),
           const SizedBox(width: 6),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -993,7 +992,7 @@ class _Pill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha:0.08),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

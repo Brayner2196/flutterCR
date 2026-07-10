@@ -418,7 +418,6 @@ class _PasarelaComisionesWidgetState extends State<PasarelaComisionesWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs    = theme.colorScheme;
     final lista = widget.pasarelas ?? TipoPasarela.values;
 
     return Container(

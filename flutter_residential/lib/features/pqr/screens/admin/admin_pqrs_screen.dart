@@ -433,17 +433,6 @@ class _PqrTile extends StatelessWidget {
         return (cs.surfaceContainerHighest, cs.onSurfaceVariant);
     }
   }
-
-  static String _formatFecha(String iso) {
-    try {
-      // Formato del backend: dd-MM-yyyy HH:mm:ss
-      final parts = iso.split(' ')[0].split('-');
-      if (parts.length == 3) return '${parts[0]}/${parts[1]}/${parts[2]}';
-      return iso;
-    } catch (_) {
-      return iso;
-    }
-  }
 }
 
 // ─── Sheet de detalle / gestión completa ─────────────────────────────────────

@@ -320,7 +320,7 @@ class _TabActivas extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.bgOrange,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.orange.withOpacity(0.3)),
+              border: Border.all(color: AppColors.orange.withValues(alpha:0.3)),
             ),
             child: Row(
               children: [
@@ -402,7 +402,7 @@ class _CuotaActivaTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
         side: esIndividual
-            ? BorderSide(color: AppColors.orange.withOpacity(0.4), width: 1)
+            ? BorderSide(color: AppColors.orange.withValues(alpha:0.4), width: 1)
             : BorderSide.none,
       ),
       child: Padding(
@@ -684,7 +684,7 @@ class _BadgeOverride extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.bgOrange,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: AppColors.orange.withOpacity(0.4)),
+        border: Border.all(color: AppColors.orange.withValues(alpha:0.4)),
       ),
       child: Text(
         'Individual',

@@ -223,7 +223,7 @@ class _ModeloBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final esIndependiente = modelo == ModeloParqueaderoPrivado.INDEPENDIENTE;
+    final esIndependiente = modelo == ModeloParqueaderoPrivado.independiente;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(

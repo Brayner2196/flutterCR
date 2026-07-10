@@ -32,7 +32,7 @@ class ConfiguracionParqueaderoModel {
     required this.permiteMoto,
     required this.permiteBicicleta,
     required this.requiereAprobacionVehiculo,
-    this.modeloPrivadoDefault = ModeloParqueaderoPrivado.ACCESORIO,
+    this.modeloPrivadoDefault = ModeloParqueaderoPrivado.accesorio,
     this.aceptaParqueaderoVisitantes = false,
     this.totalParqueaderosVisitantes = 0,
   });
@@ -47,7 +47,7 @@ class ConfiguracionParqueaderoModel {
         permiteMoto: true,
         permiteBicicleta: true,
         requiereAprobacionVehiculo: false,
-        modeloPrivadoDefault: ModeloParqueaderoPrivado.ACCESORIO,
+        modeloPrivadoDefault: ModeloParqueaderoPrivado.accesorio,
         aceptaParqueaderoVisitantes: false,
         totalParqueaderosVisitantes: 0,
       );
@@ -66,9 +66,9 @@ class ConfiguracionParqueaderoModel {
       modeloPrivadoDefault: json['modeloPrivadoDefault'] != null
           ? ModeloParqueaderoPrivado.values.firstWhere(
               (e) => e.name == json['modeloPrivadoDefault'],
-              orElse: () => ModeloParqueaderoPrivado.ACCESORIO,
+              orElse: () => ModeloParqueaderoPrivado.accesorio,
             )
-          : ModeloParqueaderoPrivado.ACCESORIO,
+          : ModeloParqueaderoPrivado.accesorio,
       aceptaParqueaderoVisitantes:  json['aceptaParqueaderoVisitantes'] as bool? ?? false,
       totalParqueaderosVisitantes:  json['totalParqueaderosVisitantes'] as int? ?? 0,
     );

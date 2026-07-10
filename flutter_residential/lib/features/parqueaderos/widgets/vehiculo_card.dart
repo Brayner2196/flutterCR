@@ -21,9 +21,9 @@ class VehiculoCard extends StatelessWidget {
 
   static IconData _iconoTipo(TipoVehiculo tipo) {
     switch (tipo) {
-      case TipoVehiculo.CARRO:     return Icons.directions_car_outlined;
-      case TipoVehiculo.MOTO:      return Icons.two_wheeler_outlined;
-      case TipoVehiculo.BICICLETA: return Icons.pedal_bike_outlined;
+      case TipoVehiculo.carro:     return Icons.directions_car_outlined;
+      case TipoVehiculo.moto:      return Icons.two_wheeler_outlined;
+      case TipoVehiculo.bicicleta: return Icons.pedal_bike_outlined;
     }
   }
 

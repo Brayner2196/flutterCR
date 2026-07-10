@@ -139,7 +139,7 @@ class UsuarioDetalleSheet extends StatelessWidget {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha:0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(children: filas),
@@ -395,7 +395,7 @@ class _PropiedadesSectionState extends State<_PropiedadesSection> {
         else
           Container(
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha:0.4),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -628,7 +628,7 @@ class _CambiarEstadoDialogState extends State<_CambiarEstadoDialog> {
     return AlertDialog(
       title: const Text('Cambiar estado'),
       content: DropdownButtonFormField<String>(
-        value: _estadoSeleccionado,
+        initialValue: _estadoSeleccionado,
         decoration: const InputDecoration(labelText: 'Estado'),
         items: _estados
             .map((e) => DropdownMenuItem(
@@ -1019,7 +1019,7 @@ class _AdminControlesSectionState extends State<_AdminControlesSection> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: rolesOpciones.contains(_rolActual) ? _rolActual : null,
+                        initialValue: rolesOpciones.contains(_rolActual) ? _rolActual : null,
                         decoration: InputDecoration(
                           labelText: 'Rol del usuario',
                           border: OutlineInputBorder(

@@ -56,7 +56,9 @@ class _AdminCrearVotacionScreenState extends State<AdminCrearVotacionScreen> {
     _tituloCtrl.dispose();
     _descCtrl.dispose();
     _escalaCtrl.dispose();
-    for (final c in _opcionesCtrl) c.dispose();
+    for (final c in _opcionesCtrl) {
+      c.dispose();
+    }
     super.dispose();
   }
 

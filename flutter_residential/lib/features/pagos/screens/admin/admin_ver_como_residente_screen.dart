@@ -329,7 +329,7 @@ class _KpiCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 11, color: color.withOpacity(0.75)),
+            style: TextStyle(fontSize: 11, color: color.withValues(alpha:0.75)),
           ),
         ],
       ),
@@ -410,12 +410,12 @@ class _CobroTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: cobro.tieneDeuda
-              ? color.withOpacity(0.35)
-              : theme.colorScheme.outlineVariant.withOpacity(0.4),
+              ? color.withValues(alpha:0.35)
+              : theme.colorScheme.outlineVariant.withValues(alpha:0.4),
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.04),
+            color: theme.colorScheme.shadow.withValues(alpha:0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),

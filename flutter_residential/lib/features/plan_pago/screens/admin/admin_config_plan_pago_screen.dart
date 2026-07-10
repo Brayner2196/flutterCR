@@ -96,7 +96,6 @@ class _AdminConfigPlanPagoScreenState
   @override
   Widget build(BuildContext context) {
     final p = context.watch<PlanPagoProvider>();
-    final cs = Theme.of(context).colorScheme;
 
     if (p.loading && p.config.id == null) {
       return Scaffold(

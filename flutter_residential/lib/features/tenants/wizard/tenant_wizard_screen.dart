@@ -121,7 +121,9 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
     _schemaCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
-    for (final p in _pasarelas) p.dispose();
+    for (final p in _pasarelas) {
+      p.dispose();
+    }
     super.dispose();
   }
 

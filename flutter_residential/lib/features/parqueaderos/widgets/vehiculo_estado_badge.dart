@@ -30,11 +30,11 @@ class VehiculoEstadoBadge extends StatelessWidget {
 
   (Color, Color, String) _colores(EstadoVehiculo e) {
     switch (e) {
-      case EstadoVehiculo.APROBADO:
+      case EstadoVehiculo.aprobado:
         return (AppColors.bgGreen, AppColors.ok, 'Aprobado');
-      case EstadoVehiculo.RECHAZADO:
+      case EstadoVehiculo.rechazado:
         return (AppColors.dangerSoft, AppColors.danger, 'Rechazado');
-      case EstadoVehiculo.PENDIENTE:
+      case EstadoVehiculo.pendiente:
         return (AppColors.warningSoft, AppColors.warning, 'Pendiente');
     }
   }

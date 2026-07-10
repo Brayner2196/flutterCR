@@ -397,10 +397,10 @@ class CobrosTabViewState extends State<CobrosTabView>
                   Icon(Icons.close, size: 14, color: cs.primary),
                   const SizedBox(width: 2),
                   Text('Ver todos',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: cs.primary)),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: cs.primary)),
                 ],
               ),
             )

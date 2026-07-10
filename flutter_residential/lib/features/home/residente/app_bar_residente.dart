@@ -4,7 +4,6 @@ import 'package:flutter_residential/features/propiedades/providers/propiedad_pro
 import 'package:flutter_residential/features/home/residente/widgets/propiedad_selector_dropdown.dart';
 import 'package:flutter_residential/core/utils/texto_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import '../../usuarios/models/usuario_propiedad_response.dart';
 
 class AppBarResidente extends StatelessWidget implements PreferredSizeWidget {

@@ -381,7 +381,7 @@ class _RegistrarVehiculoSheetState extends State<_RegistrarVehiculoSheet> {
   final _modeloCtrl = TextEditingController();
   final _colorCtrl  = TextEditingController();
 
-  TipoVehiculo _tipo = TipoVehiculo.CARRO;
+  TipoVehiculo _tipo = TipoVehiculo.carro;
   bool _cargando = false;
 
   @override
@@ -414,18 +414,18 @@ class _RegistrarVehiculoSheetState extends State<_RegistrarVehiculoSheet> {
 
             // Tipo
             DropdownButtonFormField<TipoVehiculo>(
-              value: _tipo,
+              initialValue: _tipo,
               decoration: const InputDecoration(
                 labelText: 'Tipo de vehículo',
                 border: OutlineInputBorder(),
               ),
               items: const [
                 DropdownMenuItem(
-                    value: TipoVehiculo.CARRO, child: Text('Carro')),
+                    value: TipoVehiculo.carro, child: Text('Carro')),
                 DropdownMenuItem(
-                    value: TipoVehiculo.MOTO, child: Text('Moto')),
+                    value: TipoVehiculo.moto, child: Text('Moto')),
                 DropdownMenuItem(
-                    value: TipoVehiculo.BICICLETA, child: Text('Bicicleta')),
+                    value: TipoVehiculo.bicicleta, child: Text('Bicicleta')),
               ],
               onChanged: (v) => setState(() => _tipo = v!),
             ),
