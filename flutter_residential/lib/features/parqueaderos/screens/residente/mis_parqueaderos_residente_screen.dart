@@ -538,28 +538,28 @@ class _CambiarVehiculoDialogState extends State<_CambiarVehiculoDialog> {
               'No tienes vehículos aprobados para asignar.\nRegistra y espera aprobación del administrador.')
           : SizedBox(
               width: double.maxFinite,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Opción para desasignar
-                  RadioListTile<int?>(
-                    value: null,
-                    groupValue: _seleccionado,
-                    title: const Text('Ninguno (desasignar)'),
-                    onChanged: (v) => setState(() => _seleccionado = v),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  ...widget.vehiculos.map(
-                    (v) => RadioListTile<int?>(
-                      value: v.id,
-                      groupValue: _seleccionado,
-                      title: Text(v.placa),
-                      subtitle: Text(v.tipoLegible),
-                      onChanged: (val) => setState(() => _seleccionado = val),
+              child: RadioGroup<int?>(
+                groupValue: _seleccionado,
+                onChanged: (v) => setState(() => _seleccionado = v),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Opción para desasignar
+                    RadioListTile<int?>(
+                      value: null,
+                      title: const Text('Ninguno (desasignar)'),
                       contentPadding: EdgeInsets.zero,
                     ),
-                  ),
-                ],
+                    ...widget.vehiculos.map(
+                      (v) => RadioListTile<int?>(
+                        value: v.id,
+                        title: Text(v.placa),
+                        subtitle: Text(v.tipoLegible),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
       actions: [

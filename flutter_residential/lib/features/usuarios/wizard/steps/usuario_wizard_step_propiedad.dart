@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../features/propiedades/models/tipo_propiedad_nodo.dart';
+import '../../../../features/propiedades/models/valor_tipo_propiedad.dart';
 import '../../../../features/propiedades/providers/propiedad_provider.dart';
+import '../../../../features/propiedades/services/propiedad_service.dart';
+import '../../../../features/propiedades/widgets/valor_propiedad_dropdown.dart';
 
 /// Nodo facturable con su ruta completa desde la raíz.
 /// Ej: Apartamento → ruta = [Torre, Piso, Apartamento]
@@ -38,7 +41,7 @@ class UsuarioWizardStepPropiedadState
     extends State<UsuarioWizardStepPropiedad> {
   _RutaFacturable? _rutaSeleccionada;
   final List<TipoPropiedadNodo> _nivelesActivos = [];
-  final List<TextEditingController> _pathCtrlList = [];
+  final List<ValorTipoPropiedad?> _valoresSeleccionados = [];
 
   @override
   void initState() {
@@ -48,31 +51,23 @@ class UsuarioWizardStepPropiedadState
     });
   }
 
-  @override
-  void dispose() {
-    for (final c in _pathCtrlList) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
   // ── API pública para el wizard ─────────────────────────────────────────────
 
   bool get esValido {
     if (_rutaSeleccionada == null) return false;
-    // Todos los niveles de la ruta deben estar llenos
-    return _pathCtrlList.isNotEmpty &&
-        _pathCtrlList.every((c) => c.text.trim().isNotEmpty);
+    // Todos los niveles de la ruta deben tener un valor elegido del catálogo.
+    return _valoresSeleccionados.isNotEmpty &&
+        _valoresSeleccionados.every((v) => v != null);
   }
 
   /// Retorna el path como lista de {tipoId, valor} para enviar al backend.
   List<Map<String, dynamic>> buildPath() {
     final path = <Map<String, dynamic>>[];
     for (int i = 0; i < _nivelesActivos.length; i++) {
-      if (i >= _pathCtrlList.length) break;
-      final valor = _pathCtrlList[i].text.trim();
-      if (valor.isEmpty) break;
-      path.add({'tipoId': _nivelesActivos[i].id, 'valor': valor});
+      if (i >= _valoresSeleccionados.length) break;
+      final valor = _valoresSeleccionados[i];
+      if (valor == null) break;
+      path.add({'tipoId': _nivelesActivos[i].id, 'valor': valor.valor});
     }
     return path;
   }
@@ -81,10 +76,10 @@ class UsuarioWizardStepPropiedadState
   List<String> buildPathLabels() {
     final parts = <String>[];
     for (int i = 0; i < _nivelesActivos.length; i++) {
-      if (i >= _pathCtrlList.length) break;
-      final valor = _pathCtrlList[i].text.trim();
-      if (valor.isEmpty) break;
-      parts.add('${_nivelesActivos[i].nombre}: $valor');
+      if (i >= _valoresSeleccionados.length) break;
+      final valor = _valoresSeleccionados[i];
+      if (valor == null) break;
+      parts.add('${_nivelesActivos[i].nombre}: ${valor.valor}');
     }
     return parts;
   }
@@ -113,19 +108,26 @@ class UsuarioWizardStepPropiedadState
   /// Al seleccionar una ruta facturable, crea un controller por cada nivel
   /// de la ruta completa — todos los inputs aparecen a la vez.
   void _onRutaChanged(_RutaFacturable? ruta) {
-    for (final c in _pathCtrlList) {
-      c.dispose();
-    }
-    _pathCtrlList.clear();
     _nivelesActivos.clear();
+    _valoresSeleccionados.clear();
 
     if (ruta != null) {
       for (final nodo in ruta.ruta) {
         _nivelesActivos.add(nodo);
-        _pathCtrlList.add(TextEditingController());
+        _valoresSeleccionados.add(null);
       }
     }
     setState(() => _rutaSeleccionada = ruta);
+  }
+
+  /// Al elegir un valor en el nivel [index], se limpian los niveles hijos (sus
+  /// valores permitidos dependen del padre elegido).
+  void _onValorSeleccionado(int index, ValorTipoPropiedad? valor) {
+    _valoresSeleccionados[index] = valor;
+    for (int j = index + 1; j < _valoresSeleccionados.length; j++) {
+      _valoresSeleccionados[j] = null;
+    }
+    setState(() {});
   }
 
   // ── UI ─────────────────────────────────────────────────────────────────────
@@ -277,18 +279,25 @@ class UsuarioWizardStepPropiedadState
                 for (int i = 0; i < _nivelesActivos.length; i++) ...[
                   const SizedBox(height: 14),
                   _NivelField(
+                    key: ValueKey(
+                        'nivel_${_nivelesActivos[i].id}_${i == 0 ? 'raiz' : _valoresSeleccionados[i - 1]?.id}'),
                     nivel: i,
                     nodo: _nivelesActivos[i],
-                    controller: _pathCtrlList[i],
                     esPrimero: i == 0,
-                    esUltimo: i == _nivelesActivos.length - 1,
-                    onChanged: (_) => setState(() {}),
+                    dependencyKey:
+                        i == 0 ? 'raiz' : _valoresSeleccionados[i - 1]?.id,
+                    loader: () => PropiedadService.getValoresAdmin(
+                      _nivelesActivos[i].id,
+                      parentValorId:
+                          i == 0 ? null : _valoresSeleccionados[i - 1]?.id,
+                    ),
+                    onChanged: (v) => _onValorSeleccionado(i, v),
                   ),
                 ],
 
-                // Preview del path construido (aparece al llenar el primer nivel)
-                if (_pathCtrlList.isNotEmpty &&
-                    _pathCtrlList[0].text.trim().isNotEmpty) ...[
+                // Preview del path construido (aparece al elegir el primer nivel)
+                if (_valoresSeleccionados.isNotEmpty &&
+                    _valoresSeleccionados[0] != null) ...[
                   const SizedBox(height: 20),
                   _PathPreview(labels: buildPathLabels()),
                 ],
@@ -306,17 +315,18 @@ class UsuarioWizardStepPropiedadState
 class _NivelField extends StatelessWidget {
   final int nivel;
   final TipoPropiedadNodo nodo;
-  final TextEditingController controller;
   final bool esPrimero;
-  final bool esUltimo;
-  final void Function(String) onChanged;
+  final Object? dependencyKey;
+  final ValoresLoader loader;
+  final ValueChanged<ValorTipoPropiedad?> onChanged;
 
   const _NivelField({
+    super.key,
     required this.nivel,
     required this.nodo,
-    required this.controller,
     required this.esPrimero,
-    required this.esUltimo,
+    required this.dependencyKey,
+    required this.loader,
     required this.onChanged,
   });
 
@@ -362,26 +372,13 @@ class _NivelField extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        // Campo de texto
+        // Dropdown con búsqueda (solo valores del catálogo)
         Expanded(
-          child: TextFormField(
-            controller: controller,
-            textCapitalization: TextCapitalization.characters,
-            textInputAction:
-                esUltimo ? TextInputAction.done : TextInputAction.next,
-            decoration: InputDecoration(
-              hintText: nodo.descripcion ?? 'Ej: 101, A, etc.',
-              isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: color, width: 2),
-              ),
-            ),
+          child: ValorPropiedadDropdown(
+            label: nodo.nombre,
+            color: color,
+            dependencyKey: dependencyKey,
+            loader: loader,
             onChanged: onChanged,
           ),
         ),

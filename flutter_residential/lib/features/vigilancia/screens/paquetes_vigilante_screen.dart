@@ -64,7 +64,7 @@ class _PaquetesVigilanteScreenState extends State<PaquetesVigilanteScreen> {
           entregadoA: ctrl.text.trim().isEmpty ? null : ctrl.text.trim());
       if (mounted && r != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Paquete entregado')));
+          const SnackBar(content: Text('Paquete entregado')));
       }
     }
   }

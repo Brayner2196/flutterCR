@@ -161,6 +161,7 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
     outline:            border,
     outlineVariant:     isDark ? AppColors.hairlineDark  : AppColors.hairlineLight,
     onSurfaceVariant:   textMid,
+    scrim: bg,
   );
 
   final buttonShape = RoundedRectangleBorder(

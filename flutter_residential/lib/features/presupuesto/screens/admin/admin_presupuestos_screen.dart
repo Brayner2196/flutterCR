@@ -63,18 +63,22 @@ class _AdminPresupuestosScreenState extends State<AdminPresupuestosScreen> {
     );
   }
 
-  void _abrirFormulario(BuildContext context) {
-    Navigator.push(
+  Future<void> _abrirFormulario(BuildContext context) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const AdminFormPresupuestoScreen()),
-    ).then((_) => context.read<PresupuestoProvider>().cargarListaAdmin());
+    );
+    if (!context.mounted) return;
+    context.read<PresupuestoProvider>().cargarListaAdmin();
   }
 
-  void _abrirDetalle(BuildContext context, int id) {
-    Navigator.push(
+  Future<void> _abrirDetalle(BuildContext context, int id) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AdminDetallePresupuestoScreen(id: id)),
-    ).then((_) => context.read<PresupuestoProvider>().cargarListaAdmin());
+    );
+    if (!context.mounted) return;
+    context.read<PresupuestoProvider>().cargarListaAdmin();
   }
 
   Future<void> _toggleActivo(
@@ -105,7 +109,6 @@ class _AdminPresupuestosScreenState extends State<AdminPresupuestosScreen> {
 }
 
 // ── Tile de presupuesto ────────────────────────────────────────────────────────
-
 class _PresupuestoTile extends StatelessWidget {
   final PresupuestoModel presupuesto;
   final VoidCallback onTap;

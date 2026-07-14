@@ -184,13 +184,14 @@ class _VotarScreenState extends State<VotarScreen> {
   Widget _buildOpcionUnicaLista(ColorScheme cs) {
     if (_modoLectura) return _buildResultadosOpcionUnicaLista(cs);
 
-    return Column(
+    return RadioGroup<int>(
+      groupValue: _opcionSeleccionada,
+      onChanged: (v) => setState(() => _opcionSeleccionada = v),
+      child: Column(
       children: _votacion.opciones.map((op) {
         final selected = _opcionSeleccionada == op.id;
         return RadioListTile<int>(
           value: op.id,
-          groupValue: _opcionSeleccionada,
-          onChanged: (v) => setState(() => _opcionSeleccionada = v),
           title: Row(
             children: [
               Expanded(child: Text(op.texto)),
@@ -204,6 +205,7 @@ class _VotarScreenState extends State<VotarScreen> {
           ),
         );
       }).toList(),
+      ),
     );
   }
 

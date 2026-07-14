@@ -32,10 +32,20 @@ class ApiConstants {
 
   // Propiedades — público (registro)
   static const String authTiposPropiedad = '/auth/tiposPropiedad';
+  // Valores permitidos por tipo (público, para dropdowns del registro)
+  static String authValoresPropiedad(int tipoId) =>
+      '/auth/tiposPropiedad/$tipoId/valores';
 
   // Propiedades — admin
   static const String tiposPropiedad = '/api/tipos-propiedad';
   static const String propiedades = '/api/propiedades';
+
+  // Valores permitidos por tipo — admin (catálogo + dropdowns)
+  static String valoresPorTipo(int tipoId) =>
+      '/api/tipos-propiedad/$tipoId/valores';
+  static String valoresTodosPorTipo(int tipoId) =>
+      '/api/tipos-propiedad/$tipoId/valores/todos';
+  static String valorPropiedad(int id) => '/api/valores-propiedad/$id';
 
   // Propiedades — residente autenticado
   static const String misPropiedades = '/api/propiedades/mis-propiedades';

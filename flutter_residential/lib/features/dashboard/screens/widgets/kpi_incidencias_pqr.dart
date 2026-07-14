@@ -24,7 +24,6 @@ class KpiIncidenciasPqr extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: cs.surface,
         borderRadius: BorderRadius.circular(DashboardTokens.radiusCard),
         border: Border.all(color: cs.outline),
       ),

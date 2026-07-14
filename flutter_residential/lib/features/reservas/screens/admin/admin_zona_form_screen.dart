@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/shared/utils/scrollingText.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../models/reserva_model.dart';
 import '../../services/reserva_service.dart';
@@ -441,14 +442,15 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Esta zona tiene costo', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                    subtitle: const Text('Se carga al estado de cuenta al aprobar', style: TextStyle(fontSize: 12)),
+                  _ToggleRow(
+                    icon: Icons.attach_money,
+                    title: 'Esta zona tiene costo',
+                    subtitle: 'Se carga al estado de cuenta al aprobar',
                     value: _tieneCosto,
-                    activeThumbColor: const Color.fromRGBO(140, 109, 0, 1),
+                    color: const Color.fromRGBO(140, 109, 0, 1),
                     onChanged: (v) => setState(() => _tieneCosto = v),
                   ),
+                  
                   if (_tieneCosto) ...[
                     const SizedBox(height: 12),
                     _Label('Tipo de tarifa'),
@@ -475,7 +477,7 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _Label('Depósito reembolsable', hint: 'Se libera 48h después si no hay reportes'),
+                    _Label('Depósito reembolsable', hint: 'Liberado 48h luego si no hay reporte' ),
                     TextFormField(
                       controller: _depositoCtrl,
                       keyboardType: TextInputType.number,
@@ -538,12 +540,12 @@ class _AdminZonaFormScreenState extends State<AdminZonaFormScreen> {
               subtitle: _activa ? 'Activa · visible para residentes' : 'Inactiva · oculta para residentes',
               expanded: _expanded['estado']!,
               onTap: () => _toggle('estado'),
-              child: SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Zona activa', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Los residentes pueden ver y reservar esta zona'),
+              child:  _ToggleRow(
+                icon:Icons.check_circle_outline,
+                color: AppColors.ok,
+                title: 'Zona activa',
+                subtitle: 'Los residentes pueden ver y reservar esta zona',
                 value: _activa,
-                activeThumbColor: AppColors.ok,
                 onChanged: (v) => setState(() => _activa = v),
               ),
             ),

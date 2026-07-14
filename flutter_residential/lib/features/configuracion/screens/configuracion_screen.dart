@@ -20,12 +20,10 @@ class ConfiguracionScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: cs.surface,
       body: CustomScrollView(
         slivers: [
           SliverAppBar.medium(
             title: const Text('Configuración'),
-            backgroundColor: cs.surface,
             surfaceTintColor: Colors.transparent,
           ),
           SliverPadding(

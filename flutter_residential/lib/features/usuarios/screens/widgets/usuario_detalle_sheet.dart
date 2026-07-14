@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/core/utils/date_formatter.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../models/usuario_response.dart';
@@ -96,7 +97,7 @@ class UsuarioDetalleSheet extends StatelessWidget {
                     _seccion(theme, 'Información general', [
                       _fila(theme, 'Rol', _etiquetaRol(usuario.rol)),
                       _fila(theme, 'Estado', usuario.estado),
-                      _fila(theme, 'Registrado', usuario.creadoEn),
+                      _fila(theme, 'Registrado', DateFormatter.fechaHoraMinSegAmPm(usuario.creadoEn)),
                     ]),
 
                       const SizedBox(height: 16),

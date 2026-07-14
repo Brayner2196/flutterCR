@@ -3,6 +3,7 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/services/base_api_service.dart';
 import '../models/tipo_propiedad_nodo.dart';
+import '../models/valor_tipo_propiedad.dart';
 import '../../usuarios/models/usuario_propiedad_response.dart';
 
 class PropiedadService {
@@ -21,6 +22,72 @@ class PropiedadService {
     final res = await ApiClient.get(ApiConstants.tiposPropiedad);
     return BaseApiService.parseList(
         res, TipoPropiedadNodo.fromJson, 'Error al obtener tipos de propiedad');
+  }
+
+  // ── Valores permitidos por tipo (catálogo) ────────────────────────────────
+
+  /// Valores permitidos de un nivel (público, para el registro).
+  /// [parentValorId] es el id del valor elegido en el nivel anterior (null en la raíz).
+  static Future<List<ValorTipoPropiedad>> getValoresPublico(
+      String codigo, int tipoId, {int? parentValorId}) async {
+    final params = <String, String>{'codigo': codigo};
+    if (parentValorId != null) params['parentValorId'] = '$parentValorId';
+    final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    final res = await ApiClient.get(
+      '${ApiConstants.authValoresPropiedad(tipoId)}?$query',
+      requiresAuth: false,
+    );
+    return BaseApiService.parseList(
+        res, ValorTipoPropiedad.fromJson, 'Error al obtener valores permitidos');
+  }
+
+  /// Valores permitidos de un nivel (admin autenticado).
+  static Future<List<ValorTipoPropiedad>> getValoresAdmin(
+      int tipoId, {int? parentValorId}) async {
+    final q = parentValorId != null ? '?parentValorId=$parentValorId' : '';
+    final res = await ApiClient.get('${ApiConstants.valoresPorTipo(tipoId)}$q');
+    return BaseApiService.parseList(
+        res, ValorTipoPropiedad.fromJson, 'Error al obtener valores permitidos');
+  }
+
+  /// Todos los valores del tipo (activos e inactivos), para la gestión.
+  static Future<List<ValorTipoPropiedad>> getValoresTodos(int tipoId) async {
+    final res = await ApiClient.get(ApiConstants.valoresTodosPorTipo(tipoId));
+    return BaseApiService.parseList(
+        res, ValorTipoPropiedad.fromJson, 'Error al obtener valores');
+  }
+
+  /// Crear un valor permitido (admin).
+  static Future<void> crearValor(int tipoId,
+      {required String valor, int? parentValorId, int orden = 0}) async {
+    final res = await ApiClient.post(
+      ApiConstants.valoresPorTipo(tipoId),
+      {
+        'valor': valor,
+        if (parentValorId != null) 'parentValorId': parentValorId,
+        'orden': orden,
+      },
+      requiresAuth: true,
+    );
+    BaseApiService.assertSuccess(res,
+        successCodes: [200, 201], fallbackMsg: 'Error al crear valor');
+  }
+
+  /// Actualizar un valor permitido (admin).
+  static Future<void> actualizarValor(int id,
+      {required String valor, int orden = 0, bool activo = true}) async {
+    final res = await ApiClient.put(
+      ApiConstants.valorPropiedad(id),
+      {'valor': valor, 'orden': orden, 'activo': activo},
+    );
+    BaseApiService.assertSuccess(res, fallbackMsg: 'Error al actualizar valor');
+  }
+
+  /// Desactivar un valor permitido (admin).
+  static Future<void> desactivarValor(int id) async {
+    final res = await ApiClient.delete(ApiConstants.valorPropiedad(id));
+    BaseApiService.assertSuccess(res,
+        successCodes: [200, 204], fallbackMsg: 'Error al desactivar valor');
   }
 
   /// Mis propiedades del residente autenticado

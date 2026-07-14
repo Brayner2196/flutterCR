@@ -121,7 +121,9 @@ class MyApp extends StatelessWidget {
               theme: buildAppTheme(brightness: Brightness.light),
               darkTheme: buildAppTheme(brightness: Brightness.dark),
               home: const _SessionGuard(
-                child: OfflineGuard(child: InitialRouterScreen()),
+                child: OfflineGuard(
+                  child: InitialRouterScreen()
+                ),
               ),
             );
           },

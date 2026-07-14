@@ -80,8 +80,8 @@ class CobrosTabViewState extends State<CobrosTabView>
     );
     if (confirmado != true) return;
     try {
-      await context.read<CobrosProvider>().cerrarPeriodo(p.id);
       if (!mounted) return;
+      context.read<CobrosProvider>().cerrarPeriodo(p.id);
       final periodos = context.read<CobrosProvider>().periodos;
       setState(() {
         _periodoSeleccionado = periodos.where((x) => x.id == p.id).firstOrNull;

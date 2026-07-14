@@ -38,8 +38,8 @@ class QuickAccessCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: cs.onSurface.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 2),
+              blurRadius: 0,
+              offset: const Offset(0, 0),
             ),
           ],
         ),

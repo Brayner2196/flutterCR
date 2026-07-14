@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/tipo_propiedad_nodo.dart';
+import '../../models/valor_tipo_propiedad.dart';
 import '../../providers/propiedad_provider.dart';
 import '../../services/propiedad_service.dart';
+import '../../widgets/valor_propiedad_dropdown.dart';
+import '../../widgets/valores_tipo_sheet.dart';
 
 class PropiedadesScreen extends StatefulWidget {
   const PropiedadesScreen({super.key});
@@ -180,6 +183,8 @@ class _TipoNodoWidget extends StatelessWidget {
                   onSelected: (action) => _onAction(context, action),
                   itemBuilder: (_) => [
                     const PopupMenuItem(
+                        value: 'valores', child: Text('Valores permitidos')),
+                    const PopupMenuItem(
                         value: 'editar', child: Text('Editar')),
                     const PopupMenuItem(
                         value: 'hijo', child: Text('Agregar hijo')),
@@ -199,7 +204,13 @@ class _TipoNodoWidget extends StatelessWidget {
 
   void _onAction(BuildContext context, String action) {
     final provider = context.read<PropiedadProvider>();
-    if (action == 'editar') {
+    if (action == 'valores') {
+      // Diferir al siguiente frame para no chocar con el cierre del PopupMenu.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        ValoresTipoSheet.mostrar(context, tipoId: nodo.id, tipoNombre: nodo.nombre);
+      });
+    } else if (action == 'editar') {
       showDialog(
         context: context,
         builder: (_) => _TipoDialog(
@@ -439,12 +450,162 @@ class _UnidadesTabState extends State<_UnidadesTab> {
         Positioned(
           right: 16,
           bottom: 16,
-          child: FloatingActionButton(
-            heroTag: 'fab_unidades',
-            onPressed: _cargar,
-            tooltip: 'Actualizar',
-            child: const Icon(Icons.refresh),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton.small(
+                heroTag: 'fab_unidades_refresh',
+                onPressed: _cargar,
+                tooltip: 'Actualizar',
+                child: const Icon(Icons.refresh),
+              ),
+              const SizedBox(height: 12),
+              FloatingActionButton.extended(
+                heroTag: 'fab_unidades_crear',
+                onPressed: _crearUnidad,
+                icon: const Icon(Icons.add),
+                label: const Text('Crear unidad'),
+              ),
+            ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _crearUnidad() async {
+    final tipos = context.read<PropiedadProvider>().tiposArbol;
+    if (tipos.isEmpty) {
+      await context.read<PropiedadProvider>().cargarTiposAdmin();
+    }
+    if (!mounted) return;
+    final creada = await showDialog<bool>(
+      context: context,
+      builder: (_) => _CrearUnidadDialog(
+        tiposRaiz: context.read<PropiedadProvider>().tiposArbol,
+      ),
+    );
+    if (creada == true) _cargar();
+  }
+}
+
+// ─── Diálogo: crear unidad con dropdowns encadenados ──────────────────────────
+
+class _CrearUnidadDialog extends StatefulWidget {
+  final List<TipoPropiedadNodo> tiposRaiz;
+  const _CrearUnidadDialog({required this.tiposRaiz});
+
+  @override
+  State<_CrearUnidadDialog> createState() => _CrearUnidadDialogState();
+}
+
+class _CrearUnidadDialogState extends State<_CrearUnidadDialog> {
+  TipoPropiedadNodo? _tipoRaiz;
+  final List<TipoPropiedadNodo> _niveles = [];
+  final List<ValorTipoPropiedad?> _valores = [];
+  bool _guardando = false;
+
+  void _onTipoRaiz(TipoPropiedadNodo? tipo) {
+    _niveles.clear();
+    _valores.clear();
+    if (tipo != null) {
+      _niveles.add(tipo);
+      _valores.add(null);
+    }
+    setState(() => _tipoRaiz = tipo);
+  }
+
+  void _onValor(int index, ValorTipoPropiedad? valor) {
+    _valores[index] = valor;
+    while (_niveles.length > index + 1) {
+      _niveles.removeLast();
+      _valores.removeLast();
+    }
+    if (valor != null && _niveles[index].hijos.isNotEmpty) {
+      _niveles.add(_niveles[index].hijos.first);
+      _valores.add(null);
+    }
+    setState(() {});
+  }
+
+  bool get _completo =>
+      _valores.isNotEmpty && _valores.every((v) => v != null);
+
+  Future<void> _guardar() async {
+    if (!_completo) return;
+    setState(() => _guardando = true);
+    try {
+      final path = <Map<String, dynamic>>[];
+      for (int i = 0; i < _niveles.length; i++) {
+        path.add({'tipoId': _niveles[i].id, 'valor': _valores[i]!.valor});
+      }
+      await PropiedadService.crearPropiedad(path);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Crear unidad'),
+      content: SizedBox(
+        width: 380,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DropdownButtonFormField<TipoPropiedadNodo>(
+                initialValue: _tipoRaiz,
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de propiedad',
+                  prefixIcon: Icon(Icons.home_work_outlined),
+                ),
+                items: widget.tiposRaiz
+                    .map((t) =>
+                        DropdownMenuItem(value: t, child: Text(t.nombre)))
+                    .toList(),
+                onChanged: _onTipoRaiz,
+              ),
+              for (int i = 0; i < _niveles.length; i++) ...[
+                const SizedBox(height: 12),
+                ValorPropiedadDropdown(
+                  key: ValueKey(
+                      'u_${_niveles[i].id}_${i == 0 ? 'raiz' : _valores[i - 1]?.id}'),
+                  label: _niveles[i].nombre,
+                  dependencyKey: i == 0 ? 'raiz' : _valores[i - 1]?.id,
+                  loader: () => PropiedadService.getValoresAdmin(
+                    _niveles[i].id,
+                    parentValorId: i == 0 ? null : _valores[i - 1]?.id,
+                  ),
+                  onChanged: (v) => _onValor(i, v),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar')),
+        FilledButton(
+          onPressed: (_completo && !_guardando) ? _guardar : null,
+          child: _guardando
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Crear'),
         ),
       ],
     );

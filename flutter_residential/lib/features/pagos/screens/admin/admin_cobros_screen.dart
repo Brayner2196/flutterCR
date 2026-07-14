@@ -113,8 +113,8 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
     );
     if (nota == null || nota.trim().isEmpty) return;
     try {
-      await context.read<CobrosProvider>().exonerar(cobro.id, nota.trim());
       if (!mounted) return;
+      context.read<CobrosProvider>().exonerar(cobro.id, nota.trim());
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Cobro exonerado'),
         backgroundColor: Colors.purple,
@@ -177,6 +177,7 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
                   builder: (_) => const AdminCobroEspecialScreen()),
             ).then((result) {
               if (result == true && mounted && _periodoSeleccionado != null) {
+                if(!context.mounted) return;
                 context.read<CobrosProvider>().cargarCobrosAdmin(
                     periodoId: _periodoSeleccionado!.id);
               }
@@ -185,11 +186,11 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Generar cobros',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const AdminGenerarCobrosScreen()),
-            ).then((_) => context.read<CobrosProvider>().cargarPeriodos()),
+            onPressed: () async{
+              await Navigator.push( context, MaterialPageRoute( builder: (_) => const AdminGenerarCobrosScreen()),);
+              if(!context.mounted) return;
+              context.read<CobrosProvider>().cargarPeriodos();
+            }
           ),
         ],
       ),

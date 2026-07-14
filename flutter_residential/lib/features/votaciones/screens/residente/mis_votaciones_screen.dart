@@ -124,11 +124,11 @@ class _VotacionResidenteCard extends StatelessWidget {
                       backgroundColor: cs.primaryContainer,
                       foregroundColor: cs.primary 
                     ),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => VotarScreen(votacion: votacion)),
-                    ).then((_) => context.read<VotacionProvider>().cargarResidente()),
+                    onPressed: () async {
+                      await Navigator.push( context, MaterialPageRoute(builder: (_) => VotarScreen(votacion: votacion)),);
+                      if(!context.mounted) return;
+                      context.read<VotacionProvider>().cargarResidente();
+                    }, 
                     child: Text(yaVoto
                         ? (votacion.permiteCambiarVoto ? 'Ver / Cambiar' : 'Ver resultados')
                         : 'Participar'),

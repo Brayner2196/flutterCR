@@ -30,7 +30,7 @@ class _AdminConfigPlanPagoScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await context.read<PlanPagoProvider>().cargarConfigAdmin();
+      context.read<PlanPagoProvider>().cargarConfigAdmin();
       _initFromConfig(context.read<PlanPagoProvider>().config);
     });
   }

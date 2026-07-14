@@ -43,8 +43,9 @@ class _ConsejoDashboardScreenState extends State<ConsejoDashboardScreen> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          await context.read<ConsejoProvider>().cargarPqrs();
-          await context.read<ConsejoProvider>().cargarDirectorio();
+          if (!context.mounted) return;
+          context.read<ConsejoProvider>().cargarPqrs();
+          context.read<ConsejoProvider>().cargarDirectorio();
         },
         child: ListView(
           padding: const EdgeInsets.fromLTRB(

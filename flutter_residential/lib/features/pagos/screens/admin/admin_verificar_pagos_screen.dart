@@ -196,7 +196,8 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
     final motivo = await _dialogMotivo(context, 'Rechazar abono');
     if (motivo == null || motivo.trim().isEmpty) return;
     try {
-      await context.read<AbonoProvider>().rechazar(abono.id, motivo);
+      if(!context.mounted) return;
+      context.read<AbonoProvider>().rechazar(abono.id, motivo);
       if (mounted) _cargar();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

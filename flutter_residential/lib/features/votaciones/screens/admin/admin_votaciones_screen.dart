@@ -95,7 +95,8 @@ class _AdminVotacionesScreenState extends State<AdminVotacionesScreen> {
       context,
       MaterialPageRoute(builder: (_) => const AdminCrearVotacionScreen()),
     );
-    if (mounted) context.read<VotacionProvider>().cargarAdmin(estado: _filtroEstado);
+    if (!context.mounted) return;
+    context.read<VotacionProvider>().cargarAdmin(estado: _filtroEstado);
   }
 }
 

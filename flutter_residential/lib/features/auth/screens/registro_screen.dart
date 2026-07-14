@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import '../../propiedades/models/tipo_propiedad_nodo.dart';
+import '../../propiedades/models/valor_tipo_propiedad.dart';
 import '../../propiedades/services/propiedad_service.dart';
+import '../../propiedades/widgets/valor_propiedad_dropdown.dart';
 import '../services/auth_service.dart';
 import '../../../core/utils/password_policy.dart';
 import '../../../shared/widgets/password_policy_indicator.dart';
@@ -27,8 +29,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
   List<TipoPropiedadNodo> _tiposRaiz = [];
   TipoPropiedadNodo? _tipoRaizSeleccionado;
-  final List<TextEditingController> _pathCtrlList = [];
+  // Niveles activos del path y el valor elegido (del catálogo) en cada uno.
   final List<TipoPropiedadNodo> _nivelesActivos = [];
+  final List<ValorTipoPropiedad?> _valoresSeleccionados = [];
 
   @override
   void dispose() {
@@ -37,9 +40,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
     _passwordCtrl.dispose();
     _codigoCtrl.dispose();
     _telefonoCtrl.dispose();
-    for (final c in _pathCtrlList) {
-      c.dispose();
-    }
     super.dispose();
   }
 
@@ -52,10 +52,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       _tiposRaiz = [];
       _tipoRaizSeleccionado = null;
       _nivelesActivos.clear();
-      for (final c in _pathCtrlList) {
-        c.dispose();
-      }
-      _pathCtrlList.clear();
+      _valoresSeleccionados.clear();
     });
 
     try {
@@ -81,33 +78,33 @@ class _RegistroScreenState extends State<RegistroScreen> {
   }
 
   void _onTipoRaizChanged(TipoPropiedadNodo? tipo) {
-    for (final c in _pathCtrlList) {
-      c.dispose();
-    }
-    _pathCtrlList.clear();
     _nivelesActivos.clear();
+    _valoresSeleccionados.clear();
 
     if (tipo != null) {
       _nivelesActivos.add(tipo);
-      _pathCtrlList.add(TextEditingController());
+      _valoresSeleccionados.add(null);
     }
 
     setState(() => _tipoRaizSeleccionado = tipo);
   }
 
-  void _onNivelLlenado(int index) {
-    final texto = _pathCtrlList[index].text.trim();
-    if (texto.isEmpty) return;
+  /// Al elegir un valor del catálogo en el nivel [index], se recorta lo más
+  /// profundo y, si el tipo tiene hijos, se agrega el siguiente nivel.
+  void _onValorSeleccionado(int index, ValorTipoPropiedad? valor) {
+    _valoresSeleccionados[index] = valor;
 
     while (_nivelesActivos.length > index + 1) {
       _nivelesActivos.removeLast();
-      _pathCtrlList.removeLast().dispose();
+      _valoresSeleccionados.removeLast();
     }
 
-    final nodoActual = _nivelesActivos[index];
-    if (nodoActual.hijos.isNotEmpty) {
-      _nivelesActivos.add(nodoActual.hijos.first);
-      _pathCtrlList.add(TextEditingController());
+    if (valor != null) {
+      final nodoActual = _nivelesActivos[index];
+      if (nodoActual.hijos.isNotEmpty) {
+        _nivelesActivos.add(nodoActual.hijos.first);
+        _valoresSeleccionados.add(null);
+      }
     }
 
     setState(() {});
@@ -116,9 +113,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
   List<Map<String, dynamic>> _construirPropiedadPath() {
     final path = <Map<String, dynamic>>[];
     for (int i = 0; i < _nivelesActivos.length; i++) {
-      final valor = _pathCtrlList[i].text.trim();
-      if (valor.isEmpty) break;
-      path.add({'tipoId': _nivelesActivos[i].id, 'valor': valor});
+      final valor = _valoresSeleccionados[i];
+      if (valor == null) break;
+      path.add({'tipoId': _nivelesActivos[i].id, 'valor': valor.valor});
     }
     return path;
   }
@@ -305,20 +302,19 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
                   for (int i = 0; i < _nivelesActivos.length; i++) ...[
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _pathCtrlList[i],
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        labelText: _nivelesActivos[i].nombre,
-                        hintText: _nivelesActivos[i].descripcion,
-                        prefixIcon: const Icon(Icons.label_outline),
+                    ValorPropiedadDropdown(
+                      key: ValueKey(
+                          'nivel_${_nivelesActivos[i].id}_${i == 0 ? 'raiz' : _valoresSeleccionados[i - 1]?.id}'),
+                      label: _nivelesActivos[i].nombre,
+                      dependencyKey:
+                          i == 0 ? 'raiz' : _valoresSeleccionados[i - 1]?.id,
+                      loader: () => PropiedadService.getValoresPublico(
+                        _codigoCtrl.text.trim(),
+                        _nivelesActivos[i].id,
+                        parentValorId:
+                            i == 0 ? null : _valoresSeleccionados[i - 1]?.id,
                       ),
-                      onFieldSubmitted: (_) => _onNivelLlenado(i),
-                      onChanged: (_) {
-                        if (_pathCtrlList[i].text.trim().isNotEmpty) {
-                          _onNivelLlenado(i);
-                        }
-                      },
+                      onChanged: (v) => _onValorSeleccionado(i, v),
                     ),
                   ],
                 ],

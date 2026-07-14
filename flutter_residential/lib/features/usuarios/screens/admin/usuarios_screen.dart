@@ -57,7 +57,7 @@ class _UsuariosScreenState extends State<UsuariosScreen>
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: Theme.of(context).colorScheme.scrim,
       child: Column(
         children: [
           Padding(

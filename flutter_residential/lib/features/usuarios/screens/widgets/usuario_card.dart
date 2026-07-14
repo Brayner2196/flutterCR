@@ -11,14 +11,18 @@ class UsuarioCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final rolColor = _colorRol(usuario.rol, theme);
     final estadoColor = _colorEstado(usuario.estado);
 
     return Card(
+      color: cs.scrim,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      elevation: 1,
-      shadowColor: Colors.grey,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder( 
+        side: BorderSide(color: cs.surface, style: BorderStyle.solid),
+        borderRadius: BorderRadius.circular(14),
+
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),

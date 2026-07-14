@@ -26,7 +26,6 @@ class ConfigSectionTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: cs.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -34,6 +33,7 @@ class ConfigSectionTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
+            color: cs.scrim,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: cs.outlineVariant),
           ),

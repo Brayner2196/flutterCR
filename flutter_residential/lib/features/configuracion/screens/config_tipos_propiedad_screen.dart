@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/propiedades/models/tipo_propiedad_nodo.dart';
 import 'package:flutter_residential/features/propiedades/services/propiedad_service.dart';
+import 'package:flutter_residential/features/propiedades/widgets/valores_tipo_sheet.dart';
 
 class ConfigTiposPropiedadScreen extends StatefulWidget {
   const ConfigTiposPropiedadScreen({super.key});
@@ -59,6 +60,20 @@ class _ConfigTiposPropiedadScreenState
         onGuardado: _cargar,
       ),
     );
+  }
+
+  void _gestionarValores(TipoPropiedadNodo nodo, int nivel) {
+    // Diferir al siguiente frame: evita que la ruta del PopupMenu (aún
+    // cerrándose) choque con la del bottom sheet durante el layout.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ValoresTipoSheet.mostrar(
+        context,
+        tipoId: nodo.id,
+        tipoNombre: nodo.nombre,
+        color: _coloresPorNivel[nivel % _coloresPorNivel.length],
+      );
+    });
   }
 
   Future<void> _confirmarDesactivar(TipoPropiedadNodo nodo) async {
@@ -145,6 +160,7 @@ class _ConfigTiposPropiedadScreenState
                             colores: _coloresPorNivel,
                             onEditar: (n, nivel) => _mostrarFormNodo(nodo: n, nivel: nivel),
                             onAgregarHijo: (n, nivel) => _mostrarFormNodo(parentId: n.id, nivel: nivel + 1),
+                            onGestionarValores: _gestionarValores,
                             onDesactivar: _confirmarDesactivar,
                           )),
                     ],
@@ -162,6 +178,7 @@ class _NodoTile extends StatefulWidget {
   final List<Color> colores;
   final void Function(TipoPropiedadNodo, int) onEditar;
   final void Function(TipoPropiedadNodo, int) onAgregarHijo;
+  final void Function(TipoPropiedadNodo, int) onGestionarValores;
   final void Function(TipoPropiedadNodo) onDesactivar;
 
   const _NodoTile({
@@ -170,6 +187,7 @@ class _NodoTile extends StatefulWidget {
     required this.colores,
     required this.onEditar,
     required this.onAgregarHijo,
+    required this.onGestionarValores,
     required this.onDesactivar,
   });
 
@@ -314,10 +332,12 @@ class _NodoTileState extends State<_NodoTile> {
                         onSelected: (v) {
                           if (v == 'editar') widget.onEditar(nodo, widget.nivel);
                           if (v == 'hijo') widget.onAgregarHijo(nodo, widget.nivel);
+                          if (v == 'valores') widget.onGestionarValores(nodo, widget.nivel);
                           if (v == 'desactivar') widget.onDesactivar(nodo);
                         },
                         itemBuilder: (_) => [
                           const PopupMenuItem(value: 'editar', child: Row(children: [Icon(Icons.edit_outlined, size: 16), SizedBox(width: 8), Text('Editar')])),
+                          const PopupMenuItem(value: 'valores', child: Row(children: [Icon(Icons.tune, size: 16), SizedBox(width: 8), Text('Gestionar valores')])),
                           const PopupMenuItem(value: 'hijo', child: Row(children: [Icon(Icons.add, size: 16), SizedBox(width: 8), Text('Agregar subnivel')])),
                           if (nodo.activo)
                             const PopupMenuItem(
@@ -344,6 +364,7 @@ class _NodoTileState extends State<_NodoTile> {
                   colores: widget.colores,
                   onEditar: widget.onEditar,
                   onAgregarHijo: widget.onAgregarHijo,
+                  onGestionarValores: widget.onGestionarValores,
                   onDesactivar: widget.onDesactivar,
                 )),
         ],

@@ -54,12 +54,11 @@ class _AdminDetallePresupuestoScreenState
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Editar',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => AdminFormPresupuestoScreen(presupuesto: p)),
-            ).then((_) =>
-                context.read<PresupuestoProvider>().cargarDetalle(widget.id)),
+            onPressed: () async {
+              await Navigator.push( context, MaterialPageRoute(builder: (_) => AdminFormPresupuestoScreen(presupuesto: p)),);
+              if (!context.mounted) return;
+              context.read<PresupuestoProvider>().cargarDetalle(widget.id);
+            }
           ),
         ],
       ),
