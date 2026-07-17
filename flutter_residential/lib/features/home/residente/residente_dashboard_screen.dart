@@ -12,6 +12,7 @@ import '../../pagos/screens/residente/estado_cuenta_screen.dart';
 import '../../reservas/screens/residente/mis_reservas_screen.dart';
 import '../../pqr/screens/residente/mis_pqrs_screen.dart';
 import '../../anuncios/screens/residente/mis_anuncios_screen.dart';
+import '../../documentos/screens/residente/documentos_residente_screen.dart';
 import '../../votaciones/screens/residente/mis_votaciones_screen.dart';
 import '../../marketplace/screens/residente/marketplace_screen.dart';
 import '../../visitas/screens/mis_visitas_screen.dart';
@@ -371,6 +372,23 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisAnunciosScreen()),
+        ),
+      ));
+    }
+
+    // Documentos de interés general: visible para propietarios e inquilinos.
+    if (esPropietario || permisos.tienePermiso('DOCUMENTOS')) {
+      final palette =
+          PaletteQuickAccessCard.resolve(AppColors.bgBlue, AppColors.blue, isDark);
+      cards.add(QuickAccessCard(
+        label: 'Documentos',
+        subtitulo: 'Interés general',
+        icono: Icons.folder_copy_outlined,
+        bg: palette.bg,
+        fg: palette.fg,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const DocumentosResidenteScreen()),
         ),
       ));
     }

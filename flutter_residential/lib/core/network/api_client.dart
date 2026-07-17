@@ -318,6 +318,71 @@ class ApiClient {
     }
   }
 
+  /// POST multipart/form-data con VARIOS archivos bajo el mismo campo.
+  /// Reutilizable para módulos que suben listas de archivos (ej: documentos de interés).
+  /// [filePaths] rutas locales; [fileField] nombre del part (repetido por archivo).
+  static Future<http.Response> postMultipartFiles(
+    String path, {
+    required String fileField,
+    required List<String> filePaths,
+    Map<String, String> fields = const {},
+    Duration timeout = const Duration(minutes: 5),
+  }) async {
+    await _checkConnectivity();
+    final uri = Uri.parse('${ApiConstants.baseUrl}$path');
+
+    Future<http.Response> enviar() async {
+      final headers = await _headers();
+      // MultipartRequest define su propio Content-Type (boundary)
+      headers.remove('Content-Type');
+
+      final req = http.MultipartRequest('POST', uri)
+        ..headers.addAll(headers)
+        ..fields.addAll(fields);
+      for (final ruta in filePaths) {
+        req.files.add(await http.MultipartFile.fromPath(fileField, ruta));
+      }
+
+      final streamed = await req.send().timeout(timeout);
+      return http.Response.fromStream(streamed);
+    }
+
+    try {
+      final res = await enviar();
+      return await _handleUnauthorized(res, enviar) ?? res;
+    } on SessionExpiredException {
+      rethrow;
+    } on SocketException {
+      throw Exception('Sin conexión a internet. Verifica tu red.');
+    } on TimeoutException {
+      throw Exception('La subida tardó demasiado. Inténtalo de nuevo.');
+    }
+  }
+
+  /// GET para descargar binarios (usa response.bodyBytes). Timeout amplio por si
+  /// el archivo es pesado (ej: video). Maneja auth, tenant y refresh 401.
+  static Future<http.Response> download(
+    String path, {
+    Duration timeout = const Duration(minutes: 2),
+  }) async {
+    await _checkConnectivity();
+    final uri = Uri.parse('${ApiConstants.baseUrl}$path');
+
+    Future<http.Response> enviar() async =>
+        http.get(uri, headers: await _headers()).timeout(timeout);
+
+    try {
+      final res = await enviar();
+      return await _handleUnauthorized(res, enviar) ?? res;
+    } on SessionExpiredException {
+      rethrow;
+    } on SocketException {
+      throw Exception('Sin conexión a internet. Verifica tu red.');
+    } on TimeoutException {
+      throw Exception('La descarga tardó demasiado. Inténtalo de nuevo.');
+    }
+  }
+
   static Future<http.Response> patch(String path, [Map<String, dynamic>? body]) async {
     await _checkConnectivity();
     final uri = Uri.parse('${ApiConstants.baseUrl}$path');

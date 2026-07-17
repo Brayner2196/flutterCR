@@ -1,7 +1,7 @@
 name: flutter_residential
 description: "A new Flutter project."
 
-version: 1.1.0+52
+version: 1.1.0+55
 
 environment:
   sdk: ^3.9.2
@@ -33,6 +33,8 @@ dependencies:
   mobile_scanner: ^5.2.3  # Lector de QR del vigilante
   share_plus: ^10.1.2  # Compartir QR por WhatsApp/otros
   path_provider: ^2.1.4  # Guardar el QR temporal para compartir
+  file_picker: ^8.1.2  # Seleccionar archivos (documentos de interés general)
+  open_filex: ^4.5.0  # Abrir archivos descargados con la app nativa del dispositivo
 
   # Firebase / FCM
   firebase_core: ^3.6.0

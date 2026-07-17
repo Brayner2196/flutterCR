@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/anuncios/screens/admin/admin_anuncios_screen.dart';
+import 'package:flutter_residential/features/documentos/screens/admin/admin_documentos_screen.dart';
 import 'package:flutter_residential/features/dashboard/providers/dashboard_provider.dart';
 import 'package:flutter_residential/features/dashboard/screens/widgets/kpi_carousel.dart';
 import 'package:flutter_residential/features/home/admin/widgets/quick_access_cards.dart';
@@ -122,6 +123,15 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   iconColor: AppColors.yellow,
                   colorText: AppColors.yellow,
                   onTap: () => _abrir(const AdminAnunciosScreen()),
+                ),
+                QuickAccessCardData(
+                  title: 'Documentos',
+                  icon: Icons.folder_copy_outlined,
+                  backgroundColor: AppColors.bgBlue,
+                  iconBackgroundColor: Colors.white,
+                  iconColor: AppColors.blue,
+                  colorText: AppColors.blue,
+                  onTap: () => _abrir(const AdminDocumentosScreen()),
                 ),
                 QuickAccessCardData(
                   title: 'Votaciones',

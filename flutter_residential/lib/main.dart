@@ -17,6 +17,7 @@ import 'features/pagos/providers/abono_provider.dart';
 import 'features/usuarios/providers/residente_estadisticas_provider.dart';
 import 'features/tenants/providers/tenant_provider.dart';
 import 'features/anuncios/providers/anuncio_provider.dart';
+import 'features/documentos/providers/documento_provider.dart';
 import 'features/votaciones/providers/votacion_provider.dart';
 import 'features/marketplace/providers/publicacion_provider.dart';
 import 'features/inquilinos/providers/inquilino_permisos_provider.dart';
@@ -97,6 +98,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ResidenteEstadisticasProvider()),
         ChangeNotifierProvider(create: (_) => AbonoProvider()),
         ChangeNotifierProvider(create: (_) => AnuncioProvider()),
+        ChangeNotifierProvider(create: (_) => DocumentoProvider()),
         ChangeNotifierProvider(create: (_) => VotacionProvider()),
         ChangeNotifierProvider(create: (_) => PublicacionProvider()),
         ChangeNotifierProvider(create: (_) => InquilinoPermisosProvider()),

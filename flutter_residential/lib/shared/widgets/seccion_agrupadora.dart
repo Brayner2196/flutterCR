@@ -33,7 +33,6 @@ class SeccionAgrupadora extends StatelessWidget {
         ),
         Container(
           decoration: BoxDecoration(
-            color: cs.surface,
             borderRadius: BorderRadius.circular(AppRadius.xl),
             border: Border.all(color: cs.outlineVariant),
           ),

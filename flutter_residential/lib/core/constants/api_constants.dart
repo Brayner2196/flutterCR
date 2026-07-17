@@ -2,7 +2,7 @@
 class ApiConstants {
 
   //static const String baseUrl = AppEnv.baseUrl;
-  static const String baseUrl = 'https://cr-dev.up.railway.app';
+  static const String baseUrl = 'https://myproyectcrdev.up.railway.app';
 
 
   // Auth
@@ -160,6 +160,22 @@ class ApiConstants {
   // Anuncios — residente
   static const String residenteAnuncios = '/api/residente/anuncios';
   static String marcarAnuncioVisto(int id) => '/api/residente/anuncios/$id/visto';
+
+  // Documentos de interés general — admin
+  static const String adminDocumentos = '/api/admin/documentos';
+  static String adminDocumento(int id) => '/api/admin/documentos/$id';
+  static String adminDocumentoEstado(int id) => '/api/admin/documentos/$id/estado';
+  static String adminDocumentoArchivos(int id) => '/api/admin/documentos/$id/archivos';
+  static String adminDocumentoArchivo(int id, int archivoId) =>
+      '/api/admin/documentos/$id/archivos/$archivoId';
+  static String adminDocumentoArchivoDescarga(int id, int archivoId) =>
+      '/api/admin/documentos/$id/archivos/$archivoId/descargar';
+
+  // Documentos de interés general — residente
+  static const String residenteDocumentos = '/api/residente/documentos';
+  static String residenteDocumento(int id) => '/api/residente/documentos/$id';
+  static String residenteDocumentoArchivoDescarga(int id, int archivoId) =>
+      '/api/residente/documentos/$id/archivos/$archivoId/descargar';
 
   // Votaciones — admin
   static const String adminVotaciones = '/api/admin/votaciones';

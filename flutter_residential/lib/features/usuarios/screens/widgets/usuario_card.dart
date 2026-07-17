@@ -19,13 +19,11 @@ class UsuarioCard extends StatelessWidget {
       color: cs.scrim,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       shape: RoundedRectangleBorder( 
-        side: BorderSide(color: cs.surface, style: BorderStyle.solid),
+        side: BorderSide(color:cs.outlineVariant ,width: 2, strokeAlign:BorderSide.strokeAlignCenter),
         borderRadius: BorderRadius.circular(14),
-
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 14, 6, 14),
           child: Column(

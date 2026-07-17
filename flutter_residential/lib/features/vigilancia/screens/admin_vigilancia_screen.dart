@@ -113,7 +113,6 @@ class _AdminVigilanciaScreenState extends State<AdminVigilanciaScreen> {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: cs.primaryContainer,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: cs.primary.withValues(alpha: 0.3),
@@ -203,22 +202,6 @@ class _AdminVigilanciaScreenState extends State<AdminVigilanciaScreen> {
                 valor: cfg.exigeFotoPaquete,
                 onChanged: (v) => setState(
                     () => _cfg = cfg.copyWith(exigeFotoPaquete: v)),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // ── Reportes ──
-          SeccionAgrupadora(
-            titulo: 'Reportes',
-            items: [
-              SeccionAgrupadoraItemAccion(
-                icono: Icons.fact_check_outlined,
-                label: 'Reportes / bitácora',
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const BitacoraAdminScreen())),
               ),
             ],
           ),
