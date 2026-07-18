@@ -130,11 +130,15 @@ class _ValorPropiedadDropdownState extends State<ValorPropiedadDropdown> {
       );
     }
 
+    // Mientras no hay selección: typeahead (escribir para filtrar y elegir).
+    // Ya seleccionado un valor del catálogo, se bloquea la edición del texto:
+    // tocar reabre el menú para elegir otro, pero no se puede alterar el valor.
+    final sinSeleccion = _seleccionado == null;
     return DropdownMenu<ValorTipoPropiedad>(
       enabled: widget.enabled,
       expandedInsets: EdgeInsets.zero,
-      enableFilter: true,
-      requestFocusOnTap: true,
+      enableFilter: sinSeleccion,
+      requestFocusOnTap: sinSeleccion,
       initialSelection: _seleccionado,
       label: Text(widget.label),
       leadingIcon: Icon(widget.icon, color: color),

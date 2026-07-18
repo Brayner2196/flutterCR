@@ -51,4 +51,54 @@ class TipoPropiedadNodo {
   };
 
   bool get esHoja => hijos.isEmpty;
+
+  /// Recorre el árbol y devuelve, por cada HOJA (tipo final, ej. Apartamento),
+  /// su ruta completa raíz→hoja (ej. [Torre, Piso, Apartamento]).
+  ///
+  /// Reutilizable en cualquier flujo que deba crear la unidad final del árbol:
+  /// las hojas son `rutas.map((r) => r.last)`, y cada ruta da los niveles cuyos
+  /// valores hay que pedir.
+  static List<List<TipoPropiedadNodo>> rutasHoja(
+      List<TipoPropiedadNodo> raices) {
+    final rutas = <List<TipoPropiedadNodo>>[];
+    void recorrer(TipoPropiedadNodo nodo, List<TipoPropiedadNodo> acumulado) {
+      final ruta = [...acumulado, nodo];
+      if (nodo.esHoja) {
+        rutas.add(ruta);
+      } else {
+        for (final hijo in nodo.hijos) {
+          recorrer(hijo, ruta);
+        }
+      }
+    }
+
+    for (final raiz in raices) {
+      recorrer(raiz, const []);
+    }
+    return rutas;
+  }
+
+  /// Recorre el árbol y devuelve, por cada nodo FACTURABLE (la unidad final
+  /// asignable, ej. Apartamento), su ruta completa raíz→nodo
+  /// (ej. [Torre, Piso, Apartamento]).
+  ///
+  /// Reutilizable en cualquier flujo que deba elegir/crear la unidad asignable:
+  /// las hojas mostrables son `rutas.map((r) => r.last)`, y cada ruta da los
+  /// niveles cuyos valores hay que pedir.
+  static List<List<TipoPropiedadNodo>> rutasFacturables(
+      List<TipoPropiedadNodo> raices) {
+    final rutas = <List<TipoPropiedadNodo>>[];
+    void recorrer(TipoPropiedadNodo nodo, List<TipoPropiedadNodo> acumulado) {
+      final ruta = [...acumulado, nodo];
+      if (nodo.esFacturable) rutas.add(ruta);
+      for (final hijo in nodo.hijos) {
+        recorrer(hijo, ruta);
+      }
+    }
+
+    for (final raiz in raices) {
+      recorrer(raiz, const []);
+    }
+    return rutas;
+  }
 }

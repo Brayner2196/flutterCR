@@ -4,6 +4,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/services/base_api_service.dart';
 import '../models/tipo_propiedad_nodo.dart';
 import '../models/valor_tipo_propiedad.dart';
+import '../models/propiedad_admin.dart';
 import '../../usuarios/models/usuario_propiedad_response.dart';
 
 class PropiedadService {
@@ -187,6 +188,13 @@ class PropiedadService {
     }
     BaseApiService.assertSuccess(res, fallbackMsg: 'Error al listar propiedades');
     return [];
+  }
+
+  /// Listar todas las propiedades del conjunto (admin), tipadas para la gestión.
+  static Future<List<PropiedadAdmin>> getPropiedadesAdmin() async {
+    final res = await ApiClient.get(ApiConstants.propiedades);
+    return BaseApiService.parseList(
+        res, PropiedadAdmin.fromJson, 'Error al listar propiedades');
   }
 
   /// Asignar residente a propiedad (admin)

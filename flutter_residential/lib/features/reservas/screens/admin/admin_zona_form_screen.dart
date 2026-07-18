@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_residential/shared/utils/scrollingText.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../models/reserva_model.dart';
 import '../../services/reserva_service.dart';

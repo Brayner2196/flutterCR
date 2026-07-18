@@ -65,6 +65,12 @@ class _UsuarioWizardScreenState extends State<UsuarioWizardScreen> {
   String _rol = '';
   bool _verPassword = false;
 
+  // Path de propiedad capturado al salir del paso 2. Se guarda aquí porque el
+  // PageView desmonta el State del step al perder foco y _keyPropiedad.currentState
+  // queda null al momento de crear (el usuario terminaba sin propiedad asignada).
+  List<Map<String, dynamic>> _propiedadPath = [];
+  List<String> _propiedadPathLabels = [];
+
   final _keyDatos = GlobalKey<FormState>();
   final _keyPropiedad = GlobalKey<UsuarioWizardStepPropiedadState>();
 
@@ -128,8 +134,19 @@ class _UsuarioWizardScreenState extends State<UsuarioWizardScreen> {
     }
   }
 
+  /// Captura el path del step de propiedad mientras su State sigue montado.
+  void _capturarPropiedad() {
+    final st = _keyPropiedad.currentState;
+    _propiedadPath = st?.buildPath() ?? [];
+    _propiedadPathLabels = st?.buildPathLabels() ?? [];
+  }
+
   void _siguiente() {
     if (!_validarPasoActual()) return;
+
+    // Al abandonar el paso de propiedad guardamos el path antes de que el
+    // PageView pueda desmontar su State (si no, la asignación se pierde).
+    if (_pasoActual == 2) _capturarPropiedad();
 
     int destino;
     if (_pasoActual == 1 && !_requierePropiedad) {
@@ -167,9 +184,11 @@ class _UsuarioWizardScreenState extends State<UsuarioWizardScreen> {
   Future<void> _crear() async {
     setState(() => _creando = true);
     try {
-      final propiedadPath = _requierePropiedad
-          ? (_keyPropiedad.currentState?.buildPath() ?? [])
-          : <Map<String, dynamic>>[];
+      // Fallback: si por alguna razón no se capturó al navegar, reintenta leerlo.
+      if (_requierePropiedad && _propiedadPath.isEmpty) _capturarPropiedad();
+
+      final propiedadPath =
+          _requierePropiedad ? _propiedadPath : <Map<String, dynamic>>[];
 
       await context.read<UsuarioProvider>().crear({
         'nombre': _nombreCtrl.text.trim(),
@@ -248,6 +267,8 @@ class _UsuarioWizardScreenState extends State<UsuarioWizardScreen> {
 
   List<String> get _pathLabelsActuales {
     if (!_requierePropiedad) return [];
+    // Prioriza las capturadas; si aún no hay (usuario en el paso), lee en vivo.
+    if (_propiedadPathLabels.isNotEmpty) return _propiedadPathLabels;
     return _keyPropiedad.currentState?.buildPathLabels() ?? [];
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
+import 'package:flutter_residential/features/configuracion/screens/configuracion_screen.dart';
 import 'package:flutter_residential/features/usuarios/providers/app_provider.dart';
 import 'package:flutter_residential/shared/dialogs/confirmar_logout.dart';
 import 'package:flutter_residential/core/utils/texto_utils.dart';
@@ -97,6 +98,22 @@ class PerfilAdminScreen extends StatelessWidget {
                 label: 'Tema oscuro',
                 valor: appProvider.esOscuro(context),
                 onChanged: () => appProvider.toggleTheme(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          // ── Administración ──
+          SeccionAgrupadora(
+            titulo: 'Administración',
+            items: [
+              SeccionAgrupadoraItemAccion(
+                icono: Icons.settings_rounded,
+                label: 'Configuración',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ConfiguracionScreen(),
+                  ),
+                ),
               ),
             ],
           ),

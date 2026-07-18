@@ -1,5 +1,3 @@
-import 'package:http/http.dart' as http;
-
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/services/base_api_service.dart';
@@ -64,9 +62,14 @@ class DocumentoService {
         successCodes: [200, 204], fallbackMsg: 'Error al eliminar archivo');
   }
 
-  static Future<http.Response> descargarAdmin(int id, int archivoId) {
-    return ApiClient.download(
-        ApiConstants.adminDocumentoArchivoDescarga(id, archivoId));
+  /// Pide al backend una URL firmada (temporal) para descargar el archivo directo de B2.
+  static Future<String> urlDescargaAdmin(int id, int archivoId) async {
+    final res = await ApiClient.get(ApiConstants.adminDocumentoArchivoUrl(id, archivoId));
+    return BaseApiService.parseSingle<String>(
+      res,
+      (json) => json['url'] as String,
+      fallbackMsg: 'No se pudo obtener el enlace de descarga',
+    );
   }
 
   // ─── Residente ─────────────────────────────────────────────────────────
@@ -80,8 +83,13 @@ class DocumentoService {
         res, DocumentoModel.fromJson, 'Error al listar documentos');
   }
 
-  static Future<http.Response> descargarResidente(int id, int archivoId) {
-    return ApiClient.download(
-        ApiConstants.residenteDocumentoArchivoDescarga(id, archivoId));
+  /// Pide al backend una URL firmada (temporal) para descargar el archivo directo de B2.
+  static Future<String> urlDescargaResidente(int id, int archivoId) async {
+    final res = await ApiClient.get(ApiConstants.residenteDocumentoArchivoUrl(id, archivoId));
+    return BaseApiService.parseSingle<String>(
+      res,
+      (json) => json['url'] as String,
+      fallbackMsg: 'No se pudo obtener el enlace de descarga',
+    );
   }
 }

@@ -58,8 +58,8 @@ class _DetalleDocumentoScreenState extends State<DetalleDocumentoScreen> {
   Future<void> _descargar(ArchivoDocumentoModel a) async {
     setState(() => _descargandoId = a.id);
     try {
-      final res = await DocumentoService.descargarResidente(widget.documento.id, a.id);
-      await DescargaArchivo.abrir(res, a.nombreOriginal);
+      final url = await DocumentoService.urlDescargaResidente(widget.documento.id, a.id);
+      await DescargaArchivo.abrirDesdeUrl(url, a.nombreOriginal);
     } catch (e) {
       if (mounted) AppToast.error(context, e);
     } finally {

@@ -60,10 +60,10 @@ class BottomNavigationBarAdmin extends StatelessWidget {
               label: 'Usuarios',
             ),
             NavigationDestination(
-              icon: Icon(Icons.settings_outlined,
+              icon: Icon(Icons.apartment_outlined,
                   color: onBg.withValues(alpha: 0.6)),
-              selectedIcon: Icon(Icons.settings_rounded, color: onBg),
-              label: 'Configuración',
+              selectedIcon: Icon(Icons.apartment_rounded, color: onBg),
+              label: 'Propiedades',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline,

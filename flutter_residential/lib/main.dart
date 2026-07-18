@@ -11,6 +11,7 @@ import 'features/dashboard/providers/dashboard_provider.dart';
 import 'features/pagos/providers/pagos_provider.dart';
 import 'features/pqr/providers/pqr_provider.dart';
 import 'features/propiedades/providers/propiedad_provider.dart';
+import 'features/propiedades/providers/gestion_propiedades_provider.dart';
 import 'features/reservas/providers/reserva_provider.dart';
 import 'features/usuarios/providers/usuario_provider.dart';
 import 'features/pagos/providers/abono_provider.dart';
@@ -90,6 +91,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
         ChangeNotifierProvider(create: (_) => TenantProvider()),
         ChangeNotifierProvider(create: (_) => PropiedadProvider()),
+        ChangeNotifierProvider(create: (_) => GestionPropiedadesProvider()),
         ChangeNotifierProvider(create: (_) => CobrosProvider()),
         ChangeNotifierProvider(create: (_) => PagosProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),

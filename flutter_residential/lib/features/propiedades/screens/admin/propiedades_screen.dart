@@ -500,30 +500,41 @@ class _CrearUnidadDialog extends StatefulWidget {
 }
 
 class _CrearUnidadDialogState extends State<_CrearUnidadDialog> {
-  TipoPropiedadNodo? _tipoRaiz;
+  // Rutas raíz→hoja del árbol y sus hojas (tipos finales, ej. Apartamento).
+  late final List<List<TipoPropiedadNodo>> _rutas;
+  late final List<TipoPropiedadNodo> _hojas;
+  TipoPropiedadNodo? _hoja;
+
   final List<TipoPropiedadNodo> _niveles = [];
   final List<ValorTipoPropiedad?> _valores = [];
   bool _guardando = false;
 
-  void _onTipoRaiz(TipoPropiedadNodo? tipo) {
+  @override
+  void initState() {
+    super.initState();
+    _rutas = TipoPropiedadNodo.rutasHoja(widget.tiposRaiz);
+    _hojas = _rutas.map((r) => r.last).toList();
+  }
+
+  /// Al elegir la unidad final se reconstruye toda la ruta raíz→hoja para pedir
+  /// los valores de cada nivel (ej. Torre, Piso, Apartamento).
+  void _onHoja(TipoPropiedadNodo? hoja) {
     _niveles.clear();
     _valores.clear();
-    if (tipo != null) {
-      _niveles.add(tipo);
-      _valores.add(null);
+    if (hoja != null) {
+      final ruta = _rutas.firstWhere((r) => r.last == hoja);
+      _niveles.addAll(ruta);
+      _valores.addAll(List<ValorTipoPropiedad?>.filled(ruta.length, null));
     }
-    setState(() => _tipoRaiz = tipo);
+    setState(() => _hoja = hoja);
   }
 
   void _onValor(int index, ValorTipoPropiedad? valor) {
     _valores[index] = valor;
-    while (_niveles.length > index + 1) {
-      _niveles.removeLast();
-      _valores.removeLast();
-    }
-    if (valor != null && _niveles[index].hijos.isNotEmpty) {
-      _niveles.add(_niveles[index].hijos.first);
-      _valores.add(null);
+    // Los niveles están fijados por la hoja; solo reseteo los valores de los
+    // niveles inferiores, que dependen del valor padre.
+    for (int j = index + 1; j < _valores.length; j++) {
+      _valores[j] = null;
     }
     setState(() {});
   }
@@ -564,18 +575,24 @@ class _CrearUnidadDialogState extends State<_CrearUnidadDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DropdownButtonFormField<TipoPropiedadNodo>(
-                initialValue: _tipoRaiz,
-                decoration: const InputDecoration(
-                  labelText: 'Tipo de propiedad',
-                  prefixIcon: Icon(Icons.home_work_outlined),
+              if (_hojas.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text('No hay tipos de propiedad configurados.'),
+                )
+              else
+                DropdownButtonFormField<TipoPropiedadNodo>(
+                  initialValue: _hoja,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de propiedad',
+                    prefixIcon: Icon(Icons.home_work_outlined),
+                  ),
+                  items: _hojas
+                      .map((t) =>
+                          DropdownMenuItem(value: t, child: Text(t.nombre)))
+                      .toList(),
+                  onChanged: _onHoja,
                 ),
-                items: widget.tiposRaiz
-                    .map((t) =>
-                        DropdownMenuItem(value: t, child: Text(t.nombre)))
-                    .toList(),
-                onChanged: _onTipoRaiz,
-              ),
               for (int i = 0; i < _niveles.length; i++) ...[
                 const SizedBox(height: 12),
                 ValorPropiedadDropdown(

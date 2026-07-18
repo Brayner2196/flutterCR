@@ -19,7 +19,7 @@ class UsuarioCard extends StatelessWidget {
       color: cs.scrim,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       shape: RoundedRectangleBorder( 
-        side: BorderSide(color:cs.outlineVariant ,width: 2, strokeAlign:BorderSide.strokeAlignCenter),
+        side: BorderSide(color:cs.outlineVariant ,width: 1.5, strokeAlign:BorderSide.strokeAlignCenter),
         borderRadius: BorderRadius.circular(14),
       ),
       child: InkWell(

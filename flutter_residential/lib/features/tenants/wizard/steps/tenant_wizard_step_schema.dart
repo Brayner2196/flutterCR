@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_residential/shared/utils/scrollingText.dart';
 
 class TenantWizardStepSchema extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -99,21 +100,20 @@ class TenantWizardStepSchema extends StatelessWidget {
                     Icon(Icons.lightbulb_outline,
                         size: 16, color: Colors.amber.shade700),
                     const SizedBox(width: 8),
-                    Text(
-                      'Sugerido: ',
+                    Text('Sugerido: ',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
                     ),
-                    Text(
-                      sugerido,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: ScrollingText(
+                        text: sugerido, 
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

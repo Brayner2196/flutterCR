@@ -168,14 +168,14 @@ class ApiConstants {
   static String adminDocumentoArchivos(int id) => '/api/admin/documentos/$id/archivos';
   static String adminDocumentoArchivo(int id, int archivoId) =>
       '/api/admin/documentos/$id/archivos/$archivoId';
-  static String adminDocumentoArchivoDescarga(int id, int archivoId) =>
-      '/api/admin/documentos/$id/archivos/$archivoId/descargar';
+  static String adminDocumentoArchivoUrl(int id, int archivoId) =>
+      '/api/admin/documentos/$id/archivos/$archivoId/url';
 
   // Documentos de interés general — residente
   static const String residenteDocumentos = '/api/residente/documentos';
   static String residenteDocumento(int id) => '/api/residente/documentos/$id';
-  static String residenteDocumentoArchivoDescarga(int id, int archivoId) =>
-      '/api/residente/documentos/$id/archivos/$archivoId/descargar';
+  static String residenteDocumentoArchivoUrl(int id, int archivoId) =>
+      '/api/residente/documentos/$id/archivos/$archivoId/url';
 
   // Votaciones — admin
   static const String adminVotaciones = '/api/admin/votaciones';

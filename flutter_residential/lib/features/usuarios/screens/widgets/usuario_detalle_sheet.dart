@@ -5,6 +5,8 @@ import 'package:toastification/toastification.dart';
 import '../../models/usuario_response.dart';
 import '../../models/usuario_propiedad_response.dart';
 import '../../../propiedades/models/tipo_propiedad_nodo.dart';
+import '../../../propiedades/models/valor_tipo_propiedad.dart';
+import '../../../propiedades/widgets/valor_propiedad_dropdown.dart';
 import '../../providers/usuario_provider.dart';
 import '../../services/usuario_service.dart';
 import '../../../propiedades/services/propiedad_service.dart';
@@ -685,10 +687,15 @@ class _AgregarPropiedadDialog extends StatefulWidget {
 }
 
 class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
-  List<TipoPropiedadNodo> _tiposRaiz = [];
-  TipoPropiedadNodo? _tipoRaizSeleccionado;
-  final List<TipoPropiedadNodo> _nivelesActivos = [];
-  final List<TextEditingController> _pathCtrlList = [];
+  /// Rutas completas hacia cada unidad asignable (ej. Apartamento → [Torre, Piso, Apartamento]).
+  List<List<TipoPropiedadNodo>> _rutasFacturables = [];
+
+  /// Ruta seleccionada; su `.last` es la hoja mostrada en el dropdown (ej. Apartamento).
+  List<TipoPropiedadNodo>? _rutaSeleccionada;
+
+  /// Valor elegido del catálogo por cada nivel de la ruta seleccionada.
+  final List<ValorTipoPropiedad?> _valoresSeleccionados = [];
+
   bool _cargando = true;
   bool _guardando = false;
   String? _error;
@@ -699,20 +706,12 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
     _cargarTipos();
   }
 
-  @override
-  void dispose() {
-    for (final c in _pathCtrlList) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
   Future<void> _cargarTipos() async {
     try {
       final tipos = await PropiedadService.getTiposArbolAdmin();
       if (mounted) {
         setState(() {
-          _tiposRaiz = tipos;
+          _rutasFacturables = TipoPropiedadNodo.rutasFacturables(tipos);
           _cargando = false;
         });
       }
@@ -726,54 +725,42 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
     }
   }
 
-  void _onTipoRaizChanged(TipoPropiedadNodo? tipo) {
-    for (final c in _pathCtrlList) {
-      c.dispose();
-    }
-    _pathCtrlList.clear();
-    _nivelesActivos.clear();
-    if (tipo != null) {
-      _nivelesActivos.add(tipo);
-      _pathCtrlList.add(TextEditingController());
-    }
-    setState(() => _tipoRaizSeleccionado = tipo);
+  List<TipoPropiedadNodo> get _niveles => _rutaSeleccionada ?? const [];
+
+  bool get _esValido =>
+      _rutaSeleccionada != null &&
+      _valoresSeleccionados.isNotEmpty &&
+      _valoresSeleccionados.every((v) => v != null);
+
+  void _onRutaChanged(List<TipoPropiedadNodo>? ruta) {
+    _valoresSeleccionados
+      ..clear()
+      ..addAll(List.filled(ruta?.length ?? 0, null));
+    setState(() => _rutaSeleccionada = ruta);
   }
 
-  void _onNivelLlenado(int index) {
-    final texto = _pathCtrlList[index].text.trim();
-    if (texto.isEmpty) return;
-    while (_nivelesActivos.length > index + 1) {
-      _nivelesActivos.removeLast();
-      _pathCtrlList.removeLast().dispose();
-    }
-    final nodoActual = _nivelesActivos[index];
-    if (nodoActual.hijos.isNotEmpty) {
-      _nivelesActivos.add(nodoActual.hijos.first);
-      _pathCtrlList.add(TextEditingController());
+  /// Al elegir un valor, se limpian los niveles hijos (dependen del padre).
+  void _onValorSeleccionado(int index, ValorTipoPropiedad? valor) {
+    _valoresSeleccionados[index] = valor;
+    for (int j = index + 1; j < _valoresSeleccionados.length; j++) {
+      _valoresSeleccionados[j] = null;
     }
     setState(() {});
   }
 
   Future<void> _guardar() async {
-    if (_tipoRaizSeleccionado == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecciona un tipo de propiedad')));
+    if (!_esValido) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Selecciona la propiedad y completa todos los niveles')));
       return;
-    }
-    for (final c in _pathCtrlList) {
-      if (c.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Completa todos los campos')));
-        return;
-      }
     }
     setState(() => _guardando = true);
     try {
       final path = List.generate(
-        _nivelesActivos.length,
+        _niveles.length,
         (i) => {
-          'tipoId': _nivelesActivos[i].id,
-          'valor': _pathCtrlList[i].text.trim(),
+          'tipoId': _niveles[i].id,
+          'valor': _valoresSeleccionados[i]!.valor,
         },
       );
       final propiedadId = await PropiedadService.crearPropiedad(path);
@@ -807,53 +794,64 @@ class _AgregarPropiedadDialogState extends State<_AgregarPropiedadDialog> {
               ? Text(_error!,
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.error))
-              : _tiposRaiz.isEmpty
-                  ? const Text('No hay tipos de propiedad configurados.')
-                  : SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          DropdownButtonFormField<TipoPropiedadNodo>(
-                            initialValue: _tipoRaizSeleccionado,
-                            decoration: const InputDecoration(
-                                labelText: 'Tipo de propiedad *'),
-                            items: _tiposRaiz
-                                .map((t) => DropdownMenuItem(
-                                      value: t,
-                                      child: Text(t.nombre),
-                                    ))
-                                .toList(),
-                            onChanged: _onTipoRaizChanged,
-                          ),
-                          for (int i = 0;
-                              i < _nivelesActivos.length;
-                              i++) ...[
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _pathCtrlList[i],
-                              textCapitalization:
-                                  TextCapitalization.characters,
-                              decoration: InputDecoration(
-                                  labelText:
-                                      '${_nivelesActivos[i].nombre} *'),
-                              onFieldSubmitted: (_) => _onNivelLlenado(i),
-                              onChanged: (_) {
-                                if (_pathCtrlList[i].text.trim().isNotEmpty) {
-                                  _onNivelLlenado(i);
-                                }
-                              },
+              : _rutasFacturables.isEmpty
+                  ? const Text(
+                      'No hay unidades asignables configuradas.\nMarca un tipo como facturable en Configuración → Tipos de propiedad.')
+                  : SizedBox(
+                      width: double.maxFinite,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Dropdown solo con la unidad final asignable (ej. Apartamento)
+                            DropdownButtonFormField<List<TipoPropiedadNodo>>(
+                              initialValue: _rutaSeleccionada,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Tipo de propiedad *',
+                                prefixIcon: Icon(Icons.home_work_outlined),
+                                border: OutlineInputBorder(),
+                              ),
+                              hint: const Text('Selecciona la unidad...'),
+                              items: _rutasFacturables
+                                  .map((ruta) => DropdownMenuItem(
+                                        value: ruta,
+                                        child: Text(ruta.last.nombre),
+                                      ))
+                                  .toList(),
+                              onChanged: _onRutaChanged,
                             ),
+                            // Un buscador por cada nivel de la jerarquía (solo catálogo)
+                            for (int i = 0; i < _niveles.length; i++) ...[
+                              const SizedBox(height: 12),
+                              ValorPropiedadDropdown(
+                                key: ValueKey(
+                                    'nivel_${_niveles[i].id}_${i == 0 ? 'raiz' : _valoresSeleccionados[i - 1]?.id}'),
+                                label: _niveles[i].nombre,
+                                dependencyKey: i == 0
+                                    ? 'raiz'
+                                    : _valoresSeleccionados[i - 1]?.id,
+                                loader: () => PropiedadService.getValoresAdmin(
+                                  _niveles[i].id,
+                                  parentValorId: i == 0
+                                      ? null
+                                      : _valoresSeleccionados[i - 1]?.id,
+                                ),
+                                onChanged: (v) => _onValorSeleccionado(i, v),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancelar')),
-        if (!_cargando && _error == null && _tiposRaiz.isNotEmpty)
+        if (!_cargando && _error == null && _rutasFacturables.isNotEmpty)
           FilledButton(
-            onPressed: _guardando ? null : _guardar,
+            onPressed: (_guardando || !_esValido) ? null : _guardar,
             child: _guardando
                 ? const SizedBox(
                     width: 18,
