@@ -1,5 +1,3 @@
-/// Modelos del módulo Documentos de interés general.
-
 class ArchivoDocumentoModel {
   final int id;
   final String nombreOriginal;

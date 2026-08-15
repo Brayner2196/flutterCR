@@ -45,6 +45,7 @@ class _ConsejoActasScreenState extends State<ConsejoActasScreen> {
                   context,
                   MaterialPageRoute(builder: (_) => const GrabarActaScreen()),
                 );
+                // ignore: use_build_context_synchronously
                 if (mounted) context.read<ActaProvider>().cargar();
               },
               icon: const Icon(Icons.mic_rounded),

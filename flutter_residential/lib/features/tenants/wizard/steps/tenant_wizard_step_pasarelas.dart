@@ -206,7 +206,7 @@ class _PasarelaCardState extends State<_PasarelaCard> {
                   // Toggle
                   Switch(
                     value: p.habilitada,
-                    activeColor: color,
+                    activeThumbColor: color,
                     onChanged: (v) {
                       setState(() => p.habilitada = v);
                       widget.onCambio();

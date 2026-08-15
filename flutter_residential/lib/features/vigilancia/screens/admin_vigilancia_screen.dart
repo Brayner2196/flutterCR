@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:flutter_residential/shared/widgets/seccion_agrupadora.dart';
-import 'package:flutter_residential/shared/widgets/seccion_agrupadora_item_accion.dart';
 import 'package:flutter_residential/shared/widgets/seccion_agrupadora_item_switch.dart';
 import 'package:flutter_residential/shared/widgets/seccion_agrupadora_item_slider.dart';
 import '../models/config_vigilancia_model.dart';
