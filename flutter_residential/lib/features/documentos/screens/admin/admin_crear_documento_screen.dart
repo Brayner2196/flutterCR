@@ -228,15 +228,13 @@ class _AdminCrearDocumentoScreenState extends State<AdminCrearDocumentoScreen> {
   }
 
   Future<void> _agregarArchivos() async {
-    final resultado = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
+    final seleccion = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: _extensiones,
     );
-    if (resultado == null) return;
+    if (seleccion.isEmpty) return;
 
-    final rutas =
-        resultado.files.where((f) => f.path != null).map((f) => f.path!).toList();
+    final rutas = seleccion.where((f) => f.path != null).map((f) => f.path!).toList();
     if (rutas.isEmpty) return;
 
     if (_documento!.archivos.length + rutas.length > 10) {

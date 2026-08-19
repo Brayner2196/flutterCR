@@ -112,7 +112,7 @@ class NotificacionService {
     const iosSettings = DarwinInitializationSettings();
 
     await _localNotif.initialize(
-      const InitializationSettings(android: androidSettings, iOS: iosSettings),
+      settings: const InitializationSettings(android: androidSettings, iOS: iosSettings),
       // App en foreground → usuario toca la notificación local
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         debugPrint('[FCM] Tap en notificación local: ${response.payload}');
@@ -150,10 +150,10 @@ class NotificacionService {
       final notifId = DateTime.now().millisecondsSinceEpoch % 100000;
 
       _localNotif.show(
-        notifId,
-        notif.title,
-        notif.body,
-        NotificationDetails(
+        id: notifId,
+        title: notif.title,
+        body: notif.body,
+        notificationDetails:  NotificationDetails(
           android: AndroidNotificationDetails(
             _channelId,
             _channelName,
