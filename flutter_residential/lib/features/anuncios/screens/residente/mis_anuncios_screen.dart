@@ -43,7 +43,7 @@ class _MisAnunciosScreenState extends State<MisAnunciosScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         itemCount: provider.anuncios.length,
-                        separatorBuilder: (_, __) =>
+                        separatorBuilder: (_, _) =>
                             const SizedBox(height: AppSpacing.sm + 2),
                         itemBuilder: (_, i) => _AnuncioResidenteCard(
                           anuncio: provider.anuncios[i],

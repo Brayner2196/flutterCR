@@ -2,40 +2,28 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "CR — Dev (emulador)",
-      "request": "launch",
-      "type": "dart",
-      "args": [
-        "--dart-define=API_BASE_URL=http://10.0.2.2:8080",
-        "--dart-define=APP_ENV=dev"
-      ]
+      "name": "CR — Dev (local 8080)",
+      "request": "launch", "type": "dart",
+      "args": ["--dart-define=API_BASE_URL=http://10.0.2.2:8080",
+               "--dart-define=APP_ENV=dev"]
     },
     {
-      "name": "CR — DevServer (dispositivo físico)",
-      "request": "launch",
-      "type": "dart",
-      "args": [
-        "--dart-define=API_BASE_URL=https://cr-dev.up.railway.app",
-        "--dart-define=APP_ENV=dev"
-      ]
+      "name": "CR — Dev (Railway)",
+      "request": "launch", "type": "dart",
+      "args": ["--dart-define=API_BASE_URL=https://myproyectcrdev.up.railway.app",
+               "--dart-define=APP_ENV=dev"]
     },
     {
-      "name": "CR — Staging",
-      "request": "launch",
-      "type": "dart",
-      "args": [
-        "--dart-define=API_BASE_URL=https://cr-dev.up.railway.app",
-        "--dart-define=APP_ENV=staging"
-      ]
+      "name": "CR — Dev Web (Chrome)",
+      "request": "launch", "type": "dart", "deviceId": "chrome",
+      "args": ["--dart-define=API_BASE_URL=https://myproyectcrdev.up.railway.app",
+               "--dart-define=APP_ENV=dev"]
     },
     {
-      "name": "CR — Producción (solo lectura, no buildear aquí)",
-      "request": "launch",
-      "type": "dart",
-      "args": [
-        "--dart-define=API_BASE_URL=https://cr-dev.up.railway.app",
-        "--dart-define=APP_ENV=prod"
-      ]
+      "name": "CR — PROD ⚠️ datos reales",
+      "request": "launch", "type": "dart",
+      "args": ["--dart-define=API_BASE_URL=https://myproyectcrprod.up.railway.app",
+               "--dart-define=APP_ENV=prod"]
     }
   ]
 }

@@ -13,6 +13,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1
   http: ^1.6.0
+  web: ^1.0.0
   flutter_secure_storage: ^11.0.0
   shared_preferences: ^2.5.4
   toastification: ^3.0.3
@@ -51,6 +52,11 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icons/logocr.png"
+  web:
+    generate: true
+    image_path: "assets/icons/logocr.png"
+    background_color: "#FFFFFF"
+    theme_color: "#005F8F"
 
 flutter:
   uses-material-design: true

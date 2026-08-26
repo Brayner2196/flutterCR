@@ -1,0 +1,1 @@
+bool esSinConexion(Object e) => false;

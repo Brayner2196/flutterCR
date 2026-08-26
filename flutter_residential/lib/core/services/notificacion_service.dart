@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -313,5 +313,5 @@ class NotificacionService {
 
   // ─── Helper ───────────────────────────────────────────────────────────────
 
-  String _plataforma() => Platform.isAndroid ? 'ANDROID' : 'IOS';
+  String _plataforma() => defaultTargetPlatform == TargetPlatform.iOS ? 'IOS' : 'ANDROID';
 }

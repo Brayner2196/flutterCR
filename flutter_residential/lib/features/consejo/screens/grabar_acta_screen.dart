@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 
+import '../../../core/platform/archivo.dart'; // solo por borrarArchivo()
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/utils/app_toast.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../providers/acta_provider.dart';
@@ -55,6 +56,10 @@ class _GrabarActaScreenState extends State<GrabarActaScreen> {
     // Cerrar el teclado: abierto reduce la altura y puede ocultar los controles.
     FocusScope.of(context).unfocus();
 
+    if (kIsWeb) {
+      AppToast.info(context, 'Grabar actas no está disponible en la versión web todavía');
+      return;
+    }
     final dir = await getTemporaryDirectory();
     final ruta =
         '${dir.path}/acta_${DateTime.now().millisecondsSinceEpoch}.m4a';
@@ -132,7 +137,7 @@ class _GrabarActaScreenState extends State<GrabarActaScreen> {
 
     // El audio local ya no se necesita tras subirlo.
     try {
-      await File(ruta).delete();
+      await borrarArchivo(ruta);
     } catch (_) {}
 
     if (!mounted) return;
@@ -178,7 +183,7 @@ class _GrabarActaScreenState extends State<GrabarActaScreen> {
       _timer?.cancel();
       if (_rutaAudio != null) {
         try {
-          await File(_rutaAudio!).delete();
+          await borrarArchivo(_rutaAudio!);
         } catch (_) {}
       }
     }

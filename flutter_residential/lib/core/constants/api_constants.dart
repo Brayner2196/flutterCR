@@ -1,8 +1,10 @@
 
+import '../config/app_env.dart';
+
 class ApiConstants {
 
-  //static const String baseUrl = AppEnv.baseUrl;
-  static const String baseUrl = 'https://myproyectcrdev.up.railway.app';
+  static const String baseUrl = AppEnv.baseUrl;
+  //static const String baseUrl = 'https://myproyectcrdev.up.railway.app';
 
 
   // Auth

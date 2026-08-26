@@ -59,7 +59,7 @@ class _AdminAnunciosScreenState extends State<AdminAnunciosScreen> {
                             child: ListView.separated(
                               padding: const EdgeInsets.all(AppSpacing.md),
                               itemCount: provider.anuncios.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: AppSpacing.sm + 2),
                               itemBuilder: (_, i) => _AnuncioAdminCard(
                                 anuncio: provider.anuncios[i],
@@ -88,7 +88,7 @@ class _AdminAnunciosScreenState extends State<AdminAnunciosScreen> {
         padding:
             const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
         itemCount: estados.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) => ChoiceChip(
           label: Text(labels[i]),
           selected: _filtroEstado == estados[i],

@@ -1,11 +1,11 @@
 {
-    "name": "flutter_residential",
-    "short_name": "flutter_residential",
+    "name": "My CR",
+    "short_name": "My CR",
+    "description": "Gestión residencial My CR",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#005F8F",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

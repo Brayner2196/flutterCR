@@ -32,17 +32,15 @@ class AppEnv {
   /// Llama esto en main() antes de runApp().
   /// Falla rápido si alguien intenta hacer un build de release sin definir la URL.
   static void validate() {
-    assert(
-      baseUrl.isNotEmpty,
-      'API_BASE_URL no definida. '
-      'Usa --dart-define=API_BASE_URL=<url> al compilar.',
-    );
-    if (isProd) {
-      assert(
-        !baseUrl.contains('localhost') && !baseUrl.contains('10.0.2.2'),
-        'API_BASE_URL apunta a local pero APP_ENV=prod. '
-        'Verifica el comando de build.',
-      );
+    if (baseUrl.isEmpty) {
+      throw StateError('API_BASE_URL no definida. Usa --dart-define=API_BASE_URL=<url>.');
+    }
+    final esLocal = baseUrl.contains('localhost') || baseUrl.contains('10.0.2.2');
+    if (isProd && esLocal) {
+      throw StateError('APP_ENV=prod con API_BASE_URL local ($baseUrl). Revisa el build.');
+    }
+    if (isProd && baseUrl.startsWith('http://')) {
+      throw StateError('APP_ENV=prod exige https. Actual: $baseUrl');
     }
   }
 }

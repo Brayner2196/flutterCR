@@ -70,3 +70,8 @@ secrets.dart
 android/key.properties
 android/app/upload-keystore.jks
 android/app/release-keystore.jks
+
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+.firebase/

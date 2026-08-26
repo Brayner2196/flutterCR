@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../exceptions/session_expired_exception.dart';
 import '../storage/token_storage.dart';
+import 'net_error_web.dart';
 
 class ApiClient {
   static const _timeout = Duration(seconds: 15);
@@ -186,10 +186,13 @@ class ApiClient {
           res;
     } on SessionExpiredException {
       rethrow;
-    } on SocketException {
-      throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
       throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    } catch (e) {
+      if (esSinConexion(e) || e is http.ClientException) {
+        throw Exception('Sin conexión a internet. Verifica tu red.');
+      }
+      rethrow;
     }
   }
 
@@ -220,10 +223,13 @@ class ApiClient {
           res;
     } on SessionExpiredException {
       rethrow;
-    } on SocketException {
-      throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
       throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    } catch (e) {
+      if (esSinConexion(e) || e is http.ClientException) {
+        throw Exception('Sin conexión a internet. Verifica tu red.');
+      }
+      rethrow;
     }
   }
 
@@ -244,10 +250,13 @@ class ApiClient {
           res;
     } on SessionExpiredException {
       rethrow;
-    } on SocketException {
-      throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
       throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    } catch (e) {
+      if (esSinConexion(e) || e is http.ClientException) {
+        throw Exception('Sin conexión a internet. Verifica tu red.');
+      }
+      rethrow;
     }
   }
 
@@ -272,10 +281,13 @@ class ApiClient {
           res;
     } on SessionExpiredException {
       rethrow;
-    } on SocketException {
-      throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
       throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    } catch (e) {
+      if (esSinConexion(e) || e is http.ClientException) {
+        throw Exception('Sin conexión a internet. Verifica tu red.');
+      }
+      rethrow;
     }
   }
 
@@ -311,10 +323,13 @@ class ApiClient {
       return await _handleUnauthorized(res, enviar) ?? res;
     } on SessionExpiredException {
       rethrow;
-    } on SocketException {
-      throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
-      throw Exception('La subida tardó demasiado. Inténtalo de nuevo.');
+      throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    } catch (e) {
+      if (esSinConexion(e) || e is http.ClientException) {
+        throw Exception('Sin conexión a internet. Verifica tu red.');
+      }
+      rethrow;
     }
   }
 
@@ -352,10 +367,13 @@ class ApiClient {
       return await _handleUnauthorized(res, enviar) ?? res;
     } on SessionExpiredException {
       rethrow;
-    } on SocketException {
-      throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
-      throw Exception('La subida tardó demasiado. Inténtalo de nuevo.');
+      throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    } catch (e) {
+      if (esSinConexion(e) || e is http.ClientException) {
+        throw Exception('Sin conexión a internet. Verifica tu red.');
+      }
+      rethrow;
     }
   }
 
@@ -376,10 +394,13 @@ class ApiClient {
       return await _handleUnauthorized(res, enviar) ?? res;
     } on SessionExpiredException {
       rethrow;
-    } on SocketException {
-      throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
-      throw Exception('La descarga tardó demasiado. Inténtalo de nuevo.');
+      throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    } catch (e) {
+      if (esSinConexion(e) || e is http.ClientException) {
+        throw Exception('Sin conexión a internet. Verifica tu red.');
+      }
+      rethrow;
     }
   }
 
@@ -400,10 +421,13 @@ class ApiClient {
           res;
     } on SessionExpiredException {
       rethrow;
-    } on SocketException {
-      throw Exception('Sin conexión a internet. Verifica tu red.');
     } on TimeoutException {
       throw Exception('El servidor tardó demasiado. Inténtalo de nuevo.');
+    } catch (e) {
+      if (esSinConexion(e) || e is http.ClientException) {
+        throw Exception('Sin conexión a internet. Verifica tu red.');
+      }
+      rethrow;
     }
   }
 }

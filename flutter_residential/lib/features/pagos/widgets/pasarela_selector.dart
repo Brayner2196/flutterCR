@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../../../core/platform/checkout_web.dart';
 import '../models/pasarela_disponible_model.dart';
 import '../pasarelas/pasarela_factory.dart';
 import '../services/pasarela_service.dart';
@@ -80,8 +84,27 @@ class PasarelaSelector {
       return null;
     }
 
-    // 4. Abrir WebView
+        // 4. Abrir checkout
     if (!context.mounted) return null;
+
+    if (kIsWeb) {
+      final completer = Completer<void>();
+      final abierto = await abrirYEsperarRegreso(
+        checkout.checkoutUrl,
+        () async => completer.complete(),
+      );
+      if (!abierto) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se pudo abrir la pasarela de pago')),
+          );
+        }
+        return null;
+      }
+      await completer.future; // espera a que la pestaña se cierre
+      return ResultadoPago.procesando;
+    }
+
     final resultado = await Navigator.of(context).push<ResultadoPago>(
       MaterialPageRoute(
         builder: (_) => PasarelaWebViewScreen(

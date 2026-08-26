@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/core/services/notificacion_service.dart';
 import 'package:flutter_residential/features/usuarios/providers/app_provider.dart';
@@ -72,9 +73,14 @@ void main() async {
   AppEnv.validate();
   WidgetsFlutterBinding.ensureInitialized();
   DateFormatter.init(); // carga la base de zonas horarias (IANA)
-  await Firebase.initializeApp();
-  NotificacionService().configurarNavigator(navigatorKey);
-  await NotificacionService().inicializar();
+
+
+  if (!kIsWeb) {                          // ← MVP: solo móvil
+    await Firebase.initializeApp();
+    NotificacionService().configurarNavigator(navigatorKey);
+    await NotificacionService().inicializar();
+  }
+
   runApp(const MyApp());
 }
 
@@ -118,7 +124,7 @@ class MyApp extends StatelessWidget {
         child: Consumer<AppProvider>(
           builder: (_, AppProvider appProvider, __) {
             return MaterialApp(
-              title: 'My CR app',
+              title: 'My CR',
               debugShowCheckedModeBanner: false,
               navigatorKey: navigatorKey,
               themeMode: appProvider.themeMode,

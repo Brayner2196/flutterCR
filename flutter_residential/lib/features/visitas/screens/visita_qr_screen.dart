@@ -1,12 +1,10 @@
-import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:flutter_residential/core/utils/date_formatter.dart';
+import '../../../core/platform/archivo.dart';
 import '../../vigilancia/models/visita_model.dart';
 
 /// Muestra el QR de una visita para que el residente lo comparta con su invitado.
@@ -24,7 +22,7 @@ class _VisitaQrScreenState extends State<VisitaQrScreen> {
   final GlobalKey _qrKey = GlobalKey();
   bool _compartiendo = false;
 
-  Future<void> _compartir() async {
+    Future<void> _compartir() async {
     final v = widget.visita;
     setState(() => _compartiendo = true);
     try {
@@ -34,15 +32,11 @@ class _VisitaQrScreenState extends State<VisitaQrScreen> {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final bytes = byteData!.buffer.asUint8List();
 
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/visita_${v.codigo}.png');
-      await file.writeAsBytes(bytes);
-
       final mensaje = 'Visita para ${v.nombreVisitante}'
           '${v.propiedadIdentificador != null ? ' — unidad ${v.propiedadIdentificador}' : ''}.'
           ' Muestra este QR en portería. Código: ${v.codigo}';
 
-      await Share.shareXFiles([XFile(file.path)], text: mensaje);
+      await guardarYCompartir(bytes, 'visita_${v.codigo}.png', texto: mensaje);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

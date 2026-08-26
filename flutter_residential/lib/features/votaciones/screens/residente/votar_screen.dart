@@ -638,7 +638,7 @@ class _ResultadoOpcionRow extends StatelessWidget {
                 tween: Tween(begin: 0, end: pct),
                 duration: const Duration(milliseconds: 600),
                 curve: Curves.easeOut,
-                builder: (_, val, __) => LinearProgressIndicator(
+                builder: (_, val, _) => LinearProgressIndicator(
                   value: val,
                   minHeight: 8,
                   backgroundColor: esMiVoto

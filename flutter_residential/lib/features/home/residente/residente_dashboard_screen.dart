@@ -535,7 +535,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       return GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
+        crossAxisCount: 3,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.sm,
         childAspectRatio: 1.6,

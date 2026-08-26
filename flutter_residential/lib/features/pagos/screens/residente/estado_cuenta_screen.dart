@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/platform/checkout_web.dart';
 import '../../../../core/utils/celebracion.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../features/usuarios/providers/residente_estadisticas_provider.dart';
@@ -1310,11 +1314,37 @@ class _CobroCardState extends State<_CobroCard> {
   }
 
   /// Abre la WebView del pago, interpreta el resultado y notifica al padre.
-  Future<void> _abrirWebViewYNotificar(
+    Future<void> _abrirWebViewYNotificar(
     String url, {
     TipoPasarela tipoPasarela = TipoPasarela.mercadoPago,
   }) async {
     if (!mounted) return;
+
+        if (kIsWeb) {
+      final completer = Completer<void>();
+      final abierto = await abrirYEsperarRegreso(
+        url,
+        () async => completer.complete(),
+      );
+      if (!abierto) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se pudo abrir la pasarela de pago')),
+          );
+        }
+        return;
+      }
+      await completer.future;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verificando el pago...')),
+        );
+      }
+      await _notificarPagoExitoso();
+      return;
+    }
+
+    // ── Móvil: WebView nativo, comportamiento original sin cambios ────────
     final resultado = await Navigator.push<ResultadoPagoMP>(
       context,
       MaterialPageRoute(

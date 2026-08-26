@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/providers/base_provider.dart';
 import '../../../core/services/notificacion_service.dart';
 import '../../../core/storage/token_storage.dart';
@@ -214,10 +215,11 @@ class AuthProvider extends BaseProvider {
     // Paralelo real sin race: HTTP usa el token capturado (no lee storage),
     // así borrarSesion() corre al mismo tiempo sin causar 401.
     unawaited(Future.wait([
-      NotificacionService().eliminarTokenDelBackend(
-        token: tokenActual,
-        tenantId: tenantActual,
-      ),
+      if (!kIsWeb)
+        NotificacionService().eliminarTokenDelBackend(
+          token: tokenActual,
+          tenantId: tenantActual,
+        ),
       TokenStorage.borrarSesion(),
     ]));
   }
@@ -248,6 +250,6 @@ class AuthProvider extends BaseProvider {
     notifyListeners();
 
     // Registrar token FCM tras sesión exitosa (no bloquea si falla)
-    NotificacionService().registrarTokenEnBackend();
+    if (!kIsWeb) NotificacionService().registrarTokenEnBackend(); 
   }
 }
