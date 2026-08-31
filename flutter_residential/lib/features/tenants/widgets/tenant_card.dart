@@ -12,6 +12,15 @@ class TenantCard extends StatelessWidget {
   final TenantResponse tenant;
   final int? usuariosCount; // opcional, mock si no hay backend
   final VoidCallback onEditar;
+
+  /// Abre el panel de módulos parametrizables del conjunto.
+  final VoidCallback onModulos;
+
+  /// Borra todos los datos del conjunto conservando sus tablas y su admin.
+  final VoidCallback onVaciarDatos;
+
+  /// Elimina el conjunto por completo. Irreversible.
+  final VoidCallback onEliminarDefinitivo;
   final VoidCallback onDesactivar;
   final VoidCallback onActivar;
 
@@ -19,6 +28,9 @@ class TenantCard extends StatelessWidget {
     super.key,
     required this.tenant,
     required this.onEditar,
+    required this.onModulos,
+    required this.onVaciarDatos,
+    required this.onEliminarDefinitivo,
     required this.onDesactivar,
     required this.onActivar,
     this.usuariosCount,
@@ -188,6 +200,9 @@ class TenantCard extends StatelessWidget {
                   ),
                   onSelected: (value) {
                     if (value == 'editar') onEditar();
+                    if (value == 'modulos') onModulos();
+                    if (value == 'vaciar') onVaciarDatos();
+                    if (value == 'eliminar') onEliminarDefinitivo();
                     if (value == 'desactivar') onDesactivar();
                     if (value == 'activar') onActivar();
                   },
@@ -199,6 +214,16 @@ class TenantCard extends StatelessWidget {
                           Icon(Icons.edit_outlined, size: 18),
                           SizedBox(width: 10),
                           Text('Editar'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'modulos',
+                      child: Row(
+                        children: [
+                          Icon(Icons.extension_outlined, size: 18),
+                          SizedBox(width: 10),
+                          Text('Módulos'),
                         ],
                       ),
                     ),
@@ -228,6 +253,33 @@ class TenantCard extends StatelessWidget {
                           ],
                         ),
                       ),
+                    // Zona destructiva, separada del resto para que no se
+                    // toque por inercia al buscar "Editar".
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'vaciar',
+                      child: Row(
+                        children: [
+                          Icon(Icons.cleaning_services_outlined,
+                              size: 18, color: AppColors.danger),
+                          SizedBox(width: 10),
+                          Text('Borrar datos',
+                              style: TextStyle(color: AppColors.danger)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'eliminar',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_forever_outlined,
+                              size: 18, color: AppColors.danger),
+                          SizedBox(width: 10),
+                          Text('Eliminar conjunto',
+                              style: TextStyle(color: AppColors.danger)),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ],

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/celebracion.dart';
 import '../../models/cobro_model.dart';
 import '../../services/cobro_service.dart';
-import '../../widgets/pasarela_selector.dart';
+import '../../services/flujo_pago_service.dart';
 import 'pasarela_webview_screen.dart';
 import 'registrar_abono_screen.dart';
 
@@ -45,15 +45,15 @@ class _DetalleCobroScreenState extends State<DetalleCobroScreen> {
 
   // ─── Acción: Pagar (multi-pasarela) ──────────────────────────────────────
 
-  /// Delega al [PasarelaSelector] la selección de pasarela, creación de
+  /// Delega en [FlujoPagoService] la selección de pasarela, creación de
   /// checkout y apertura del WebView. Maneja el resultado localmente.
   Future<void> _iniciarPago() async {
     setState(() => _loadingMp = true);
     try {
-      final resultado = await PasarelaSelector.iniciarPago(
+      final resultado = await FlujoPagoService.pagarCobro(
         context: context,
         cobroId: cobro.id,
-        tituloCobro: cobro.anio != null
+        titulo: cobro.anio != null
             ? '${cobro.concepto} ${cobro.mes}/${cobro.anio}'
             : cobro.concepto,
       );

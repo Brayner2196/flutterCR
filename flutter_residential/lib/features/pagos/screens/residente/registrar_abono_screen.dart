@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/celebracion.dart';
 import '../../models/simular_abono_model.dart';
+import '../../widgets/distribucion_fifo_view.dart';
 import '../../providers/abono_provider.dart';
 import '../../services/abono_service.dart';
 
@@ -129,7 +130,10 @@ class _RegistrarAbonoScreenState extends State<RegistrarAbonoScreen> {
             ),
             if (_simulacion != null) ...[
               const SizedBox(height: 16),
-              _SimulacionCard(sim: _simulacion!),
+              DistribucionFifoView(
+                      simulacion: _simulacion!,
+                      titulo: 'Distribución del abono',
+                    ),
             ],
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
@@ -273,94 +277,6 @@ class _BannerSaldoPendiente extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Preview de distribución ─────────────────────────────────────
-
-class _SimulacionCard extends StatelessWidget {
-  final SimularAbonoModel sim;
-  const _SimulacionCard({required this.sim});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.primaryContainer.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(Icons.account_balance_wallet_outlined,
-                size: 18, color: cs.primary),
-            const SizedBox(width: 6),
-            Text('Distribución del abono',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: cs.primary)),
-          ]),
-          if (sim.saldoFavorPrevio > 0) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Saldo a favor previo: ${_fmt(sim.saldoFavorPrevio)}  →  Total disponible: ${_fmt(sim.totalDisponible)}',
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-            ),
-          ],
-          const SizedBox(height: 10),
-          ...sim.distribucion.map((m) => _FilaMovimiento(m: m)),
-          if (sim.saldoFavorResultante > 0) ...[
-            const Divider(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Saldo a tu favor',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.teal)),
-                Text(_fmt(sim.saldoFavorResultante),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.teal)),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
-}
-
-class _FilaMovimiento extends StatelessWidget {
-  final dynamic m;
-  const _FilaMovimiento({required this.m});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(
-            m.esSaldoFavor ? Icons.savings_outlined : Icons.check_circle_outline,
-            size: 16,
-            color: m.esSaldoFavor ? Colors.teal : Colors.green,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-              child: Text(m.descripcion,
-                  style: const TextStyle(fontSize: 13))),
-          Text(
-            '\$${m.montoAplicado.toStringAsFixed(0)}',
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           ),
         ],
       ),

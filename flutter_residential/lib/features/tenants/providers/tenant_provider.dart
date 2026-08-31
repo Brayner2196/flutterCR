@@ -1,4 +1,5 @@
 import '../../../core/providers/base_provider.dart';
+import '../models/operacion_destructiva_response.dart';
 import '../models/tenant_response.dart';
 import '../services/tenant_service.dart';
 
@@ -38,6 +39,40 @@ class TenantProvider extends BaseProvider {
   Future<void> activar(int id) async {
     await ejecutar(() => TenantService.activar(id));
     _actualizarEstado(id, activo: true);
+  }
+
+  // ─── Operaciones destructivas ────────────────────────────────────────────
+
+  /// Vacía los datos del conjunto. El conjunto SIGUE existiendo, así que no se
+  /// quita de la lista: solo se recarga para refrescar el conteo de usuarios.
+  Future<OperacionDestructivaResponse?> vaciarDatos({
+    required int id,
+    required String codigoConfirmacion,
+  }) async {
+    final resultado = await ejecutar(() => TenantService.vaciarDatos(
+          id: id,
+          codigoConfirmacion: codigoConfirmacion,
+        ));
+    if (resultado != null) {
+      await cargarTodos();
+    }
+    return resultado;
+  }
+
+  /// Elimina el conjunto por completo y lo saca de la lista en memoria, para
+  /// no dejar en pantalla una tarjeta que ya no existe en el servidor.
+  Future<OperacionDestructivaResponse?> eliminarDefinitivo({
+    required int id,
+    required String codigoConfirmacion,
+  }) async {
+    final resultado = await ejecutar(() => TenantService.eliminarDefinitivo(
+          id: id,
+          codigoConfirmacion: codigoConfirmacion,
+        ));
+    if (resultado != null) {
+      eliminar(_tenants, (t) => t.id == id);
+    }
+    return resultado;
   }
 
   void limpiarDatos() {

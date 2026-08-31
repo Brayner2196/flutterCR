@@ -21,6 +21,20 @@ class ApiConstants {
   static const String tenants = '/api/tenants';
   static const String tenantsReprovisionar = '/api/tenants/reprovisionar';
 
+  // Módulos parametrizables
+  // Usuario del conjunto: qué módulos tiene habilitados su conjunto
+  static const String misModulos = '/api/mi-conjunto/modulos';
+  // Super Admin: catálogo y toggle de módulos por conjunto (GET y PATCH)
+  static String tenantModulos(int tenantId) => '/api/tenants/$tenantId/modulos';
+
+  // Super Admin — operaciones destructivas sobre un conjunto.
+  // Son POST y no DELETE porque llevan body de confirmación (el cliente HTTP
+  // de la app no envía body en un DELETE).
+  static String tenantVaciarDatos(int tenantId) =>
+      '/api/tenants/$tenantId/vaciar-datos';
+  static String tenantEliminarDefinitivo(int tenantId) =>
+      '/api/tenants/$tenantId/eliminar-definitivo';
+
   // Cartera — configuración de estados (admin)
   static const String carteraEstados = '/api/admin/cartera/estados';
   static const String carteraSeed = '/api/admin/cartera/seed';
@@ -96,6 +110,8 @@ class ApiConstants {
   // Pasarelas de pago (multi-pasarela unificado)
   static const String pasarelasDisponibles = '/api/residente/pago/pasarelas';
   static String pagoCheckout(int cobroId) => '/api/residente/pago/checkout/$cobroId';
+  /// Checkout de toda la deuda de una propiedad (reparto FIFO en el backend).
+  static const String pagoCheckoutDeuda = '/api/residente/pago/checkout-deuda';
 
   // Admin — gestión de pasarelas
   static const String adminPasarelas = '/api/admin/pasarelas';

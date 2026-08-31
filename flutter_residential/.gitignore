@@ -75,3 +75,5 @@ android/app/release-keystore.jks
 firebase-debug.log
 firebase-debug.*.log
 .firebase/
+# Widget Preview related
+.widget_preview/

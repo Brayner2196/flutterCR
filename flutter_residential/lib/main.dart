@@ -32,6 +32,7 @@ import 'features/consejo/providers/acta_provider.dart';
 import 'features/vigilancia/providers/vigilancia_provider.dart';
 import 'features/visitas/providers/visita_provider.dart';
 import 'features/paquetes_residente/providers/paquete_residente_provider.dart';
+import 'features/modulos/providers/modulos_provider.dart';
 import 'core/config/app_env.dart';
 import 'core/utils/date_formatter.dart';
 import 'core/network/api_client.dart';
@@ -119,6 +120,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VigilanciaProvider()),
         ChangeNotifierProvider(create: (_) => VisitaProvider()),
         ChangeNotifierProvider(create: (_) => PaqueteResidenteProvider()),
+        // Módulos habilitados del conjunto — se carga apenas hay sesión.
+        ChangeNotifierProvider(create: (_) => ModulosProvider()),
       ],
       child: ToastificationWrapper(
         child: Consumer<AppProvider>(

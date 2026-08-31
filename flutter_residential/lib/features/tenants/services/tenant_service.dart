@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
+import '../models/operacion_destructiva_response.dart';
 import '../models/tenant_response.dart';
 
 class TenantService {
@@ -75,6 +76,63 @@ class TenantService {
       final body = jsonDecode(response.body);
       throw Exception(body['message'] ?? 'Error al activar tenant');
     }
+  }
+
+  // ─── Operaciones destructivas ────────────────────────────────────────────
+
+  /// Vacía TODOS los datos del conjunto conservando sus tablas y su
+  /// administrador. [codigoConfirmacion] debe ser el código exacto del
+  /// conjunto; si no coincide, el backend responde 400.
+  static Future<OperacionDestructivaResponse> vaciarDatos({
+    required int id,
+    required String codigoConfirmacion,
+  }) async {
+    return _operacionDestructiva(
+      ApiConstants.tenantVaciarDatos(id),
+      codigoConfirmacion,
+      'Error al vaciar los datos del conjunto',
+    );
+  }
+
+  /// Elimina el conjunto POR COMPLETO: schema, identidades, tokens y
+  /// pasarelas. Irreversible.
+  static Future<OperacionDestructivaResponse> eliminarDefinitivo({
+    required int id,
+    required String codigoConfirmacion,
+  }) async {
+    return _operacionDestructiva(
+      ApiConstants.tenantEliminarDefinitivo(id),
+      codigoConfirmacion,
+      'Error al eliminar el conjunto',
+    );
+  }
+
+  /// Las dos operaciones destructivas comparten contrato: mismo body de
+  /// confirmación y misma respuesta. Se factoriza para no duplicar el parseo
+  /// ni el manejo de error.
+  static Future<OperacionDestructivaResponse> _operacionDestructiva(
+    String ruta,
+    String codigoConfirmacion,
+    String mensajeError,
+  ) async {
+    final response = await ApiClient.post(
+      ruta,
+      {'codigoConfirmacion': codigoConfirmacion},
+      requiresAuth: true,
+    );
+
+    if (response.statusCode == 200) {
+      return OperacionDestructivaResponse.fromJson(
+          jsonDecode(response.body) as Map<String, dynamic>);
+    }
+
+    // El body puede no ser JSON (500/HTML): parseo defensivo.
+    String msg = '$mensajeError (HTTP ${response.statusCode})';
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map && body['message'] != null) msg = body['message'].toString();
+    } catch (_) {}
+    throw Exception(msg);
   }
 
   /// Re-provisiona el esquema de todos los tenants (crea tablas faltantes).

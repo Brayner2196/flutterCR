@@ -4,10 +4,13 @@ import 'package:flutter_residential/features/tenants/widgets/mod_layout_table.da
 import 'package:flutter_residential/features/tenants/widgets/tenant_form_insert_edit_dialog.dart';
 import 'package:flutter_residential/features/tenants/widgets/tenant_layout_switcher.dart';
 import 'package:flutter_residential/features/tenants/widgets/tenants_error_view.dart';
+import 'package:flutter_residential/features/tenants/screens/tenant_modulos_screen.dart';
+import 'package:flutter_residential/shared/dialogs/confirmacion_destructiva_dialog.dart';
 import 'package:flutter_residential/features/tenants/wizard/tenant_wizard_screen.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../providers/tenant_provider.dart';
+import '../models/operacion_destructiva_response.dart';
 import '../models/tenant_response.dart';
 import '../widgets/tenant_card.dart';
 import '../widgets/tenant_header_widget.dart';
@@ -44,6 +47,114 @@ class _TenantsScreenState extends State<TenantsScreen> {
   void _abrirWizardCrear() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const TenantWizardScreen()),
+    );
+  }
+
+  // ─── Acciones destructivas ────────────────────────────────────────────────
+
+  /// Borra los datos del conjunto conservando sus tablas y su administrador.
+  Future<void> _confirmarVaciarDatos(TenantResponse tenant) async {
+    final confirmado = await ConfirmacionDestructivaDialog.mostrar(
+      context,
+      titulo: 'Borrar datos de "${tenant.nombre}"',
+      mensaje:
+          'Se borrarán TODOS los datos del conjunto. Las tablas quedan intactas '
+          'y vacías, listas para volver a usarse.',
+      consecuencias: const [
+        'Residentes, inquilinos y vigilantes',
+        'Cobros, pagos, abonos y estados de cartera',
+        'Propiedades, unidades y tipos de propiedad',
+        'PQRs, reservas, votaciones, anuncios y documentos',
+        'Toda la parametrización del conjunto',
+        'Los módulos quedan apagados',
+      ],
+      conservado: const [
+        'El administrador del conjunto y su acceso',
+        'La estructura de tablas en la base de datos',
+        'El conjunto en sí (no se elimina)',
+      ],
+      textoEsperado: tenant.codigo,
+      etiquetaBoton: 'Borrar datos',
+    );
+    if (confirmado != true || !mounted) return;
+
+    await _ejecutarDestructiva(
+      () => context.read<TenantProvider>().vaciarDatos(
+            id: tenant.id,
+            codigoConfirmacion: tenant.codigo,
+          ),
+    );
+  }
+
+  /// Elimina el conjunto por completo. Irreversible.
+  Future<void> _confirmarEliminarDefinitivo(TenantResponse tenant) async {
+    final confirmado = await ConfirmacionDestructivaDialog.mostrar(
+      context,
+      titulo: 'Eliminar "${tenant.nombre}"',
+      mensaje:
+          'Se elimina el conjunto POR COMPLETO. Esta acción no se puede deshacer '
+          'y no hay papelera: la única forma de recuperarlo es un respaldo de la '
+          'base de datos.',
+      consecuencias: const [
+        'El esquema completo del conjunto y todas sus tablas',
+        'Todos sus usuarios y sus credenciales de acceso',
+        'Sus pasarelas de pago configuradas',
+        'Todo su histórico financiero',
+      ],
+      conservado: const [
+        'Nada del conjunto. El código y el esquema quedan libres para reusarse',
+      ],
+      textoEsperado: tenant.codigo,
+      etiquetaBoton: 'Eliminar definitivamente',
+    );
+    if (confirmado != true || !mounted) return;
+
+    await _ejecutarDestructiva(
+      () => context.read<TenantProvider>().eliminarDefinitivo(
+            id: tenant.id,
+            codigoConfirmacion: tenant.codigo,
+          ),
+    );
+  }
+
+  /// Corre la operación con indicador de progreso y muestra el resultado.
+  /// Las dos acciones comparten este flujo: solo cambia la llamada.
+  Future<void> _ejecutarDestructiva(
+    Future<OperacionDestructivaResponse?> Function() operacion,
+  ) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    OperacionDestructivaResponse? resultado;
+    String? error;
+    try {
+      resultado = await operacion();
+      if (resultado == null) {
+        error = context.read<TenantProvider>().error ?? 'La operación no se completó';
+      }
+    } catch (e) {
+      error = e.toString().replaceFirst('Exception: ', '');
+    }
+
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop(); // cierra el progreso
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: Duration(seconds: error != null ? 8 : 4),
+      backgroundColor:
+          error != null ? Theme.of(context).colorScheme.error : AppColors.ok,
+      content: Text(error ?? resultado!.resumen),
+    ));
+  }
+
+  /// Abre el panel de módulos parametrizables del conjunto.
+  void _abrirModulos(TenantResponse tenant) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => TenantModulosScreen(tenant: tenant)),
     );
   }
 
@@ -268,6 +379,9 @@ class _TenantsScreenState extends State<TenantsScreen> {
                               onEditar: () => _abrirDialogEditar(t),
                               onDesactivar: () => _confirmarDesactivar(t),
                               onActivar: () => _confirmarActivar(t),
+                              onModulos: () => _abrirModulos(t),
+                              onVaciarDatos: () => _confirmarVaciarDatos(t),
+                              onEliminarDefinitivo: () => _confirmarEliminarDefinitivo(t),
                             );
                           },
                           childCount: lista.length,
@@ -287,6 +401,9 @@ class _TenantsScreenState extends State<TenantsScreen> {
                             onEditar: () => _abrirDialogEditar(t),
                             onDesactivar: () => _confirmarDesactivar(t),
                             onActivar: () => _confirmarActivar(t),
+                            onModulos: () => _abrirModulos(t),
+                            onVaciarDatos: () => _confirmarVaciarDatos(t),
+                            onEliminarDefinitivo: () => _confirmarEliminarDefinitivo(t),
                           );
                         },
                       ),

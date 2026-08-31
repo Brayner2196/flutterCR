@@ -48,6 +48,37 @@ class PasarelaService {
     throw Exception(errorBody['message'] ?? 'Error al iniciar el pago');
   }
 
+  /// Crea un checkout por TODA la deuda de una propiedad.
+  ///
+  /// A diferencia de [crearCheckout], no apunta a un cobro: el backend crea un abono,
+  /// y cuando la pasarela confirma lo reparte entre los cobros pendientes del más
+  /// antiguo al más nuevo. [monto] null = deuda completa menos el saldo a favor.
+  static Future<CheckoutResponseModel> crearCheckoutDeuda(
+    int propiedadId,
+    TipoPasarela pasarela, {
+    double? monto,
+  }) async {
+    final body = <String, dynamic>{
+      'pasarela': pasarela.backendValue,
+      'propiedadId': propiedadId,
+      if (monto != null) 'monto': monto,
+    };
+
+    final res = await ApiClient.post(
+      ApiConstants.pagoCheckoutDeuda,
+      body,
+      requiresAuth: true,
+    );
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return CheckoutResponseModel.fromJson(
+        jsonDecode(res.body) as Map<String, dynamic>,
+      );
+    }
+    final errorBody = jsonDecode(res.body) as Map<String, dynamic>;
+    throw Exception(errorBody['message'] ?? 'Error al iniciar el pago de la deuda');
+  }
+
   /// Confirma un pago de MercadoPago desde la app (interceptado en el WebView).
   /// Requiere auth para que el backend pueda resolver la config del tenant desde el JWT.
   /// suppressSessionExpiry: true → si el JWT expiró durante el checkout no cierra la sesión;

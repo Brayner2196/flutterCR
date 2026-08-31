@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../inquilinos/providers/inquilino_permisos_provider.dart';
+import '../../modulos/providers/modulos_provider.dart';
+import '../../../core/enums/modulo.dart';
 import '../../usuarios/providers/residente_estadisticas_provider.dart';
 import '../../anuncios/providers/anuncio_provider.dart';
 import '../../pqr/providers/pqr_provider.dart';
@@ -51,22 +53,33 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       final permisos = context.read<InquilinoPermisosProvider>();
+      final modulos = context.read<ModulosProvider>();
       final propProvider = context.read<PropiedadProvider>();
 
-      if (auth.isPropietario || permisos.tienePermiso('ANUNCIOS')) {
+      // Doble condición en cada carga: el módulo debe estar contratado por el
+      // conjunto Y el usuario debe tener el permiso. Si el módulo está
+      // apagado ni siquiera se dispara la petición: el backend respondería
+      // 403 y solo ensuciaría los logs.
+      if (modulos.activo(Modulo.anuncios) &&
+          (auth.isPropietario || permisos.tienePermiso('ANUNCIOS'))) {
         context.read<AnuncioProvider>().cargarResidente();
       }
-      if (auth.isPropietario || permisos.tienePermiso('PQRS')) {
+      if (modulos.activo(Modulo.pqr) &&
+          (auth.isPropietario || permisos.tienePermiso('PQRS'))) {
         context.read<PqrProvider>().cargarMisPqrs();
       }
-      if (auth.isPropietario || permisos.tienePermiso('VOTAR')) {
+      if (modulos.activo(Modulo.votaciones) &&
+          (auth.isPropietario || permisos.tienePermiso('VOTAR'))) {
         context.read<VotacionProvider>().cargarResidente();
       }
-      if (auth.isPropietario || permisos.tienePermiso('ESTADO_CUENTA')) {
+      if (modulos.activo(Modulo.planesPago) &&
+          (auth.isPropietario || permisos.tienePermiso('ESTADO_CUENTA'))) {
         context.read<PlanPagoProvider>().cargarConfigResidente();
         context.read<PlanPagoProvider>().cargarMisPlanes();
       }
-      context.read<PresupuestoProvider>().cargarActivo();
+      if (modulos.activo(Modulo.presupuesto)) {
+        context.read<PresupuestoProvider>().cargarActivo();
+      }
 
       final pid = propProvider.propiedadActual?.propiedadId;
       if (pid != null) {
@@ -153,6 +166,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
     final permisos = context.watch<InquilinoPermisosProvider>();
+    final modulos = context.watch<ModulosProvider>();
     final stats = context.watch<ResidenteEstadisticasProvider>();
     final anuncios = context.watch<AnuncioProvider>();
     final pqrs = context.watch<PqrProvider>();
@@ -177,13 +191,18 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
         if (esPropietario || permisos.tienePermiso('ESTADO_CUENTA')) {
           await stats.cargar(propiedadId: pid);
         }
-        if (esPropietario || permisos.tienePermiso('ANUNCIOS')) {
+        if (modulos.activo(Modulo.anuncios) &&
+            (esPropietario || permisos.tienePermiso('ANUNCIOS'))) {
           await anuncios.cargarResidente();
         }
-        if (!esParqueadero && (esPropietario || permisos.tienePermiso('PQRS'))) {
+        if (!esParqueadero &&
+            modulos.activo(Modulo.pqr) &&
+            (esPropietario || permisos.tienePermiso('PQRS'))) {
           await pqrs.cargarMisPqrs();
         }
-        if (!esParqueadero && (esPropietario || permisos.tienePermiso('VOTAR'))) {
+        if (!esParqueadero &&
+            modulos.activo(Modulo.votaciones) &&
+            (esPropietario || permisos.tienePermiso('VOTAR'))) {
           await votaciones.cargarResidente();
         }
       },
@@ -278,6 +297,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
               esPropietario: esPropietario,
               esParqueadero: esParqueadero,
               permisos: permisos,
+              modulos: modulos,
               anuncios: anuncios,
               pqrs: pqrs,
               votaciones: votaciones,
@@ -294,12 +314,21 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     required bool esPropietario,
     required bool esParqueadero,
     required InquilinoPermisosProvider permisos,
+    required ModulosProvider modulos,
     required AnuncioProvider anuncios,
     required PqrProvider pqrs,
     required VotacionProvider votaciones,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    bool puede(String permiso) {
+    /// Tres capas independientes que deben pasar TODAS:
+    ///   1. módulo  — qué contrató el conjunto (lo decide el SUPER_ADMIN)
+    ///   2. tipo de propiedad — un parqueadero no reserva ni vota
+    ///   3. permiso — qué le dejó ver el propietario a su inquilino
+    ///
+    /// [modulo] es opcional: los accesos del núcleo (estado de cuenta) no
+    /// dependen de ningún módulo y se llaman sin él.
+    bool puede(String permiso, [Modulo? modulo]) {
+      if (modulo != null && !modulos.activo(modulo)) return false;
       if (esParqueadero) {
         const permitidosParqueadero = {'ESTADO_CUENTA', 'PQRS', 'ANUNCIOS'};
         if (!permitidosParqueadero.contains(permiso)) return false;
@@ -325,7 +354,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    if (!esParqueadero && puede('RESERVAS')) {
+    if (!esParqueadero && puede('RESERVAS', Modulo.reservas)) {
       final palette =  PaletteQuickAccessCard.resolve(AppColors.bgOrange, AppColors.orange, isDark);
       cards.add(QuickAccessCard(
         label: 'Reservas',
@@ -340,7 +369,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    if (puede('PQRS')) {
+    if (puede('PQRS', Modulo.pqr)) {
       final palette =  PaletteQuickAccessCard.resolve(AppColors.bgPurple, AppColors.purple, isDark);
       cards.add(QuickAccessCard(
         label: 'PQRs',
@@ -358,7 +387,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    if (puede('ANUNCIOS')) {
+    if (puede('ANUNCIOS', Modulo.anuncios)) {
       final palette =  PaletteQuickAccessCard.resolve(AppColors.bgGreen, AppColors.green, isDark);
       cards.add(QuickAccessCard(
         label: 'Anuncios',
@@ -377,7 +406,8 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     // Documentos de interés general: visible para propietarios e inquilinos.
-    if (esPropietario || permisos.tienePermiso('DOCUMENTOS')) {
+    if (modulos.activo(Modulo.documentos) &&
+        (esPropietario || permisos.tienePermiso('DOCUMENTOS'))) {
       final palette =
           PaletteQuickAccessCard.resolve(AppColors.bgBlue, AppColors.blue, isDark);
       cards.add(QuickAccessCard(
@@ -393,7 +423,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    if (!esParqueadero && puede('VOTAR')) {
+    if (!esParqueadero && puede('VOTAR', Modulo.votaciones)) {
       final palette =  PaletteQuickAccessCard.resolve(AppColors.bgYellow, AppColors.yellow, isDark);
       cards.add(QuickAccessCard(
         label: 'Votaciones',
@@ -413,7 +443,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       ));
     }
 
-    if (!esParqueadero && puede('MARKETPLACE')) {
+    if (!esParqueadero && puede('MARKETPLACE', Modulo.marketplace)) {
       final palette =  PaletteQuickAccessCard.resolve(AppColors.bgTeal, AppColors.teal, isDark);
       cards.add(QuickAccessCard(
         label: 'Marketplace',
@@ -429,7 +459,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     // Visitas con QR — propietario siempre; inquilino con permiso VISITAS
-    if (!esParqueadero && puede('VISITAS')) {
+    if (!esParqueadero && puede('VISITAS', Modulo.visitas)) {
       final palette =  PaletteQuickAccessCard.resolve(AppColors.bgCoral, AppColors.coral, isDark);
       cards.add(QuickAccessCard(
         label: 'Visitas',
@@ -445,20 +475,25 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     // Paquetería recibida en portería
-    final palette =  PaletteQuickAccessCard.resolve(AppColors.bgSlate, AppColors.slate, isDark);
-    cards.add(QuickAccessCard(
-      label: 'Paquetes',
-      subtitulo: 'Correspondencia en portería',
-      icono: Icons.inventory_2_outlined,
-      bg: palette.bg,
-      fg: palette.fg,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const MisPaquetesScreen()),
-      ),
-    ));
+    if (modulos.activo(Modulo.paquetes)) {
+      final palette =
+          PaletteQuickAccessCard.resolve(AppColors.bgSlate, AppColors.slate, isDark);
+      cards.add(QuickAccessCard(
+        label: 'Paquetes',
+        subtitulo: 'Correspondencia en portería',
+        icono: Icons.inventory_2_outlined,
+        bg: palette.bg,
+        fg: palette.fg,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MisPaquetesScreen()),
+        ),
+      ));
+    }
 
-    if (!esParqueadero && puede('ESTADO_CUENTA')) {
+    if (!esParqueadero &&
+        modulos.activo(Modulo.planesPago) &&
+        puede('ESTADO_CUENTA')) {
       final planProvider = context.read<PlanPagoProvider>();
       final tienePlan = planProvider.planes.any((p) => p.esActivo || p.esPendiente);
       final moduloActivo = planProvider.config.activo;
@@ -480,7 +515,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       }
     }
 
-    if (!esParqueadero) {
+    if (!esParqueadero && modulos.activo(Modulo.presupuesto)) {
       final presupuestoProvider = context.read<PresupuestoProvider>();
       if (presupuestoProvider.activo != null) {
         final p = presupuestoProvider.activo!;
@@ -500,7 +535,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       }
     }
 
-    if (propiedadActual != null) {
+    if (propiedadActual != null && modulos.activo(Modulo.parqueaderos)) {
       final palette =  PaletteQuickAccessCard.resolve(AppColors.bgCyan, AppColors.cyan, isDark);
       final cardParqueadero = QuickAccessCard(
         label: esParqueadero ? 'Mi Parqueadero' : 'Parqueaderos',

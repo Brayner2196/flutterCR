@@ -109,7 +109,11 @@ class _FilaMovimiento extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final titulo = mov.esPago ? 'Pago' : 'Abono';
+    final titulo = mov.esPago
+        ? 'Pago'
+        : mov.esSaldoFavor
+            ? 'Saldo a favor'
+            : 'Abono';
     final metodo = mov.metodoPago != null
         ? ' · ${MetodoPagoIcon.nombreLegible(mov.metodoPago)}'
         : '';

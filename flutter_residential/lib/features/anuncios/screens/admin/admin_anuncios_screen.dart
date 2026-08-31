@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/anuncio_provider.dart';
 import '../../models/anuncio_model.dart';
 import '../../utils/fecha_relativa.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../../../shared/widgets/estado_badge.dart';
@@ -136,6 +137,12 @@ class _AnuncioAdminCard extends StatelessWidget {
     final fraccion =
         maxVistas == 0 ? 0.0 : (anuncio.totalVistas / maxVistas).clamp(0.0, 1.0);
 
+    // Esta pantalla la abren dos roles: el administrador del conjunto y el
+    // consejero (desde su propio dashboard). El backend reserva ver las
+    // estadísticas de vistas y eliminar anuncios al TENANT_ADMIN, así que esas
+    // dos acciones se ocultan al consejero en vez de dejarlo chocar con un 403.
+    final esAdmin = context.watch<AuthProvider>().isAdmin;
+
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -143,11 +150,14 @@ class _AnuncioAdminCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.card),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (_) => AdminVistasAnuncioScreen(anuncio: anuncio)),
-        ),
+        // Sin permiso para ver estadísticas, la tarjeta no es tocable.
+        onTap: esAdmin
+            ? () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => AdminVistasAnuncioScreen(anuncio: anuncio)),
+                )
+            : null,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
@@ -240,10 +250,11 @@ class _AnuncioAdminCard extends StatelessWidget {
                             value: 'ARCHIVADO', child: Text('Archivar')),
                       const PopupMenuItem(
                           value: 'EDITAR', child: Text('Editar')),
-                      const PopupMenuItem(
-                          value: 'ELIMINAR',
-                          child: Text('Eliminar',
-                              style: TextStyle(color: Colors.red))),
+                      if (esAdmin)
+                        const PopupMenuItem(
+                            value: 'ELIMINAR',
+                            child: Text('Eliminar',
+                                style: TextStyle(color: Colors.red))),
                     ],
                   ),
                 ],

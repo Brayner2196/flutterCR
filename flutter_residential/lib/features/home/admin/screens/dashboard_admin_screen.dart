@@ -14,6 +14,8 @@ import 'package:flutter_residential/features/presupuesto/screens/admin/admin_pre
 import 'package:flutter_residential/features/parqueaderos/screens/admin/admin_parqueaderos_screen.dart';
 import 'package:flutter_residential/features/consejo/screens/admin_consejo_screen.dart';
 import 'package:flutter_residential/features/vigilancia/screens/admin_vigilancia_screen.dart';
+import 'package:flutter_residential/core/enums/modulo.dart';
+import 'package:flutter_residential/features/modulos/providers/modulos_provider.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
@@ -45,6 +47,10 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Módulos habilitados en el conjunto. Un módulo apagado no se muestra
+    // deshabilitado: se oculta, porque un candado sobre algo que el conjunto
+    // no contrató solo genera preguntas a la administración.
+    final modulos = context.watch<ModulosProvider>();
     return RefreshIndicator(
       onRefresh: () => context.read<DashboardProvider>().refrescar(),
       child: SingleChildScrollView(
@@ -54,10 +60,16 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
               child: KpiCarouselDashboard(
-                onTapPqrs: () => _abrir(const AdminPqrsScreen()),
+                // Con el módulo apagado el KPI queda sin acción en vez de
+                // navegar a una pantalla que el backend va a rechazar con 403.
+                onTapPqrs: modulos.activo(Modulo.pqr)
+                    ? () => _abrir(const AdminPqrsScreen())
+                    : null,
                 onTapPagos: () => _abrir(const AdminVerificarPagosScreen()),
                 onTapComprobantes: () => _abrir(const AdminVerificarPagosScreen()),
-                onTapReservas: () => _abrir(const AdminReservasScreen()),
+                onTapReservas: modulos.activo(Modulo.reservas)
+                    ? () => _abrir(const AdminReservasScreen())
+                    : null,
               ),
             ),
             const SizedBox(height: 20),
@@ -88,7 +100,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: AppColors.green,
                   onTap: () => _abrir(const CobrosHubScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.pqr))
+                  QuickAccessCardData(
                   title: 'PQRs',
                   icon: Icons.forum_outlined,
                   backgroundColor: _bgOrange,
@@ -97,7 +110,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: _orange,
                   onTap: () => _abrir(const AdminPqrsScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.reservas))
+                  QuickAccessCardData(
                   title: 'Reservas',
                   icon: Icons.event_available,
                   backgroundColor: AppColors.bgYellow,
@@ -115,7 +129,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: _orange,
                   onTap: () => _abrir(const CobrosHubScreen(initialTab: 1)),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.anuncios))
+                  QuickAccessCardData(
                   title: 'Anuncios',
                   icon: Icons.campaign_outlined,
                   backgroundColor: AppColors.bgYellow,
@@ -124,7 +139,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: AppColors.yellow,
                   onTap: () => _abrir(const AdminAnunciosScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.documentos))
+                  QuickAccessCardData(
                   title: 'Documentos',
                   icon: Icons.folder_copy_outlined,
                   backgroundColor: AppColors.bgBlue,
@@ -133,7 +149,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: AppColors.blue,
                   onTap: () => _abrir(const AdminDocumentosScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.votaciones))
+                  QuickAccessCardData(
                   title: 'Votaciones',
                   icon: Icons.how_to_vote_outlined,
                   backgroundColor: _bgTeal,
@@ -142,7 +159,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: _teal,
                   onTap: () => _abrir(const AdminVotacionesScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.presupuesto))
+                  QuickAccessCardData(
                   title: 'Presupuesto',
                   icon: Icons.account_balance_outlined,
                   backgroundColor: AppColors.bgGreen,
@@ -151,7 +169,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: AppColors.ok,
                   onTap: () => _abrir(const AdminPresupuestosScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.parqueaderos))
+                  QuickAccessCardData(
                   title: 'Parqueaderos',
                   icon: Icons.local_parking,
                   backgroundColor: AppColors.bgBlue,
@@ -160,7 +179,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: AppColors.blue,
                   onTap: () => _abrir(const AdminParqueaderosScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.consejo))
+                  QuickAccessCardData(
                   title: 'Consejo',
                   icon: Icons.gavel_rounded,
                   backgroundColor: AppColors.bgPurple,
@@ -169,7 +189,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: AppColors.purple,
                   onTap: () => _abrir(const AdminConsejoScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.planesPago))
+                  QuickAccessCardData(
                   title: 'Planes de pago',
                   icon: Icons.calendar_month_outlined,
                   backgroundColor: AppColors.bgOrange,
@@ -178,7 +199,8 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   colorText: AppColors.orange,
                   onTap: () => _abrir(const AdminPlanesPagoScreen()),
                 ),
-                QuickAccessCardData(
+                if (modulos.activo(Modulo.vigilancia))
+                  QuickAccessCardData(
                   title: 'Vigilancia',
                   icon: Icons.shield_outlined,
                   backgroundColor: AppColors.bgBlue,

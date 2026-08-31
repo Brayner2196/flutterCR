@@ -7,6 +7,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import '../constants/api_constants.dart';
 import '../network/api_client.dart';
+import '../enums/modulo.dart';
+import '../../features/modulos/providers/modulos_provider.dart';
 
 // ─── Pantallas admin ──────────────────────────────────────────────────────────
 import '../../features/pagos/screens/admin/cobros_hub_screen.dart';
@@ -266,8 +268,42 @@ class NotificacionService {
         debugPrint('[FCM] Ruta desconocida: $ruta — solo se abre la app');
     }
 
+    // Una notificación de un módulo que el conjunto apagó (por ejemplo,
+    // encolada antes del cambio) no debe abrir una pantalla que el backend va
+    // a rechazar con 403: se ignora la navegación y la app solo se abre.
+    final moduloRuta = _moduloDeRuta(ruta);
+    if (moduloRuta != null) {
+      try {
+        if (!ctx.read<ModulosProvider>().activo(moduloRuta)) {
+          debugPrint('[FCM] Módulo ${moduloRuta.codigo} deshabilitado — no se navega');
+          return;
+        }
+      } catch (_) {
+        // Provider aún no montado: se deja pasar y, si acaso, el backend corta.
+      }
+    }
+
     if (destino != null) {
       nav.push(MaterialPageRoute(builder: (_) => destino!));
+    }
+  }
+
+  /// Módulo al que pertenece cada ruta de notificación. `null` = ruta del
+  /// núcleo (pagos, usuarios), que siempre está disponible.
+  Modulo? _moduloDeRuta(String? ruta) {
+    switch (ruta) {
+      case 'reservas':
+        return Modulo.reservas;
+      case 'pqr':
+        return Modulo.pqr;
+      case 'anuncios':
+        return Modulo.anuncios;
+      case 'votaciones':
+        return Modulo.votaciones;
+      case 'marketplace':
+        return Modulo.marketplace;
+      default:
+        return null;
     }
   }
 

@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
+import '../enums/modulo.dart';
+import '../exceptions/modulo_deshabilitado_exception.dart';
 import '../exceptions/session_expired_exception.dart';
 import '../storage/token_storage.dart';
 import 'net_error_web.dart';
@@ -119,6 +121,11 @@ class ApiClient {
     Future<http.Response> Function() retry, {
     bool suppressSessionExpiry = false,
   }) async {
+    // 403 con código MODULO_DESHABILITADO → el conjunto no tiene ese módulo.
+    // Se intercepta acá, un único punto por el que pasan todos los métodos
+    // autenticados, en vez de repetir la comprobación en cada uno.
+    _verificarModuloHabilitado(res);
+
     if (res.statusCode != 401) return null; // no era 401, el caller maneja res
 
     final refreshed = await _tryRefresh();
@@ -135,6 +142,28 @@ class ApiClient {
     // la respuesta 401 (que puede tener body vacío → FormatException).
     _sessionExpiredController.add(null);
     throw const SessionExpiredException();
+  }
+
+  /// Traduce el 403 de módulo apagado a [ModuloDeshabilitadoException].
+  ///
+  /// El backend responde `{"error": "MODULO_DESHABILITADO", "message": ...}`.
+  /// Sin esto el usuario vería "Acceso denegado" y pensaría que le falta un
+  /// permiso, cuando lo que pasa es que el conjunto no tiene el módulo.
+  static void _verificarModuloHabilitado(http.Response res) {
+    if (res.statusCode != 403) return;
+    try {
+      final body = jsonDecode(res.body);
+      if (body is Map<String, dynamic> && body['error'] == 'MODULO_DESHABILITADO') {
+        throw ModuloDeshabilitadoException(
+          body['message']?.toString() ?? 'Este módulo no está habilitado en tu conjunto',
+          modulo: Modulo.desdeCodigo(body['modulo']?.toString()),
+        );
+      }
+    } on ModuloDeshabilitadoException {
+      rethrow;
+    } catch (_) {
+      // Body vacío o no-JSON: es un 403 normal, lo maneja el caller.
+    }
   }
 
   // ─── Headers ────────────────────────────────────────────────────────────

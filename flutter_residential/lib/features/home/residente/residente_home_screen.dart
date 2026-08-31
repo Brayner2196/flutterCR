@@ -6,6 +6,8 @@ import '../../propiedades/providers/propiedad_provider.dart';
 import '../../pagos/screens/residente/estado_cuenta_screen.dart';
 import '../../inquilinos/screens/mis_inquilinos_screen.dart';
 import '../../inquilinos/providers/inquilino_permisos_provider.dart';
+import '../../modulos/providers/modulos_provider.dart';
+import '../../../core/enums/modulo.dart';
 import '../../usuarios/models/usuario_propiedad_response.dart';
 import '../../usuarios/providers/residente_estadisticas_provider.dart';
 import '../../anuncios/providers/anuncio_provider.dart';
@@ -43,7 +45,22 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
   }
 
   bool get _esPropietario => context.read<AuthProvider>().isPropietario;
-  bool get _esConsejero => context.read<AuthProvider>().esConsejero;
+
+  /// Pestaña Consejo: hay que ser consejero Y que el conjunto tenga el módulo.
+  bool get _verConsejo =>
+      context.read<AuthProvider>().esConsejero &&
+      context.read<ModulosProvider>().activo(Modulo.consejo);
+
+  /// Pestaña Inquilinos: solo el propietario, y solo si el conjunto tiene
+  /// habilitado el módulo de inquilinos.
+  bool get _verInquilinos =>
+      _esPropietario && context.read<ModulosProvider>().activo(Modulo.inquilinos);
+
+  /// Posición de la pestaña Inquilinos en la barra, o -1 si no se muestra.
+  /// Se calcula en vez de asumir el índice 2: al ocultarse una pestaña, las
+  /// siguientes se corren y el FAB terminaría apareciendo en la pantalla
+  /// equivocada.
+  int get _indiceInquilinos => _verInquilinos ? 2 : -1;
 
   /// El inquilino puede ver Finanzas solo si tiene el permiso ESTADO_CUENTA
   bool get _tieneFinanzas {
@@ -57,6 +74,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
   void _onPropiedadCambiada(UsuarioPropiedadResponse propiedad) {
     final auth = context.read<AuthProvider>();
     final permisos = context.read<InquilinoPermisosProvider>();
+    final modulos = context.read<ModulosProvider>();
     final esPropietario = auth.isPropietario;
     final esParqueadero = propiedad.esParqueadero;
 
@@ -67,17 +85,21 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     }
 
     // Anuncios (permitidos siempre para parqueaderos)
-    if (esPropietario || permisos.tienePermiso('ANUNCIOS')) {
+    if (modulos.activo(Modulo.anuncios) &&
+        (esPropietario || permisos.tienePermiso('ANUNCIOS'))) {
       context.read<AnuncioProvider>().cargarResidente();
     }
 
     // PQRs (permitidos para parqueaderos)
-    if (esPropietario || permisos.tienePermiso('PQRS')) {
+    if (modulos.activo(Modulo.pqr) &&
+        (esPropietario || permisos.tienePermiso('PQRS'))) {
       context.read<PqrProvider>().cargarMisPqrs();
     }
 
     // Votaciones — bloqueadas para parqueaderos
-    if (!esParqueadero && (esPropietario || permisos.tienePermiso('VOTAR'))) {
+    if (!esParqueadero &&
+        modulos.activo(Modulo.votaciones) &&
+        (esPropietario || permisos.tienePermiso('VOTAR'))) {
       context.read<VotacionProvider>().cargarResidente();
     }
 
@@ -101,11 +123,12 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
       return [
         ResidenteDashboardScreen(onNavegar: _onTabSelected),
         const EstadoCuentaScreen(),
-        MisInquilinosScreen(
-          onFabRegistrado: (accion) =>
-              setState(() => _accionAgregarInquilino = accion),
-        ),
-        if (_esConsejero) const ConsejoDashboardScreen(),
+        if (_verInquilinos)
+          MisInquilinosScreen(
+            onFabRegistrado: (accion) =>
+                setState(() => _accionAgregarInquilino = accion),
+          ),
+        if (_verConsejo) const ConsejoDashboardScreen(),
         const PerfilResidenteScreen(),
       ];
     }
@@ -113,13 +136,13 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
       return [
         ResidenteDashboardScreen(onNavegar: _onTabSelected),
         const EstadoCuentaScreen(),
-        if (_esConsejero) const ConsejoDashboardScreen(),
+        if (_verConsejo) const ConsejoDashboardScreen(),
         const PerfilResidenteScreen(),
       ];
     }
     return [
       ResidenteDashboardScreen(onNavegar: _onTabSelected),
-      if (_esConsejero) const ConsejoDashboardScreen(),
+      if (_verConsejo) const ConsejoDashboardScreen(),
       const PerfilResidenteScreen(),
     ];
   }
@@ -152,22 +175,31 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     );
 
     if (_esPropietario) {
-      return [inicio, finanzas, inquilinos, if (_esConsejero) consejo, perfil];
+      return [
+        inicio,
+        finanzas,
+        if (_verInquilinos) inquilinos,
+        if (_verConsejo) consejo,
+        perfil,
+      ];
     }
 
     if (_tieneFinanzas) {
-      return [inicio, finanzas, if (_esConsejero) consejo, perfil];
+      return [inicio, finanzas, if (_verConsejo) consejo, perfil];
     }
-    return [inicio, if (_esConsejero) consejo, perfil];
+    return [inicio, if (_verConsejo) consejo, perfil];
   }
 
   @override
   Widget build(BuildContext context) {
     context.watch<AuthProvider>();
     context.watch<InquilinoPermisosProvider>();
+    context.watch<ModulosProvider>();
 
-    // Inquilinos siempre en índice 2 para propietario (Finanzas ocupa el índice 1)
-    final mostrarFabInquilinos = _esPropietario && _tabActual == 2;
+    // El índice de Inquilinos se calcula: si el módulo está apagado la
+    // pestaña no existe y el FAB no debe salir en la que ocupe su lugar.
+    final mostrarFabInquilinos =
+        _indiceInquilinos != -1 && _tabActual == _indiceInquilinos;
 
     return Scaffold(
       appBar: AppBarResidente(onPropiedadCambiada: _onPropiedadCambiada),

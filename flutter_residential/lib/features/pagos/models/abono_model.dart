@@ -8,6 +8,8 @@ class AbonoModel {
   final double montoTotal;
   final String fechaPago;
   final String metodoPago;
+  /// MANUAL = comprobante subido. PASARELA = pago de deuda por checkout.
+  final String origen;
   final String? referencia;
   final String? urlComprobante;
   final String? notas;
@@ -25,6 +27,7 @@ class AbonoModel {
     required this.montoTotal,
     required this.fechaPago,
     required this.metodoPago,
+    this.origen = 'MANUAL',
     this.referencia,
     this.urlComprobante,
     this.notas,
@@ -43,6 +46,7 @@ class AbonoModel {
         montoTotal: (json['montoTotal'] as num).toDouble(),
         fechaPago: json['fechaPago'] as String,
         metodoPago: json['metodoPago'] as String,
+        origen: json['origen'] as String? ?? 'MANUAL',
         referencia: json['referencia'] as String?,
         urlComprobante: json['urlComprobante'] as String?,
         notas: json['notas'] as String?,
@@ -54,6 +58,9 @@ class AbonoModel {
             .map((e) => MovimientoAbonoModel.fromJson(e))
             .toList(),
       );
+
+  /// Pago hecho por pasarela: lo confirma el webhook, no un admin.
+  bool get esDePasarela => origen == 'PASARELA';
 
   bool get esPendiente => estado == 'PENDIENTE_VERIFICACION';
   bool get esVerificado => estado == 'VERIFICADO';

@@ -1,9 +1,12 @@
 /// Representa un movimiento de pago sobre un cobro específico.
-/// Puede ser un Pago directo (tipo = PAGO) o un movimiento
-/// distribuido desde un Abono (tipo = ABONO).
+///
+/// Tres orígenes posibles:
+///  - PAGO         → un pago dirigido a este cobro
+///  - ABONO        → parte de un abono repartido por FIFO
+///  - SALDO_FAVOR  → el excedente de otro pago que bajó hasta este cobro
 class MovimientoCobroModel {
   final int id;
-  final String tipo;           // "PAGO" | "ABONO"
+  final String tipo;           // "PAGO" | "ABONO" | "SALDO_FAVOR"
   final double monto;
   final String estado;         // PENDIENTE_VERIFICACION | VERIFICADO | RECHAZADO
   final String? fecha;
@@ -39,6 +42,7 @@ class MovimientoCobroModel {
 
   bool get esPago => tipo == 'PAGO';
   bool get esAbono => tipo == 'ABONO';
+  bool get esSaldoFavor => tipo == 'SALDO_FAVOR';
   bool get esPendiente => estado == 'PENDIENTE_VERIFICACION';
   bool get esVerificado => estado == 'VERIFICADO';
   bool get esRechazado => estado == 'RECHAZADO';

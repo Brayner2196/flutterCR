@@ -15,8 +15,13 @@ import '../../providers/cobros_provider.dart';
 import '../../models/pasarela_disponible_model.dart';
 import '../../models/paginated_cobro_response.dart';
 import '../../services/cobro_service.dart';
+import '../../services/flujo_pago_service.dart';
 import '../../services/pasarela_service.dart';
+import '../../widgets/pagar_deuda_sheet.dart';
 import '../../widgets/pasarela_logo_widget.dart';
+import '../../widgets/pasarela_selector_sheet.dart';
+import 'distribucion_pago_screen.dart';
+import 'pasarela_webview_screen.dart';
 import 'mercado_pago_webview_screen.dart';
 import '../../../../features/plan_pago/providers/plan_pago_provider.dart';
 import '../../../../features/plan_pago/screens/residente/residente_solicitar_plan_screen.dart';
@@ -131,6 +136,81 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
     if (pos >= max - 200) {
       _cargarMas();
     }
+  }
+
+  // ─── Pagar toda la deuda ──────────────────────────────────────────────────
+
+  /// Propiedad sobre la que se paga. Se prefiere la seleccionada; si todavía no
+  /// llegó, se cae a la del historial para no dejar el botón muerto en el primer frame.
+  int? get _propiedadDePago =>
+      _propiedadId ?? (_historial.isNotEmpty ? _historial.first.propiedadId : null);
+
+  /// Abre el flujo de pago de la deuda completa desde la cabecera.
+  ///
+  /// Dos caminos según lo que elija el residente: pagar todo va derecho a la pasarela
+  /// (no hay nada que decidir), mientras que un valor propio pasa antes por la pantalla
+  /// de distribución, porque ahí sí necesita ver a qué cobros va a parar su plata.
+  Future<void> _pagarTodaLaDeuda() async {
+    final ec = context.read<CobrosProvider>().estadoCuenta;
+    final propiedadId = _propiedadDePago;
+    if (ec == null || propiedadId == null) return;
+
+    final saldoFavor = context.read<AbonoProvider>().saldoFavor?.saldo ?? 0.0;
+
+    final seleccion = await mostrarPagarDeudaSheet(
+      context,
+      totalDeuda: ec.totalDeuda,
+      saldoFavor: saldoFavor,
+      cantidadCobros: ec.cobrosPendientes + ec.cobrosVencidos,
+    );
+    if (seleccion == null || !mounted) return;
+
+    final ResultadoPago? resultado = seleccion.deudaCompleta
+        ? await FlujoPagoService.pagarDeuda(
+            context: context,
+            propiedadId: propiedadId,
+            titulo: 'Pago de tu deuda',
+          )
+        : await Navigator.of(context).push<ResultadoPago>(
+            MaterialPageRoute(
+              builder: (_) => DistribucionPagoScreen(
+                propiedadId: propiedadId,
+                monto: seleccion.monto!,
+              ),
+            ),
+          );
+
+    if (!mounted || resultado == null) return;
+    _alPagoDeudaTerminado(resultado);
+  }
+
+  /// Un pago de deuda toca varios cobros a la vez, así que no sirve el refresco
+  /// puntual de [_alPagoExitoso]: hay que recargar todo. La espera le da margen al
+  /// webhook, que es quien realmente aplica el reparto.
+  void _alPagoDeudaTerminado(ResultadoPago resultado) {
+    if (resultado == ResultadoPago.cancelado || resultado == ResultadoPago.fallo) {
+      if (resultado == ResultadoPago.fallo) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El pago no pudo procesarse. Puedes intentarlo nuevamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Estamos aplicando tu pago a los cobros pendientes...'),
+        duration: Duration(seconds: 4),
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      _alPagoExitoso(null);
+    });
   }
 
   /// Llamado por _CobroCard cuando un pago MP fue exitoso/pendiente.
@@ -312,6 +392,8 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
                     estadoCuenta: provider.estadoCuenta,
                     saldoFavor: abonos.saldoFavor?.saldo ?? 0,
                     formatMonto: _fmt,
+                    onPagarTodo:
+                        _propiedadDePago != null ? _pagarTodaLaDeuda : null,
                     onSolicitarPlan: () {
                       final cobros = provider.estadoCuenta?.cobrosActivos
                           .where((c) => !c.estado.contains('PAGADO') &&
@@ -553,11 +635,15 @@ class _BalanceHeader extends StatelessWidget {
   final String Function(double) formatMonto;
   final VoidCallback? onSolicitarPlan;
 
+  /// Abre el pago de la deuda completa. Null cuando todavía no se sabe la propiedad.
+  final VoidCallback? onPagarTodo;
+
   const _BalanceHeader({
     required this.estadoCuenta,
     required this.saldoFavor,
     required this.formatMonto,
     this.onSolicitarPlan,
+    this.onPagarTodo,
   });
 
   @override
@@ -567,6 +653,11 @@ class _BalanceHeader extends StatelessWidget {
     final neto = (totalPendiente - saldoFavor).clamp(0.0, double.infinity);
     final estaAlDia = totalPendiente == 0;
     final tieneVencidos = !estaAlDia && (ec?.cobrosVencidos ?? 0) > 0;
+
+    // "Pagar todo" solo tiene sentido con más de un cobro abierto: con uno solo, el
+    // botón de la tarjeta de ese cobro ya hace exactamente lo mismo y sobra la opción.
+    final cobrosAbiertos = (ec?.cobrosPendientes ?? 0) + (ec?.cobrosVencidos ?? 0);
+    final puedePagarTodo = onPagarTodo != null && cobrosAbiertos > 1 && neto > 0;
 
     // ── Paleta dinámica según estado ────────────────────────────────────────
     // Al día → verde | Solo pendiente → ámbar oscuro | Vencido → rojo oscuro
@@ -697,6 +788,36 @@ class _BalanceHeader extends StatelessWidget {
               ),
             ],
           ),
+
+          // ── Botón pagar toda la deuda ──
+          if (puedePagarTodo) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onPagarTodo,
+                icon: const Icon(Icons.payments_outlined, size: 18),
+                label: Text('Pagar todo (${formatMonto(neto)})'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: gradientColors.last,
+                  minimumSize: const Size(0, 46),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Se aplica a los $cobrosAbiertos cobros, del más antiguo al más nuevo',
+              style: const TextStyle(color: Colors.white60, fontSize: 11),
+            ),
+          ],
 
           // ── Botón plan de pago (solo si hay deuda y módulo activo) ──
           if (!estaAlDia && onSolicitarPlan != null) ...[
@@ -972,55 +1093,11 @@ class _CobroCardState extends State<_CobroCard> {
     }
   }
 
-  /// Muestra un bottom sheet para elegir entre varias pasarelas disponibles.
+  /// Selector de pasarela. La UI vive en `pasarela_selector_sheet.dart` para que el
+  /// residente vea la misma pantalla venga de esta tarjeta o del pago de la deuda.
   Future<TipoPasarela?> _mostrarSelectorPasarela(
-      List<PasarelaDisponibleModel> pasarelas) {
-    return showModalBottomSheet<TipoPasarela>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Elige método de pago',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 4),
-            ...pasarelas.map((p) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: PasarelaLogoWidget(tipo: p.tipo, size: 44),
-                  title: Text(p.nombre,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: p.prioridad == 1
-                      ? const Text('Recomendado',
-                          style: TextStyle(
-                              color: Colors.teal, fontSize: 12))
-                      : null,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.pop(ctx, p.tipo),
-                )),
-          ],
-        ),
-      ),
-    );
-  }
+          List<PasarelaDisponibleModel> pasarelas) =>
+      mostrarSelectorPasarela(context, pasarelas);
 
   void _mostrarOpcionesPago() {
     showModalBottomSheet(
