@@ -153,7 +153,7 @@ class _ConfigZonasScreenState extends State<ConfigZonasScreen> {
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 itemCount: _zonas.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (_, i) => _ZonaTile(
                   zona: _zonas[i],
                   onEditar: () => _abrirFormulario(zona: _zonas[i]),
@@ -600,7 +600,7 @@ class _ExcepcionesSheetState extends State<_ExcepcionesSheet> {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: _excepciones.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                separatorBuilder: (_, _) => const SizedBox(height: 6),
                 itemBuilder: (_, i) {
                   final exc = _excepciones[i];
                   return ListTile(

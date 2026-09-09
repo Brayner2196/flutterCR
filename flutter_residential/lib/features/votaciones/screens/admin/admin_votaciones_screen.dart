@@ -52,7 +52,7 @@ class _AdminVotacionesScreenState extends State<AdminVotacionesScreen> {
                             child: ListView.separated(
                               padding: const EdgeInsets.all(16),
                               itemCount: provider.votaciones.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 10),
+                              separatorBuilder: (_, _) => const SizedBox(height: 10),
                               itemBuilder: (_, i) =>
                                   _VotacionAdminCard(votacion: provider.votaciones[i]),
                             ),
@@ -77,7 +77,7 @@ class _AdminVotacionesScreenState extends State<AdminVotacionesScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: estados.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) => ChoiceChip(
           label: Text(labels[i]),
           selected: _filtroEstado == estados[i],

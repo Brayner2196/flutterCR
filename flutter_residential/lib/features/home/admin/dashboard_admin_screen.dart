@@ -3,7 +3,7 @@ import 'package:flutter_residential/features/anuncios/screens/admin/admin_anunci
 import 'package:flutter_residential/features/documentos/screens/admin/admin_documentos_screen.dart';
 import 'package:flutter_residential/features/dashboard/providers/dashboard_provider.dart';
 import 'package:flutter_residential/features/dashboard/screens/widgets/kpi_carousel.dart';
-import 'package:flutter_residential/features/home/admin/widgets/quick_access_cards.dart';
+import 'package:flutter_residential/shared/widgets/quick_access_cards.dart';
 import 'package:flutter_residential/features/pagos/screens/admin/cobros_hub_screen.dart';
 import 'package:flutter_residential/features/pagos/screens/admin/admin_verificar_pagos_screen.dart';
 import 'package:flutter_residential/features/pqr/screens/admin/admin_pqrs_screen.dart';
@@ -30,7 +30,6 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
 
   static const _bgTeal = Color.fromRGBO(224, 247, 244, 1);
   static const _teal = Color.fromRGBO(0, 105, 92, 1);
-  static const _bgOrange = Color.fromRGBO(255, 237, 224, 1);
   static const _orange = Color.fromRGBO(180, 80, 0, 1);
 
   Future<T?> _abrir<T>(Widget pantalla) async {
@@ -104,10 +103,10 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   QuickAccessCardData(
                   title: 'PQRs',
                   icon: Icons.forum_outlined,
-                  backgroundColor: _bgOrange,
+                  backgroundColor: AppColors.bgOrange,
                   iconBackgroundColor: Colors.white,
-                  iconColor: _orange,
-                  colorText: _orange,
+                  iconColor: AppColors.orange,
+                  colorText: AppColors.orange,
                   onTap: () => _abrir(const AdminPqrsScreen()),
                 ),
                 if (modulos.activo(Modulo.reservas))
@@ -121,7 +120,7 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
                   onTap: () => _abrir(const AdminReservasScreen()),
                 ),
                 QuickAccessCardData(
-                  title: 'Reporte Morosidad',
+                  title: 'Morosidad',
                   icon: Icons.warning_amber_rounded,
                   backgroundColor: AppColors.bgYellow,
                   iconBackgroundColor: Colors.white,

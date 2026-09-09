@@ -42,7 +42,7 @@ class _BitacoraScreenState extends State<BitacoraScreen> {
               : ListView.separated(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   itemCount: eventos.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                  separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
                   itemBuilder: (_, i) => _EventoTile(evento: eventos[i]),
                 ),
     );

@@ -74,7 +74,7 @@ class _MisParqueaderosResidenteScreenState
       // FAB para registrar vehículo (solo en tab de vehículos)
       floatingActionButton: AnimatedBuilder(
         animation: _tabCtrl,
-        builder: (_, __) => _tabCtrl.index == 0
+        builder: (_, _) => _tabCtrl.index == 0
             ? FloatingActionButton.extended(
                 onPressed: () => _mostrarRegistrarSheet(context),
                 icon: const Icon(Icons.add),
@@ -202,7 +202,7 @@ class _TabMisVehiculos extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 80),
               sliver: SliverList.separated(
                 itemCount: p.vehiculos.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (ctx, i) {
                   final v = p.vehiculos[i];
                   return VehiculoCard(
@@ -304,7 +304,7 @@ class _TabMisParqueaderos extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               sliver: SliverList.separated(
                 itemCount: p.parqueaderos.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (ctx, i) {
                   final parq = p.parqueaderos[i];
                   final vehiculos = context.read<VehiculoProvider>().vehiculos
@@ -474,7 +474,7 @@ class _RegistrarVehiculoSheetState extends State<_RegistrarVehiculoSheet> {
 
             ValueListenableBuilder<TextEditingValue>(
               valueListenable: _placaCtrl,
-              builder: (_, value, __) {
+              builder: (_, value, _) {
                 final valido = value.text.trim().isNotEmpty;
                 return SizedBox(
                   width: double.infinity,

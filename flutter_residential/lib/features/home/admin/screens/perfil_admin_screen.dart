@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/features/auditoria/screens/admin_auditoria_screen.dart';
 import 'package:flutter_residential/features/auth/providers/auth_provider.dart';
 import 'package:flutter_residential/features/configuracion/screens/configuracion_screen.dart';
 import 'package:flutter_residential/features/usuarios/providers/app_provider.dart';
@@ -115,6 +116,18 @@ class PerfilAdminScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              // El contador comparte esta pantalla de perfil, pero la auditoría
+              // es solo del admin: no puede revisar su propio rastro.
+              if (auth.isAdmin)
+                SeccionAgrupadoraItemAccion(
+                  icono: Icons.history_rounded,
+                  label: 'Auditoría financiera',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AdminAuditoriaScreen(),
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),

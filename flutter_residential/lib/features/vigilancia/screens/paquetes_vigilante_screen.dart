@@ -91,7 +91,7 @@ class _PaquetesVigilanteScreenState extends State<PaquetesVigilanteScreen> {
                 : ListView.separated(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     itemCount: pendientes.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                    separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (_, i) => _PaqueteTile(
                       paquete: pendientes[i],
                       onEntregar: () => _entregar(pendientes[i]),

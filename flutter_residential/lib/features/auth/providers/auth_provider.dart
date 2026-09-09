@@ -56,6 +56,9 @@ class AuthProvider extends BaseProvider {
   /// Rol de portería. PORTERO queda soportado solo por compatibilidad con
   /// usuarios legados; los nuevos se crean siempre como VIGILANTE.
   bool get isVigilante => _rol == 'VIGILANTE' || _rol == 'PORTERO';
+  /// Rol contable. Su alcance real lo define [PermisosContablesProvider]: el rol
+  /// solo dice a que home entra, los permisos dicen que ve dentro.
+  bool get isContador => _rol == 'CONTADOR';
   /// Verdadero si el usuario tiene membresía activa en el consejo comunal.
   bool get esConsejero => _esConsejero;
   /// Cargo en el consejo (PRESIDENTE, VICEPRESIDENTE, etc.) o null.
@@ -66,6 +69,11 @@ class AuthProvider extends BaseProvider {
 
   /// Verdadero si el usuario opera el área de vigilancia/portería.
   bool get isAreaVigilancia => isVigilante;
+
+  /// Verdadero si el usuario entra al área financiera y necesita cargar sus
+  /// permisos contables. El admin entra también: recibe el catálogo completo,
+  /// así las pantallas compartidas preguntan por permiso y no por rol.
+  bool get isAreaContable => isContador || isAdmin;
 
   /// Al iniciar la app: intenta restaurar sesión guardada
   Future<void> cargarSesionGuardada() async {

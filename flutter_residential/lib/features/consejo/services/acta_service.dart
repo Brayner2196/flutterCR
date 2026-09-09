@@ -20,7 +20,7 @@ class ActaService {
       fields: {
         'titulo': titulo,
         if (duracionSegundos != null) 'duracionSegundos': '$duracionSegundos',
-        if (fechaReunionIso != null) 'fechaReunion': fechaReunionIso,
+        'fechaReunion': ?fechaReunionIso,
       },
       timeout: const Duration(minutes: 10),
     );
@@ -52,8 +52,8 @@ class ActaService {
   static Future<ActaModel> actualizar(int id,
       {String? titulo, String? contenido}) async {
     final res = await ApiClient.put(ApiConstants.consejoActaId(id), {
-      if (titulo != null) 'titulo': titulo,
-      if (contenido != null) 'contenido': contenido,
+      'titulo': ?titulo,
+      'contenido': ?contenido,
     });
     return BaseApiService.parseSingle(
       res,

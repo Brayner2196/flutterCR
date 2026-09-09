@@ -72,6 +72,37 @@ class ApiConstants {
   static String marcarPropiedadPrincipal(int propId, int userId) =>
       '/api/propiedades/$propId/usuarios/$userId/principal';
 
+  // ─── Rol contable ─────────────────────────────────────────────────────────
+  /// Alcance del usuario autenticado. Lo llaman TANTO el contador COMO el admin:
+  /// para el admin el backend devuelve el catalogo completo, asi la app usa una
+  /// sola condicion sin ramificar por rol.
+  static const String contableMisPermisos = '/api/contable/mis-permisos';
+
+  // Administracion de contadores (solo TENANT_ADMIN)
+  static const String adminContadores = '/api/admin/contadores';
+  static const String adminContadoresPermisos = '/api/admin/contadores/permisos';
+  static String contadorDetalle(int usuarioId) => '/api/admin/contadores/$usuarioId';
+  static String contadorPermisos(int usuarioId) =>
+      '/api/admin/contadores/$usuarioId/permisos';
+  static String contadorPermiso(int usuarioId, String permiso) =>
+      '/api/admin/contadores/$usuarioId/permisos/$permiso';
+
+  // Auditoria financiera (solo TENANT_ADMIN)
+  static const String adminAuditoria = '/api/admin/auditoria';
+  static const String adminAuditoriaFiltros = '/api/admin/auditoria/filtros';
+  static String auditoriaRastro(String entidad, int entidadId) =>
+      '/api/admin/auditoria/$entidad/$entidadId';
+
+  // Cartera historica (contador con permiso MIGRAR_CARTERA, o admin)
+  static const String carteraHistoricaPreview =
+      '/api/contable/cartera-historica/preview';
+  static const String carteraHistoricaAplicar =
+      '/api/contable/cartera-historica/aplicar';
+  static String carteraHistoricaPropiedad(int propiedadId) =>
+      '/api/contable/cartera-historica/propiedad/$propiedadId';
+  static String carteraHistoricaLote(String lote) =>
+      '/api/contable/cartera-historica/lote/$lote';
+
   // Mora — admin
   static const String adminMora = '/api/admin/mora';
   static const String adminMoraHistorico = '/api/admin/mora/historico';

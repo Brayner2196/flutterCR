@@ -7,7 +7,16 @@ import '../../providers/pagos_provider.dart';
 import '../../../../shared/theme/app_theme.dart';
 
 class AdminVerificarPagosScreen extends StatefulWidget {
-  const AdminVerificarPagosScreen({super.key});
+  /// True cuando la pantalla es una pestaña del IndexedStack de una home (la
+  /// del contador). Entonces el encabezado del contenedor es el único: acá se
+  /// omite el AppBar y el TabBar baja al cuerpo, conservando las pestañas.
+  ///
+  /// Sin esto habría doble encabezado, y el IndexedStack mide las pestañas
+  /// ocultas con constraints de ~1px, donde la fila de `actions:` no se puede
+  /// comprimir y revienta con un RenderFlex overflow.
+  final bool embebida;
+
+  const AdminVerificarPagosScreen({super.key, this.embebida = false});
 
   @override
   State<AdminVerificarPagosScreen> createState() =>
@@ -43,13 +52,9 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
     final abonosProvider = context.watch<AbonoProvider>();
     final cargando = pagosProvider.loading || abonosProvider.loading;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verificar Pagos'),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _cargar),
-        ],
-        bottom: TabBar(
+    // Se arma una sola vez: va dentro del AppBar en modo normal, o al tope del
+    // cuerpo cuando la pantalla es una pestaña de la home.
+    final tabBar = TabBar(
           controller: _tabs,
           isScrollable: true,
           tabAlignment: TabAlignment.start,
@@ -86,10 +91,37 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
                     color: AppColors.danger),
               ],
             ])),
-          ],
-        ),
-      ),
-      body: cargando
+      ],
+    );
+
+    return Scaffold(
+      appBar: widget.embebida
+          ? null
+          : AppBar(
+              title: const Text('Verificar Pagos'),
+              actions: [
+                IconButton(icon: const Icon(Icons.refresh), onPressed: _cargar),
+              ],
+              bottom: tabBar,
+            ),
+      body: Column(
+        children: [
+          if (widget.embebida)
+            Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: Row(
+                children: [
+                  Expanded(child: tabBar),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Actualizar',
+                    onPressed: _cargar,
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: cargando
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(
               controller: _tabs,
@@ -127,6 +159,9 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
                 ),
               ],
             ),
+          ),
+        ],
+      ),
     );
   }
 

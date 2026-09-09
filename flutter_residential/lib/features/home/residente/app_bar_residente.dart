@@ -64,7 +64,8 @@ class AppBarResidente extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
-      // Dropdown de selección de propiedad (solo visible si hay >1 propiedad)
+      // Selector de propiedad: chip informativo con una sola propiedad,
+      // desplegable con varias, oculto si no hay ninguna.
       actions: [
         PropiedadSelectorDropdown(
           onPropiedadCambiada: onPropiedadCambiada ?? (_) {},

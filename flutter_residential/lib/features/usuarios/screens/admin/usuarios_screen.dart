@@ -106,7 +106,7 @@ class _UsuariosScreenState extends State<UsuariosScreen>
             ),
           ),
           Consumer<UsuarioProvider>(
-            builder: (_, provider, __) => PillTabBar(
+            builder: (_, provider, _) => PillTabBar(
               tabs: [
                 PillTabItem(
                   label: 'Todos',
@@ -222,7 +222,7 @@ class _TabLista extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<UsuarioProvider>(
-      builder: (_, provider, __) {
+      builder: (_, provider, _) {
         if (provider.loading) {
           return const Center(child: CircularProgressIndicator());
         }

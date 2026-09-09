@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/core/platform/checkout.dart';
+import 'package:flutter_residential/core/utils/currency_formatter.dart';
+import 'package:flutter_residential/core/utils/moneda_inout_formatter.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/platform/checkout_web.dart';
+
 import '../../../../core/utils/celebracion.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../features/usuarios/providers/residente_estadisticas_provider.dart';
@@ -28,7 +31,13 @@ import '../../../../features/plan_pago/screens/residente/residente_solicitar_pla
 import '../../../../features/propiedades/providers/propiedad_provider.dart';
 
 class EstadoCuentaScreen extends StatefulWidget {
-  const EstadoCuentaScreen({super.key});
+  /// true cuando la pantalla se monta como pestaña dentro de otro Scaffold
+  /// (el home del residente). En ese caso NO monta AppBar propio: el AppBar
+  /// del contenedor es el único, y así se evita el doble encabezado y el
+  /// overflow del IndexedStack al medir la pestaña oculta.
+  final bool embebida;
+
+  const EstadoCuentaScreen({super.key, this.embebida = false});
 
   @override
   State<EstadoCuentaScreen> createState() => _EstadoCuentaScreenState();
@@ -362,18 +371,21 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-      appBar: AppBar(
-        title: const Text('Estado de Cuenta'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              context.read<CobrosProvider>().cargarEstadoCuenta();
-              _iniciarHistorial();
-            },
-          ),
-        ],
-      ),
+      appBar: widget.embebida
+          ? null
+          : AppBar(
+              title: const Text('Estado de Cuenta'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Actualizar',
+                  onPressed: () {
+                    context.read<CobrosProvider>().cargarEstadoCuenta();
+                    _iniciarHistorial();
+                  },
+                ),
+              ],
+            ),
       body: _loadingHistorial && _historial.isEmpty
           ? const _SkeletonBody()
           : provider.error != null
@@ -1210,7 +1222,7 @@ class _CobroCardState extends State<_CobroCard> {
     final saldoFavor =
         context.read<AbonoProvider>().saldoFavor?.saldo ?? 0.0;
     final montoCtrl = TextEditingController(
-      text: cobro.montoPendiente.toStringAsFixed(0),
+      text: CurrencyFormatter.miles(cobro.montoPendiente),
     );
     final formKey = GlobalKey<FormState>();
 
@@ -1223,7 +1235,7 @@ class _CobroCardState extends State<_CobroCard> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setInnerState) {
           final montoIngresado =
-              double.tryParse(montoCtrl.text.replaceAll(',', '.')) ?? 0.0;
+              CurrencyFormatter.parse(montoCtrl.text) ?? 0.0;
           final exceso =
               (montoIngresado - cobro.montoPendiente).clamp(0.0, double.infinity);
           final hayExceso = exceso > 0;
@@ -1295,8 +1307,8 @@ class _CobroCardState extends State<_CobroCard> {
                   TextFormField(
                     controller: montoCtrl,
                     autofocus: true,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                    inputFormatters: const [MonedaInputFormatter()],
                     decoration: const InputDecoration(
                       labelText: 'Monto a pagar',
                       prefixText: '\$ ',
@@ -1304,8 +1316,7 @@ class _CobroCardState extends State<_CobroCard> {
                     ),
                     onChanged: (_) => setInnerState(() {}),
                     validator: (v) {
-                      final n =
-                          double.tryParse((v ?? '').replaceAll(',', '.'));
+                      final n = CurrencyFormatter.parse(v);
                       if (n == null || n <= 0) return 'Ingresa un monto válido';
                       return null;
                     },
@@ -1368,8 +1379,7 @@ class _CobroCardState extends State<_CobroCard> {
                       ),
                       onPressed: () {
                         if (!formKey.currentState!.validate()) return;
-                        final monto = double.parse(
-                            montoCtrl.text.replaceAll(',', '.'));
+                        final monto = CurrencyFormatter.parse(montoCtrl.text)!;
                         Navigator.pop(ctx);
                         _iniciarPago(monto: monto);
                       },

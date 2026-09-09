@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import '../constants/api_constants.dart';
 import '../network/api_client.dart';
+import '../enums/estado_carga.dart';
 import '../enums/modulo.dart';
 import '../../features/modulos/providers/modulos_provider.dart';
 
@@ -271,10 +272,18 @@ class NotificacionService {
     // Una notificación de un módulo que el conjunto apagó (por ejemplo,
     // encolada antes del cambio) no debe abrir una pantalla que el backend va
     // a rechazar con 403: se ignora la navegación y la app solo se abre.
+    //
+    // Solo se bloquea con el estado LISTO. Un push que abre la app en frío
+    // llega antes de que los módulos hayan cargado, y ahí `activo()` responde
+    // false por diseño (para no parpadear en la UI); tomar eso como "módulo
+    // apagado" mataría la navegación de toda notificación que arranca la app.
+    // Mientras no se sabe, se deja pasar: el backend es la autoridad real.
     final moduloRuta = _moduloDeRuta(ruta);
     if (moduloRuta != null) {
       try {
-        if (!ctx.read<ModulosProvider>().activo(moduloRuta)) {
+        final modulos = ctx.read<ModulosProvider>();
+        if (modulos.estadoCarga == EstadoCarga.listo &&
+            !modulos.activo(moduloRuta)) {
           debugPrint('[FCM] Módulo ${moduloRuta.codigo} deshabilitado — no se navega');
           return;
         }

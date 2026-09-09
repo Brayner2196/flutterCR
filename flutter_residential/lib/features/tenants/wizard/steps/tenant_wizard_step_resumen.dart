@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/features/pagos/models/pasarela_disponible_model.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'tenant_wizard_step_propiedades.dart';
 import 'tenant_wizard_step_pasarelas.dart';
@@ -628,7 +629,7 @@ class _PasarelaChip extends StatelessWidget {
     );
   }
 
-  Color _color(tipo) {
+  Color _color(TipoPasarela tipo) {
     switch (tipo.toString()) {
       case 'TipoPasarela.mercadoPago': return const Color(0xFF009EE3);
       case 'TipoPasarela.wompi':       return const Color(0xFF00C896);
@@ -637,7 +638,7 @@ class _PasarelaChip extends StatelessWidget {
     }
   }
 
-  IconData _icono(tipo) {
+  IconData _icono(TipoPasarela tipo) {
     switch (tipo.toString()) {
       case 'TipoPasarela.mercadoPago': return Icons.payment_outlined;
       case 'TipoPasarela.wompi':       return Icons.credit_card_outlined;

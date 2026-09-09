@@ -5,7 +5,7 @@ import '../../../core/utils/texto_utils.dart';
 
 /// Mapa de permiso → etiqueta + icono para mostrar en la UI.
 const _permisosInfo = {
-  'ESTADO_CUENTA': (label: 'Estado de cuenta', sublabel: 'Ver pagos, cuotas y estado financiero de su propiedad', icon: Icons.account_balance_wallet_outlined),
+  'ESTADO_CUENTA': (label: 'Estado cuenta', sublabel: 'Ver pagos, cuotas y estado financiero de su propiedad', icon: Icons.account_balance_wallet_outlined),
   'ANUNCIOS': (label: 'Anuncios', sublabel: 'Ver los anuncios del conjunto', icon: Icons.campaign_outlined),
   'VOTAR': (label: 'Votar', sublabel: 'Participar en votaciones del conjunto', icon: Icons.how_to_vote_outlined),
   'PQRS': (label: 'PQR', sublabel: 'Presentar peticiones, quejas o reclamos', icon: Icons.support_agent_outlined),

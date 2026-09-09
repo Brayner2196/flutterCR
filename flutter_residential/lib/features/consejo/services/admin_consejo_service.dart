@@ -25,7 +25,7 @@ class AdminConsejoService {
       'usuarioId': usuarioId,
       'cargo': cargo,
       'fechaInicio': fechaInicio,
-      if (fechaFin != null) 'fechaFin': fechaFin,
+      'fechaFin': ?fechaFin,
     };
     final res = await ApiClient.post(ApiConstants.adminConsejo, body, requiresAuth: true);
     if (res.statusCode == 201) {

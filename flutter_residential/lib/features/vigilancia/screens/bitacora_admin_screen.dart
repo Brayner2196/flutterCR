@@ -54,7 +54,7 @@ class _BitacoraAdminScreenState extends State<BitacoraAdminScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         itemCount: _eventos.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (_, i) {
                           final e = _eventos[i];
                           final color = e.esDenegado

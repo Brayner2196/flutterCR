@@ -15,8 +15,7 @@ class CurrencyFormatter {
     return entero < 0 ? '-\$$str' : '\$$str';
   }
 
-  /// Formato compacto para montos grandes: $6,5M · $850K · $1.234.
-  /// Útil en tarjetas/resúmenes donde el ancho es limitado.
+  /// Ej: $6,5M · $850K
   static String copCompacto(num value) {
     final v = value.toInt();
     final abs = v.abs();
@@ -31,7 +30,7 @@ class CurrencyFormatter {
     return v < 0 ? '-$cuerpo' : cuerpo;
   }
 
-  /// Un decimal con coma; oculta el ",0" (6.0 -> "6", 6.5 -> "6,5").
+  /// Ej: 6.0 -> "6" · 6.5 -> "6,5"
   static String _decimal(double n) {
     final s = n.toStringAsFixed(n >= 100 ? 0 : 1);
     return s.replaceAll('.', ',').replaceAll(RegExp(r',0$'), '');
@@ -43,13 +42,20 @@ class CurrencyFormatter {
     final n = num.tryParse(value.replaceAll(',', '.'));
     return n != null ? cop(n) : '\$0';
   }
-
-  /// Parsea un String con puntos/comas a double. Retorna null si no es válido.
-  static double? parse(String text) =>
-      double.tryParse(text.replaceAll('.', '').replaceAll(',', '.').trim());
-
-  //este método es para formatear el valor de un double a un string con formato de moneda, sin decimales y con separador de miles. Ejemplo: 1234567.89 -> $1.234.568
+  
+  /// Formatea un double como pesos colombianos, Ej: 1234567.89 -> $1.234.568
   static String fmt(double v) =>
     '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
 
+
+  /// Separador de miles SIN símbolo — para inicializar campos de texto.
+  static String miles(num value) => value.toInt().abs().toString()
+      .replaceAllMapped(_sepMiles, (m) => '${m[1]}.');
+
+  /// Parsea texto formateado ("$ 1.234.567") a double. null si no es válido.
+  static double? parse(String? text) {
+    if (text == null) return null;
+    final limpio = text.replaceAll(RegExp(r'[^\d,]'), '').replaceAll(',', '.');
+    return limpio.isEmpty ? null : double.tryParse(limpio);
+  }
 }

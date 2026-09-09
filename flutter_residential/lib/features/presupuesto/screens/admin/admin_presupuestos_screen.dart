@@ -51,7 +51,7 @@ class _AdminPresupuestosScreenState extends State<AdminPresupuestosScreen> {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: p.presupuestos.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (_, i) => _PresupuestoTile(
               presupuesto: p.presupuestos[i],
               onTap: () => _abrirDetalle(context, p.presupuestos[i].id),

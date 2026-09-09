@@ -53,7 +53,7 @@ class _AdminDocumentosScreenState extends State<AdminDocumentosScreen> {
                             child: ListView.separated(
                               padding: const EdgeInsets.all(AppSpacing.md),
                               itemCount: provider.documentos.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: AppSpacing.sm + 2),
                               itemBuilder: (_, i) => _DocumentoAdminCard(
                                 documento: provider.documentos[i],
@@ -81,7 +81,7 @@ class _AdminDocumentosScreenState extends State<AdminDocumentosScreen> {
         padding:
             const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
         itemCount: categorias.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) {
           final c = categorias[i];
           return ChoiceChip(

@@ -32,15 +32,9 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Los permisos NO se cargan acá: los carga SesionContextoLoader junto
+      // con los módulos, antes de que esta pantalla llegue a construirse.
       context.read<PropiedadProvider>().cargarMisPropiedades();
-
-      // Limpiar permisos anteriores y cargar los propios si es inquilino
-      final auth = context.read<AuthProvider>();
-      final permisosProvider = context.read<InquilinoPermisosProvider>();
-      permisosProvider.limpiarDatos();
-      if (auth.isInquilino) {
-        permisosProvider.cargar();
-      }
     });
   }
 
@@ -122,7 +116,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     if (_esPropietario) {
       return [
         ResidenteDashboardScreen(onNavegar: _onTabSelected),
-        const EstadoCuentaScreen(),
+        const EstadoCuentaScreen(embebida: true),
         if (_verInquilinos)
           MisInquilinosScreen(
             onFabRegistrado: (accion) =>
@@ -135,7 +129,7 @@ class _ResidenteHomeScreenState extends State<ResidenteHomeScreen> {
     if (_tieneFinanzas) {
       return [
         ResidenteDashboardScreen(onNavegar: _onTabSelected),
-        const EstadoCuentaScreen(),
+        const EstadoCuentaScreen(embebida: true),
         if (_verConsejo) const ConsejoDashboardScreen(),
         const PerfilResidenteScreen(),
       ];

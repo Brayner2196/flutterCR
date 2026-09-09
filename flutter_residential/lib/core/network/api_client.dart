@@ -7,7 +7,7 @@ import '../enums/modulo.dart';
 import '../exceptions/modulo_deshabilitado_exception.dart';
 import '../exceptions/session_expired_exception.dart';
 import '../storage/token_storage.dart';
-import 'net_error_web.dart';
+import 'net_error.dart';
 
 class ApiClient {
   static const _timeout = Duration(seconds: 15);

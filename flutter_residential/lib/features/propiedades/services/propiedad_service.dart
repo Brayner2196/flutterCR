@@ -65,7 +65,7 @@ class PropiedadService {
       ApiConstants.valoresPorTipo(tipoId),
       {
         'valor': valor,
-        if (parentValorId != null) 'parentValorId': parentValorId,
+        'parentValorId': ?parentValorId,
         'orden': orden,
       },
       requiresAuth: true,
@@ -147,8 +147,8 @@ class PropiedadService {
       ApiConstants.tiposPropiedad,
       {
         'nombre': nombre,
-        if (descripcion != null) 'descripcion': descripcion,
-        if (parentId != null) 'parentId': parentId,
+        'descripcion': ?descripcion,
+        'parentId': ?parentId,
         'esFacturable':  esFacturable,
         'esParqueadero': esParqueadero,
       },
@@ -165,7 +165,7 @@ class PropiedadService {
       '${ApiConstants.tiposPropiedad}/$id',
       {
         'nombre':       nombre,
-        if (descripcion != null) 'descripcion': descripcion,
+        'descripcion': ?descripcion,
         'esFacturable':  esFacturable,
         'esParqueadero': esParqueadero,
       },

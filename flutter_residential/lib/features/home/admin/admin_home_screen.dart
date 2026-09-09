@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/home/admin/app_bar_admin.dart';
 import 'package:flutter_residential/features/home/admin/bottom_navigation_bar_admin.dart';
-import 'package:flutter_residential/features/home/admin/screens/dashboard_admin_screen.dart';
+import 'package:flutter_residential/features/home/admin/dashboard_admin_screen.dart';
 import 'package:flutter_residential/features/home/admin/screens/perfil_admin_screen.dart';
 import 'package:flutter_residential/features/usuarios/providers/usuario_provider.dart';
 import 'package:flutter_residential/features/usuarios/screens/admin/usuarios_screen.dart';

@@ -61,7 +61,7 @@ class _MisVisitasScreenState extends State<MisVisitasScreen> {
                 : ListView.separated(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     itemCount: visitas.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                    separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (_, i) => _VisitaTile(
                       visita: visitas[i],
                       onVerQr: () => Navigator.push(

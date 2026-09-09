@@ -47,7 +47,7 @@ class _MisVotacionesScreenState extends State<MisVotacionesScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.all(16),
                         itemCount: provider.votaciones.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (_, i) => _VotacionResidenteCard(
                           votacion: provider.votaciones[i],
                         ),

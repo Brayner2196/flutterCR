@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/core/platform/checkout.dart';
 
-import '../../../core/platform/checkout_web.dart';
 import '../models/pasarela_disponible_model.dart';
 import '../screens/residente/pasarela_webview_screen.dart';
 import '../widgets/pasarela_selector_sheet.dart';

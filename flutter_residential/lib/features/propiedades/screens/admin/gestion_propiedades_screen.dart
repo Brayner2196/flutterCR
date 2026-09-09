@@ -130,7 +130,7 @@ class _GestionPropiedadesScreenState extends State<GestionPropiedadesScreen> {
 
           // ── Estadísticas-filtro (activables/desactivables) ────────────
           Consumer<GestionPropiedadesProvider>(
-            builder: (_, provider, __) => _StatsFiltroBar(
+            builder: (_, provider, _) => _StatsFiltroBar(
               provider: provider,
               filtros: _filtros,
               onToggle: _toggleFiltro,
@@ -330,7 +330,7 @@ class _ListaPropiedades extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<GestionPropiedadesProvider>(
-      builder: (_, provider, __) {
+      builder: (_, provider, _) {
         if (provider.loading && provider.propiedades.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }

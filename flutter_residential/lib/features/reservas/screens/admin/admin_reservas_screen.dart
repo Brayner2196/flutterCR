@@ -169,7 +169,7 @@ class _AdminReservasScreenState extends State<AdminReservasScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 sliver: SliverList.separated(
                   itemCount: p.reservas.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (_, i) {
                     final reserva = p.reservas[i];
                     return _ReservaTile(

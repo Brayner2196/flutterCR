@@ -27,9 +27,9 @@ class VigilanciaService {
       ApiConstants.vigilanteAccesoPeatonal,
       {
         'propiedadId': propiedadId,
-        if (nombreVisitante != null) 'nombreVisitante': nombreVisitante,
-        if (documento != null) 'documento': documento,
-        if (motivo != null) 'motivo': motivo,
+        'nombreVisitante': ?nombreVisitante,
+        'documento': ?documento,
+        'motivo': ?motivo,
       },
       requiresAuth: true,
     );
@@ -92,8 +92,8 @@ class VigilanciaService {
       {
         'propiedadId': propiedadId,
         'descripcion': descripcion,
-        if (remitente != null) 'remitente': remitente,
-        if (transportadora != null) 'transportadora': transportadora,
+        'remitente': ?remitente,
+        'transportadora': ?transportadora,
       },
       requiresAuth: true,
     );
@@ -104,7 +104,7 @@ class VigilanciaService {
   static Future<PaqueteModel> entregarPaquete(int id, {String? entregadoA}) async {
     final res = await ApiClient.put(
       ApiConstants.vigilanteEntregarPaquete(id),
-      {if (entregadoA != null) 'entregadoA': entregadoA},
+      {'entregadoA': ?entregadoA},
     );
     return BaseApiService.parseSingle(res, PaqueteModel.fromJson,
         fallbackMsg: 'Error al entregar el paquete');

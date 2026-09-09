@@ -65,7 +65,7 @@ class AuthService {
         'email': email,
         'password': password,
         'codigoConjunto': codigoConjunto,
-        if (telefono != null) 'telefono': telefono,
+        'telefono': ?telefono,
         if (propiedadPath != null && propiedadPath.isNotEmpty)
           'propiedadPath': propiedadPath,
       },

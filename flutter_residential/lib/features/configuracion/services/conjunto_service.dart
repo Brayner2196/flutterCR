@@ -17,7 +17,7 @@ class ConjuntoService {
   }) async {
     final res = await ApiClient.patch(
       ApiConstants.adminMiConjunto,
-      {'nombre': nombre, if (direccion != null) 'direccion': direccion},
+      {'nombre': nombre, 'direccion': ?direccion},
     );
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return ConjuntoModel.fromJson(body);

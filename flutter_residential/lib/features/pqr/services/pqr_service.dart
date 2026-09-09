@@ -51,7 +51,7 @@ class PqrService {
           'tipo': tipo,
           'asunto': asunto,
           'descripcion': descripcion,
-          if (propiedadId != null) 'propiedadId': propiedadId,
+          'propiedadId': ?propiedadId,
         },
         requiresAuth: true);
     return BaseApiService.parseSingle(res, PqrModel.fromJson,

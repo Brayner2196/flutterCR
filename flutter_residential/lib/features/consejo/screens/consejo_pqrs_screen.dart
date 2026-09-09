@@ -180,7 +180,7 @@ class _ConsejoPqrsScreenState extends State<ConsejoPqrsScreen> {
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   itemCount: pqrs.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (_, i) {
                     final PqrModel pqr = pqrs[i];
                     return _PqrTileConsejo(

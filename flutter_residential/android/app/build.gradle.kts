@@ -52,11 +52,8 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.findByName("release")
+                ?: throw GradleException("Falta android/key.properties — no se puede firmar release")
         }
     }
 }

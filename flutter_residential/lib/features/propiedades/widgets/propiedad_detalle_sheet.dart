@@ -35,7 +35,7 @@ class PropiedadDetalleSheet extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Consumer<GestionPropiedadesProvider>(
-            builder: (context, provider, __) {
+            builder: (context, provider, _) {
               final prop = provider.porId(propiedadId);
               if (prop == null) {
                 return const Padding(

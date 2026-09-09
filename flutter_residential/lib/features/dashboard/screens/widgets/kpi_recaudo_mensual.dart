@@ -143,9 +143,9 @@ class KpiRecaudoMensual extends StatelessWidget {
             porcentaje: pctPendiente,
             monto: formatoMillones(pendiente),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           const Divider(height: 1),
-          const SizedBox(height: 8),
+          const SizedBox(height: 2),
 
           // ── Meta ────────────────────────────────────
           Row(

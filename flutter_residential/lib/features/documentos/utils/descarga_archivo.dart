@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 
 import '../../../core/exceptions/api_exception.dart';
-import '../../../core/platform/archivo_io.dart';
+import '../../../core/platform/archivo.dart';
 
 /// Descarga un archivo desde una URL firmada (presigned) a un temporal y lo abre
 /// con la app nativa del dispositivo. Reutilizable por cualquier módulo que sirva

@@ -75,7 +75,7 @@ class _SeleccionTenantScreenState extends State<SeleccionTenantScreen> {
             Expanded(
               child: ListView.separated(
                 itemCount: conjuntos.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final conjunto = conjuntos[index];
                   final seleccionado = _tenantSeleccionado == conjunto.tenantId;

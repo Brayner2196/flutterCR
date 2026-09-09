@@ -144,7 +144,7 @@ class _TenantModulosScreenState extends State<TenantModulosScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
         itemCount: _modulos.length + 1,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           if (index == 0) return const _NotaNucleo();
           return _tile(_modulos[index - 1]);

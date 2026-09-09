@@ -54,7 +54,7 @@ class _ConsejoDirectorioScreenState extends State<ConsejoDirectorioScreen> {
                     : ListView.separated(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         itemCount: p.directorio.length,
-                        separatorBuilder: (_, __) =>
+                        separatorBuilder: (_, _) =>
                             const SizedBox(height: AppSpacing.sm),
                         itemBuilder: (_, i) =>
                             _MiembroTile(miembro: p.directorio[i]),

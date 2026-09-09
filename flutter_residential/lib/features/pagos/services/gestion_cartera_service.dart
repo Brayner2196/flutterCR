@@ -18,7 +18,7 @@ class GestionCarteraService {
     final response = await ApiClient.post(
       ApiConstants.carteraNotificar(propiedadId),
       {
-        if (estadoCarteraId != null) 'estadoCarteraId': estadoCarteraId,
+        'estadoCarteraId': ?estadoCarteraId,
         if (mensaje != null && mensaje.trim().isNotEmpty) 'mensaje': mensaje.trim(),
       },
       requiresAuth: true,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_residential/shared/widgets/quick_access_cards.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../inquilinos/providers/inquilino_permisos_provider.dart';
@@ -25,7 +25,7 @@ import '../../presupuesto/screens/residente/residente_presupuesto_screen.dart';
 import '../../presupuesto/providers/presupuesto_provider.dart';
 import '../../propiedades/providers/propiedad_provider.dart';
 import '../../parqueaderos/screens/residente/mis_parqueaderos_residente_screen.dart';
-import 'widgets/quick_access_card.dart';
+
 import 'widgets/carousel/deuda_resumen_widget.dart';
 import 'widgets/feed/activity_feed_widget.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
@@ -42,14 +42,10 @@ class ResidenteDashboardScreen extends StatefulWidget {
 
 class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
   bool _estadisticasCargadas = false;
-  bool _esGridView = false;
-
-  static const _kGridViewPref = 'dashboard_grid_view';
 
   @override
   void initState() {
     super.initState();
-    _cargarPreferenciaGrid();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       final permisos = context.read<InquilinoPermisosProvider>();
@@ -88,20 +84,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
         propProvider.addListener(_onPropiedadLista);
       }
     });
-  }
-
-  Future<void> _cargarPreferenciaGrid() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() => _esGridView = prefs.getBool(_kGridViewPref) ?? false);
-    }
-  }
-
-  Future<void> _toggleGridView() async {
-    final newValue = !_esGridView;
-    setState(() => _esGridView = newValue);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kGridViewPref, newValue);
   }
 
   void _onPropiedadLista() {
@@ -257,38 +239,11 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
               const SizedBox(height: AppSpacing.md),
             ],
 
-            // Header con toggle grid/lista (visible para cualquier usuario)
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Accesos rapidos',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: _esGridView ? 'Ver en lista' : 'Ver en cuadricula',
-                  icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, animation) => ScaleTransition(
-                      scale: CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOut,
-                      ),
-                      child: FadeTransition(opacity: animation, child: child),
-                    ),
-                    child: Icon(
-                      _esGridView
-                          ? Icons.view_list_rounded
-                          : Icons.grid_view_rounded,
-                      key: ValueKey(_esGridView),
-                    ),
-                  ),
-                  onPressed: _toggleGridView,
-                ),
-              ],
+            Text(
+              'Accesos rápidos',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
 
             const SizedBox(height: AppSpacing.sm),
@@ -320,13 +275,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     required VotacionProvider votaciones,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    /// Tres capas independientes que deben pasar TODAS:
-    ///   1. módulo  — qué contrató el conjunto (lo decide el SUPER_ADMIN)
-    ///   2. tipo de propiedad — un parqueadero no reserva ni vota
-    ///   3. permiso — qué le dejó ver el propietario a su inquilino
-    ///
-    /// [modulo] es opcional: los accesos del núcleo (estado de cuenta) no
-    /// dependen de ningún módulo y se llaman sin él.
+
     bool puede(String permiso, [Modulo? modulo]) {
       if (modulo != null && !modulos.activo(modulo)) return false;
       if (esParqueadero) {
@@ -336,17 +285,16 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       return esPropietario || permisos.tienePermiso(permiso);
     }
 
-    final cards = <QuickAccessCard>[];
+    final cards = <QuickAccessCardData>[];
     final propiedadActual = context.read<PropiedadProvider>().propiedadActual;
 
     if (puede('ESTADO_CUENTA')) {
-      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgBlue, AppColors.blue, isDark);
-      cards.add(QuickAccessCard(
-        label: 'Estado de Cuenta',
-        subtitulo: 'Ver cobros y deudas',
-        icono: Icons.account_balance_wallet_outlined,
-        bg: palette.bg, //fondo del card
-        fg: palette.fg, //letras del card
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'Estado cuenta',
+        icon: Icons.account_balance_wallet_outlined,
+        bgLight: AppColors.bgGreen,
+        fgLight: AppColors.green,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const EstadoCuentaScreen()),
@@ -355,13 +303,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (!esParqueadero && puede('RESERVAS', Modulo.reservas)) {
-      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgOrange, AppColors.orange, isDark);
-      cards.add(QuickAccessCard(
-        label: 'Reservas',
-        subtitulo: 'Areas comunes',
-        icono: Icons.event_outlined,
-        bg: palette.bg,
-        fg: palette.fg,
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'Reservas',
+        icon: Icons.event_outlined,
+        bgLight: AppColors.bgOrange,
+        fgLight: AppColors.orange,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisReservasScreen()),
@@ -370,16 +317,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (puede('PQRS', Modulo.pqr)) {
-      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgPurple, AppColors.purple, isDark);
-      cards.add(QuickAccessCard(
-        label: 'PQRs',
-        subtitulo: pqrs.cantidadPendientes > 0
-            ? '${pqrs.cantidadPendientes} pendiente${pqrs.cantidadPendientes == 1 ? '' : 's'}'
-            : 'Sin pendientes',
-        icono: Icons.support_agent_outlined,
-        bg: palette.bg,
-        fg: palette.fg,
-        badge: pqrs.cantidadPendientes > 0 ? pqrs.cantidadPendientes : null,
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'PQRs',
+        icon: Icons.support_agent_outlined,
+        bgLight: AppColors.bgYellow,
+        fgLight: AppColors.yellow,
+        badge: pqrs.cantidadPendientes,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisPqrsScreen()),
@@ -388,16 +332,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (puede('ANUNCIOS', Modulo.anuncios)) {
-      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgGreen, AppColors.green, isDark);
-      cards.add(QuickAccessCard(
-        label: 'Anuncios',
-        subtitulo: anuncios.noVistos > 0
-            ? '${anuncios.noVistos} nuevo${anuncios.noVistos == 1 ? '' : 's'}'
-            : 'Sin novedades',
-        icono: Icons.campaign_outlined,
-        bg: palette.bg,
-        fg: palette.fg,
-        badge: anuncios.noVistos > 0 ? anuncios.noVistos : null,
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'Anuncios',
+        icon: Icons.campaign_outlined,
+        bgLight: AppColors.bgBlue,
+        fgLight: AppColors.blue,
+        badge: anuncios.noVistos,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisAnunciosScreen()),
@@ -408,14 +349,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     // Documentos de interés general: visible para propietarios e inquilinos.
     if (modulos.activo(Modulo.documentos) &&
         (esPropietario || permisos.tienePermiso('DOCUMENTOS'))) {
-      final palette =
-          PaletteQuickAccessCard.resolve(AppColors.bgBlue, AppColors.blue, isDark);
-      cards.add(QuickAccessCard(
-        label: 'Documentos',
-        subtitulo: 'Interés general',
-        icono: Icons.folder_copy_outlined,
-        bg: palette.bg,
-        fg: palette.fg,
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'Documentos',
+        icon: Icons.folder_copy_outlined,
+        bgLight: AppColors.bgTeal,
+        fgLight: AppColors.teal,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const DocumentosResidenteScreen()),
@@ -424,18 +363,13 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (!esParqueadero && puede('VOTAR', Modulo.votaciones)) {
-      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgYellow, AppColors.yellow, isDark);
-      cards.add(QuickAccessCard(
-        label: 'Votaciones',
-        subtitulo: votaciones.pendientesDeVotar > 0
-            ? '${votaciones.pendientesDeVotar} ${votaciones.pendientesDeVotar == 1 ? 'votacion abierta' : 'votaciones abiertas'}'
-            : 'Sin votaciones activas',
-        icono: Icons.how_to_vote_outlined,
-        bg: palette.bg,
-        fg: palette.fg,
-        badge: votaciones.pendientesDeVotar > 0
-            ? votaciones.pendientesDeVotar
-            : null,
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'Votaciones',
+        icon: Icons.how_to_vote_outlined,
+        bgLight: AppColors.bgPurple,
+        fgLight: AppColors.purple,
+        badge: votaciones.pendientesDeVotar,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisVotacionesScreen()),
@@ -444,13 +378,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (!esParqueadero && puede('MARKETPLACE', Modulo.marketplace)) {
-      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgTeal, AppColors.teal, isDark);
-      cards.add(QuickAccessCard(
-        label: 'Marketplace',
-        subtitulo: 'Compra y vende en el conjunto',
-        icono: Icons.storefront_outlined,
-        bg: palette.bg,
-        fg: palette.fg,
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'Marketplace',
+        icon: Icons.storefront_outlined,
+        bgLight: AppColors.bgTeal,
+        fgLight: AppColors.teal,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MarketplaceScreen()),
@@ -460,13 +393,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
 
     // Visitas con QR — propietario siempre; inquilino con permiso VISITAS
     if (!esParqueadero && puede('VISITAS', Modulo.visitas)) {
-      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgCoral, AppColors.coral, isDark);
-      cards.add(QuickAccessCard(
-        label: 'Visitas',
-        subtitulo: 'Genera el QR de tus invitados',
-        icono: Icons.qr_code_2_outlined,
-        bg: palette.bg,
-        fg: palette.fg,
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'Visitas',
+        icon: Icons.qr_code_2_outlined,
+        bgLight: AppColors.bgOrange,
+        fgLight: AppColors.orange,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisVisitasScreen()),
@@ -476,14 +408,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
 
     // Paquetería recibida en portería
     if (modulos.activo(Modulo.paquetes)) {
-      final palette =
-          PaletteQuickAccessCard.resolve(AppColors.bgSlate, AppColors.slate, isDark);
-      cards.add(QuickAccessCard(
-        label: 'Paquetes',
-        subtitulo: 'Correspondencia en portería',
-        icono: Icons.inventory_2_outlined,
-        bg: palette.bg,
-        fg: palette.fg,
+      cards.add(QuickAccessCardData.tema(
+        isDark: isDark,
+        title: 'Paquetes',
+        icon: Icons.inventory_2_outlined,
+        bgLight: AppColors.bgBlue,
+        fgLight: AppColors.blue,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MisPaquetesScreen()),
@@ -495,18 +425,16 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
         modulos.activo(Modulo.planesPago) &&
         puede('ESTADO_CUENTA')) {
       final planProvider = context.read<PlanPagoProvider>();
-      final tienePlan = planProvider.planes.any((p) => p.esActivo || p.esPendiente);
+      final tienePlan =
+          planProvider.planes.any((p) => p.esActivo || p.esPendiente);
       final moduloActivo = planProvider.config.activo;
       if (tienePlan || moduloActivo) {
-        final planActivo = planProvider.planes.where((p) => p.esActivo).firstOrNull;
-        cards.add(QuickAccessCard(
-          label: 'Plan de pago',
-          subtitulo: planActivo != null
-              ? '${planActivo.cuotasPagadas}/${planActivo.numeroCuotas} cuotas pagadas'
-              : 'Fracciona tu deuda',
-          icono: Icons.calendar_month_outlined,
-          fg: AppColors.orange,
-          bg: AppColors.bgOrange,
+        cards.add(QuickAccessCardData.tema(
+          isDark: isDark,
+          title: 'Plan de pago',
+          icon: Icons.calendar_month_outlined,
+          bgLight: AppColors.bgPurple,
+          fgLight: AppColors.purple,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const ResidenteMiPlanScreen()),
@@ -518,14 +446,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     if (!esParqueadero && modulos.activo(Modulo.presupuesto)) {
       final presupuestoProvider = context.read<PresupuestoProvider>();
       if (presupuestoProvider.activo != null) {
-        final p = presupuestoProvider.activo!;
-        final palette =  PaletteQuickAccessCard.resolve(AppColors.bgLime, AppColors.lime, isDark);
-        cards.add(QuickAccessCard(
-          label: 'Presupuesto',
-          subtitulo: '${p.porcentajeEjecucionGeneral.toStringAsFixed(0)}% ejecutado - ${p.anio}',
-          icono: Icons.account_balance_outlined,
-          bg: palette.bg,
-          fg: palette.fg,
+        cards.add(QuickAccessCardData.tema(
+          isDark: isDark,
+          title: 'Presupuesto',
+          icon: Icons.account_balance_outlined,
+          bgLight: AppColors.bgLime,
+          fgLight: AppColors.lime,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
@@ -536,15 +462,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
     }
 
     if (propiedadActual != null && modulos.activo(Modulo.parqueaderos)) {
-      final palette =  PaletteQuickAccessCard.resolve(AppColors.bgCyan, AppColors.cyan, isDark);
-      final cardParqueadero = QuickAccessCard(
-        label: esParqueadero ? 'Mi Parqueadero' : 'Parqueaderos',
-        subtitulo: esParqueadero
-            ? 'Gestionar vehiculos y accesos'
-            : 'Mis vehiculos y parqueaderos',
-        icono: Icons.local_parking,
-        bg: palette.bg,
-        fg: palette.fg,
+      final cardParqueadero = QuickAccessCardData.tema(
+        isDark: isDark,
+        title: esParqueadero ? 'Mi Parqueadero' : 'Parqueaderos',
+        icon: Icons.local_parking,
+        bgLight: AppColors.bgCyan,
+        fgLight: AppColors.cyan,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
@@ -561,41 +484,11 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       }
     }
 
-    if (cards.isEmpty) {
-      return const _SinAccesosWidget();
-    }
+    if (cards.isEmpty) return const _SinAccesosWidget();
 
-    // Vista grid (disponible para cualquier usuario que active el toggle)
-    if (_esGridView) {
-      return GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 3,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.sm,
-        childAspectRatio: 1.6,
-        children: cards
-            .map((c) => QuickAccessCard(
-                  key: c.key,
-                  label: c.label,
-                  icono: c.icono,
-                  fg: c.fg,
-                  bg: c.bg,
-                  badge: c.badge,
-                  onTap: c.onTap,
-                  isGrid: true,
-                ))
-            .toList(),
-      );
-    }
-
-    // Vista lista (default)
-    return Column(
-      children: cards
-          .expand((c) => [c, const SizedBox(height: AppSpacing.sm)])
-          .toList()
-        ..removeLast(),
-    );
+    // El SingleChildScrollView ya aplica AppSpacing.md; el padding propio del
+    // grid duplicaría el margen y desalinearía con la tarjeta de deuda.
+    return QuickAccessGrid(cards: cards, padding: EdgeInsets.zero);
   }
 }
 

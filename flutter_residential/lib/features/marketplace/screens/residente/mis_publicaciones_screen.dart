@@ -179,7 +179,7 @@ class _MisPublicacionesScreenState extends State<MisPublicacionesScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                         itemCount: _publicaciones.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (_, i) => _MiPublicacionTile(
                           pub: _publicaciones[i],
                           onEditar: () => _abrirFormulario(pub: _publicaciones[i]),

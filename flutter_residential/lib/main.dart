@@ -23,6 +23,9 @@ import 'features/documentos/providers/documento_provider.dart';
 import 'features/votaciones/providers/votacion_provider.dart';
 import 'features/marketplace/providers/publicacion_provider.dart';
 import 'features/inquilinos/providers/inquilino_permisos_provider.dart';
+import 'features/contador/providers/permisos_contables_provider.dart';
+import 'features/contador/providers/admin_contadores_provider.dart';
+import 'features/auditoria/providers/auditoria_provider.dart';
 import 'features/plan_pago/providers/plan_pago_provider.dart';
 import 'features/presupuesto/providers/presupuesto_provider.dart';
 import 'features/parqueaderos/providers/parqueadero_provider.dart';
@@ -111,6 +114,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VotacionProvider()),
         ChangeNotifierProvider(create: (_) => PublicacionProvider()),
         ChangeNotifierProvider(create: (_) => InquilinoPermisosProvider()),
+        ChangeNotifierProvider(create: (_) => PermisosContablesProvider()),
+        ChangeNotifierProvider(create: (_) => AdminContadoresProvider()),
+        ChangeNotifierProvider(create: (_) => AuditoriaProvider()),
         ChangeNotifierProvider(create: (_) => PlanPagoProvider()),
         ChangeNotifierProvider(create: (_) => PresupuestoProvider()),
         ChangeNotifierProvider(create: (_) => ParqueaderoProvider()),
@@ -125,7 +131,7 @@ class MyApp extends StatelessWidget {
       ],
       child: ToastificationWrapper(
         child: Consumer<AppProvider>(
-          builder: (_, AppProvider appProvider, __) {
+          builder: (_, AppProvider appProvider, _) {
             return MaterialApp(
               title: 'My CR',
               debugShowCheckedModeBanner: false,

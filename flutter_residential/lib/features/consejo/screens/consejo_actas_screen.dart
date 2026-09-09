@@ -62,7 +62,7 @@ class _ConsejoActasScreenState extends State<ConsejoActasScreen> {
                     padding: const EdgeInsets.fromLTRB(AppSpacing.md,
                         AppSpacing.md, AppSpacing.md, AppSpacing.xl * 2),
                     itemCount: actas.length,
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (_, i) => _ActaCard(
                       acta: actas[i],

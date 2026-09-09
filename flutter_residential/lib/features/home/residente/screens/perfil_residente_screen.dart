@@ -124,6 +124,7 @@ class PerfilResidenteScreen extends StatelessWidget {
                 label: 'Cerrar sesión',
                 color: cs.error,
                 onTap: () => LogoutDialog.confirmar(context, auth),
+                isCerrarSesion: true,
               ),
             ],
           ),

@@ -238,7 +238,7 @@ class _TenantsScreenState extends State<TenantsScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Consumer<TenantProvider>(
-      builder: (_, provider, __) {
+      builder: (_, provider, _) {
         if (provider.loading) {
           return const Center(child: CircularProgressIndicator());
         }

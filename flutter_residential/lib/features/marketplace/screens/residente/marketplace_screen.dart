@@ -246,7 +246,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                               padding:
                                   const EdgeInsets.fromLTRB(16, 8, 16, 16),
                               itemCount: lista.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: 10),
                               itemBuilder: (_, i) => _PublicacionCard(
                                 pub: lista[i],

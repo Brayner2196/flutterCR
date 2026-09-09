@@ -9,6 +9,7 @@ import '../../../propiedades/models/valor_tipo_propiedad.dart';
 import '../../../propiedades/widgets/valor_propiedad_dropdown.dart';
 import '../../providers/usuario_provider.dart';
 import '../../services/usuario_service.dart';
+import '../../../contador/screens/permisos_contador_sheet.dart';
 import '../../../propiedades/services/propiedad_service.dart';
 import '../../../pagos/screens/admin/admin_ver_como_residente_screen.dart';
 
@@ -1045,6 +1046,30 @@ class _AdminControlesSectionState extends State<_AdminControlesSection> {
                 ),
               ),
 
+              // Solo para contadores: el rol por si solo no habilita nada, el
+              // alcance real lo dan los permisos. Sin este acceso, un contador
+              // recien creado se queda sin ver nada y no hay donde arreglarlo.
+              if (_rolActual == 'CONTADOR') ...[
+                Divider(height: 1, indent: 16, endIndent: 16, color: cs.outlineVariant),
+                ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  leading: Icon(Icons.tune, color: cs.primary),
+                  title: Text(
+                    'Permisos contables',
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    'Define que puede ver y tocar del area financiera',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _cargando ? null : _abrirPermisosContables,
+                ),
+              ],
+
               if (_cargando)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 10),
@@ -1055,6 +1080,15 @@ class _AdminControlesSectionState extends State<_AdminControlesSection> {
         ),
       ],
     );
+  }
+
+  Future<void> _abrirPermisosContables() async {
+    final guardado = await PermisosContadorSheet.mostrar(
+      context,
+      usuarioId: widget.usuario.id,
+      nombre: widget.usuario.nombre,
+    );
+    if (guardado && mounted) widget.onCambiado();
   }
 }
 

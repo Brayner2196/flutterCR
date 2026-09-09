@@ -99,7 +99,7 @@ class _AdminEstadosCarteraScreenState extends State<AdminEstadosCarteraScreen> {
             return ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               itemCount: estados.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (_, i) => _EstadoCard(
                 estado: estados[i],
                 onEditar: () => _abrirEditor(estados[i]),

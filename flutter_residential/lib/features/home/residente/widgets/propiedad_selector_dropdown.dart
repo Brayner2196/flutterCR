@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_residential/shared/utils/scrollingText.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_residential/features/propiedades/providers/propiedad_provider.dart';
+import 'package:flutter_residential/features/home/residente/widgets/propiedad_chip.dart';
 import 'package:flutter_residential/features/usuarios/models/usuario_propiedad_response.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 
-/// Dropdown compacto en el AppBar para cambiar entre propiedades del residente.
-/// Solo se muestra cuando el usuario tiene más de una propiedad asignada.
+/// Selector de propiedad del AppBar del residente.
+///
+/// - Sin propiedades asignadas: no se muestra nada.
+/// - Con una sola propiedad: chip informativo, sin menú ni chevron.
+/// - Con varias: menú desplegable para cambiar de propiedad.
+///
 /// El pathTexto del ítem hace scroll horizontal automático si no cabe completo.
 class PropiedadSelectorDropdown extends StatelessWidget {
   final void Function(UsuarioPropiedadResponse propiedad) onPropiedadCambiada;
@@ -19,12 +24,32 @@ class PropiedadSelectorDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final propiedades = context.watch<PropiedadProvider>();
-
-    if (!propiedades.tieneMultiplesPropiedades) return const SizedBox.shrink();
-
     final actual = propiedades.propiedadActual;
     final cs = Theme.of(context).colorScheme;
 
+    // Sin propiedades asignadas: no hay contexto que mostrar.
+    if (actual == null || propiedades.misPropiedades.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Una sola propiedad: mismo chip, informativo, sin menú ni chevron.
+    if (!propiedades.tieneMultiplesPropiedades) {
+      return Semantics(
+        label: 'Propiedad: ${actual.pathTexto}',
+        child: Tooltip(
+          message: actual.pathTexto,
+          child: PropiedadChip(
+            etiqueta:
+                actual.pathCorto.isNotEmpty ? actual.pathCorto : actual.pathTexto,
+            esParqueadero: actual.esParqueadero,
+            mostrarFlecha: false,
+            maxAnchoTexto: 140,
+          ),
+        ),
+      );
+    }
+
+    // Varias propiedades: menú para cambiar entre ellas.
     return PopupMenuButton<UsuarioPropiedadResponse>(
       tooltip: 'Cambiar propiedad',
       offset: const Offset(0, 48),
@@ -35,56 +60,14 @@ class PropiedadSelectorDropdown extends StatelessWidget {
           .map((p) => _buildMenuItem(context, p, actual, cs))
           .toList(),
       onSelected: (p) {
-        if (p.propiedadId != actual?.propiedadId) {
+        if (p.propiedadId != actual.propiedadId) {
           context.read<PropiedadProvider>().seleccionarPropiedad(p);
           onPropiedadCambiada(p);
         }
       },
-      child: _buildTrigger(context, actual, cs),
-    );
-  }
-
-  // ─── Trigger visible en el AppBar ────────────────────────────────────────
-
-  Widget _buildTrigger(
-    BuildContext context,
-    UsuarioPropiedadResponse? actual,
-    ColorScheme cs,
-  ) {
-    final esParqueadero = actual?.esParqueadero ?? false;
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            esParqueadero ? Icons.local_parking : Icons.home_outlined,
-            size: 16,
-            color: cs.primary,
-          ),
-          const SizedBox(width: 5),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 110),
-            child: Text(
-              actual?.pathCorto ?? '—',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: cs.primary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 3),
-          Icon(Icons.expand_more_rounded, size: 16, color: cs.primary),
-        ],
+      child: PropiedadChip(
+        etiqueta: actual.pathCorto,
+        esParqueadero: actual.esParqueadero,
       ),
     );
   }

@@ -169,7 +169,7 @@ class _PropiedadSearchSheetState extends State<_PropiedadSearchSheet> {
                       : ListView.separated(
                           controller: _scrollCtrl,
                           itemCount: _items.length + (_last ? 0 : 1),
-                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          separatorBuilder: (_, _) => const Divider(height: 1),
                           itemBuilder: (_, i) {
                             if (i >= _items.length) {
                               return const Padding(
