@@ -70,8 +70,15 @@ class PlanPagoProvider extends BaseProvider {
   // Acciones (usando helpers de BaseProvider)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Future<void> guardarConfig(ConfiguracionPlanPagoModel config) async {
-    _config = await ejecutar(() => PlanPagoService.guardarConfig(config)) ?? _config;
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> guardarConfig(ConfiguracionPlanPagoModel config) async {
+    final guardada = await ejecutar(() => PlanPagoService.guardarConfig(config));
+    if (guardada == null) return false;   // se conserva la config anterior
+    _config = guardada;
+    notifyListeners();
+    return true;
   }
 
   Future<PlanPagoModel> decidir(

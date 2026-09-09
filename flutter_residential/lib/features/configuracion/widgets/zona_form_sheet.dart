@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_residential/features/reservas/models/reserva_model.dart';
 import 'package:flutter_residential/features/reservas/services/reserva_service.dart';
+import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
 /// Formulario bottom-sheet para crear o editar una zona común.
 class ZonaFormSheet extends StatefulWidget {
@@ -323,12 +324,9 @@ class _ZonaFormSheetState extends State<ZonaFormSheet> {
               const SizedBox(height: 20),
 
               // ── Requiere aprobación ──────────────────────────
-              Container(
+              PanelTiles(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                color: cs.surfaceContainerHighest,
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Requiere aprobación',

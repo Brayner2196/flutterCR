@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/exceptions/api_exception.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
 import '../../models/usuario_response.dart';
 import '../../providers/usuario_provider.dart';
@@ -68,7 +70,8 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
 
     setState(() => _guardando = true);
     try {
-      await context.read<UsuarioProvider>().actualizar(widget.usuario.id, {
+      final provider = context.read<UsuarioProvider>();
+      final ok = await provider.actualizar(widget.usuario.id, {
         'nombre': _nombreCtrl.text.trim(),
         'rol': _rol,
         'estado': _estado,
@@ -76,14 +79,27 @@ class _UsuarioEditarDialogState extends State<UsuarioEditarDialog> {
           'telefono': _telefonoCtrl.text.trim(),
         if (_correoCtrl.text.trim().isNotEmpty) 'email': _correoCtrl.text.trim(),
       });
-      if (mounted) Navigator.of(context).pop(true);
+      if (!mounted) return;
+
+      // Mismo motivo que en el wizard: el provider atrapa la excepción y
+      // devuelve false, así que el catch no corre en un error de negocio. Sin
+      // esto el diálogo se cerraba con pop(true) aunque el backend hubiera
+      // rechazado el cambio, y la lista quedaba mostrando el dato viejo.
+      if (!ok) {
+        MensajeOperacion.error(
+          context,
+          'No se pudo actualizar el usuario',
+          provider.error,
+        );
+        return;
+      }
+      Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      MensajeOperacion.error(
+        context,
+        'Error al actualizar el usuario',
+        ApiException.extract(e),
       );
     } finally {
       if (mounted) setState(() => _guardando = false);

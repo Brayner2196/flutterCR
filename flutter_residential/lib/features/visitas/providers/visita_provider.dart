@@ -43,12 +43,15 @@ class VisitaProvider extends BaseProvider {
     return res;
   }
 
-  Future<void> cancelar(int id) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> cancelar(int id) async {
     final res = await ejecutar(() => VisitaResidenteService.cancelar(id));
-    if (res != null) {
-      _visitas = _visitas.map((v) => v.id == id ? res : v).toList();
-      notifyListeners();
-    }
+    if (res == null) return false;
+    _visitas = _visitas.map((v) => v.id == id ? res : v).toList();
+    notifyListeners();
+    return true;
   }
 
   void limpiarDatos() {

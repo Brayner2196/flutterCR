@@ -3,6 +3,7 @@ import 'package:flutter_residential/features/reservas/models/reserva_model.dart'
 import 'package:flutter_residential/features/reservas/screens/admin/admin_zona_form_screen.dart';
 import 'package:flutter_residential/features/reservas/services/reserva_service.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
+import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
 class ConfigZonasScreen extends StatefulWidget {
   const ConfigZonasScreen({super.key});
@@ -207,12 +208,10 @@ class _ZonaTile extends StatelessWidget {
       estadoIcon = Icons.cancel_outlined;
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.outlineVariant),
-      ),
+    return PanelTiles(
+      color: cs.surface,
+      radio: 14,
+      lado: BorderSide(color: cs.outlineVariant),
       child: Column(
         children: [
           ListTile(

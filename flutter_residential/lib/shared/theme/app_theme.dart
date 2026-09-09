@@ -251,7 +251,7 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
 
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
+        minimumSize: const Size(0, 48),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         shape: buttonShape,

@@ -64,9 +64,16 @@ class AnuncioProvider extends BaseProvider {
   }
 
   /// Renombrado de eliminar() para evitar colisión con BaseProvider.eliminar'T'()
-  Future<void> eliminarAnuncio(int id) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> eliminarAnuncio(int id) async {
     await ejecutar(() => AnuncioService.eliminar(id));
+    // Sin este corte el anuncio desaparecía de la lista aunque el backend
+    // hubiera fallado, y reaparecía al siguiente refresco.
+    if (error != null) return false;
     super.eliminar(_anuncios, (a) => a.id == id);
+    return true;
   }
 
   Future<void> marcarVisto(int id) async {

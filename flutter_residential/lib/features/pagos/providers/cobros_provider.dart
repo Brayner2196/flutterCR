@@ -65,11 +65,16 @@ class CobrosProvider extends BaseProvider {
     return nuevo;
   }
 
-  Future<void> cerrarPeriodo(int id) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> cerrarPeriodo(int id) async {
     final actualizado = await ejecutar(
       () => CobroService.cerrarPeriodo(id),
     );
-    if (actualizado != null) reemplazar(_periodos, actualizado, (p) => p.id);
+    if (actualizado == null) return false;
+    reemplazar(_periodos, actualizado, (p) => p.id);
+    return true;
   }
 
   Future<List<CobroModel>> generarCobros(int anio, int mes) async {

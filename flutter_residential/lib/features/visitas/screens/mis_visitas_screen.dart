@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:flutter_residential/core/utils/date_formatter.dart';
@@ -38,6 +39,20 @@ class _MisVisitasScreenState extends State<MisVisitasScreen> {
     }
   }
 
+
+  /// Cancela y avisa el resultado. Antes era un `() => prov.cancelar(id)` suelto:
+  /// el provider atrapa el error y devuelve false, así que un fallo no producía
+  /// ningún aviso y la visita seguía apareciendo como pendiente.
+  Future<void> _cancelar(VisitaProvider prov, int id) async {
+    final ok = await prov.cancelar(id);
+    if (!mounted) return;
+    if (!ok) {
+      MensajeOperacion.error(context, 'No se pudo cancelar la visita', prov.error);
+      return;
+    }
+    MensajeOperacion.exito(context, 'Visita cancelada');
+  }
+
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<VisitaProvider>();
@@ -70,7 +85,7 @@ class _MisVisitasScreenState extends State<MisVisitasScreen> {
                             builder: (_) => VisitaQrScreen(visita: visitas[i])),
                       ),
                       onCancelar: visitas[i].esPendiente
-                          ? () => prov.cancelar(visitas[i].id)
+                          ? () => _cancelar(prov, visitas[i].id)
                           : null,
                     ),
                   ),

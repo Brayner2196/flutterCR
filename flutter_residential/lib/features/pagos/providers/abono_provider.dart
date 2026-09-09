@@ -63,18 +63,28 @@ class AbonoProvider extends BaseProvider {
     return nuevo;
   }
 
-  Future<void> verificar(int id, {String? notas}) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> verificar(int id, {String? notas}) async {
     final actualizado = await ejecutar(
       () => AbonoService.verificarAbono(id, notas: notas),
     );
-    if (actualizado != null) _actualizarOAgregar(actualizado);
+    if (actualizado == null) return false;
+    _actualizarOAgregar(actualizado);
+    return true;
   }
 
-  Future<void> rechazar(int id, String motivo) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> rechazar(int id, String motivo) async {
     final actualizado = await ejecutar(
       () => AbonoService.rechazarAbono(id, motivo),
     );
-    if (actualizado != null) _actualizarOAgregar(actualizado);
+    if (actualizado == null) return false;
+    _actualizarOAgregar(actualizado);
+    return true;
   }
 
   /// Helper privado: reemplaza item existente o agrega si no existe

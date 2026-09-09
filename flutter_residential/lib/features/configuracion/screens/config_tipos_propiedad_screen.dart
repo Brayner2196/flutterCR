@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_residential/features/propiedades/models/tipo_propiedad_nodo.dart';
 import 'package:flutter_residential/features/propiedades/services/propiedad_service.dart';
 import 'package:flutter_residential/features/propiedades/widgets/valores_tipo_sheet.dart';
+import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
 class ConfigTiposPropiedadScreen extends StatefulWidget {
   const ConfigTiposPropiedadScreen({super.key});
@@ -223,13 +224,12 @@ class _NodoTileState extends State<_NodoTile> {
                 ],
               ),
             ),
-          Container(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: nodo.activo ? _color.withValues(alpha: 0.3) : cs.outlineVariant,
-              ),
+          PanelTiles(
+            color: cs.surface,
+            lado: BorderSide(
+              color: nodo.activo
+                  ? _color.withValues(alpha: 0.3)
+                  : cs.outlineVariant,
             ),
             child: Column(
               children: [

@@ -62,8 +62,10 @@ class _PermisosContadorSheetState extends State<PermisosContadorSheet> {
 
   @override
   void initState() {
-    super.initState();
-    _cargar();
+    super.initState(); 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _cargar();
+    });
   }
 
   Future<void> _cargar() async {

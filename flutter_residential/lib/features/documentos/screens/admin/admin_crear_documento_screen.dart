@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -276,8 +277,15 @@ class _AdminCrearDocumentoScreenState extends State<AdminCrearDocumentoScreen> {
 
     final provider = context.read<DocumentoProvider>();
     try {
-      await provider.eliminarArchivo(_documento!.id, a.id);
+      final eliminado = await provider.eliminarArchivo(_documento!.id, a.id);
       if (!mounted) return;
+      // Sin el corte, el archivo desaparecía de la pantalla aunque el backend
+      // lo hubiera rechazado, y reaparecía al reabrir el documento.
+      if (!eliminado) {
+        MensajeOperacion.error(
+            context, 'No se pudo eliminar el archivo', provider.error);
+        return;
+      }
       setState(() {
         _documento!.archivos.removeWhere((x) => x.id == a.id);
       });

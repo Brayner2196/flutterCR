@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/utils/mensaje_operacion.dart';
 import 'package:flutter_residential/core/enums/enum_mod_layouts_screen_tenants.dart';
 import 'package:flutter_residential/features/tenants/widgets/mod_layout_table.dart';
 import 'package:flutter_residential/features/tenants/widgets/tenant_form_insert_edit_dialog.dart';
@@ -185,9 +186,17 @@ class _TenantsScreenState extends State<TenantsScreen> {
       ),
     );
     if (confirmado == true && mounted) {
-      try {
-        await context.read<TenantProvider>().activar(tenant.id);
-      } catch (_) {}
+      final provider = context.read<TenantProvider>();
+      // El catch vacío de antes tragaba todo en silencio, y como activar()
+      // no lanzaba, el conjunto se pintaba activo aunque el backend fallara.
+      final ok = await provider.activar(tenant.id);
+      if (!mounted) return;
+      if (!ok) {
+        MensajeOperacion.error(
+            context, 'No se pudo activar el conjunto', provider.error);
+      } else {
+        MensajeOperacion.exito(context, '"${tenant.nombre}" fue activado');
+      }
     }
   }
 
@@ -215,9 +224,15 @@ class _TenantsScreenState extends State<TenantsScreen> {
       ),
     );
     if (confirmado == true && mounted) {
-      try {
-        await context.read<TenantProvider>().desactivar(tenant.id);
-      } catch (_) {}
+      final provider = context.read<TenantProvider>();
+      final ok = await provider.desactivar(tenant.id);
+      if (!mounted) return;
+      if (!ok) {
+        MensajeOperacion.error(
+            context, 'No se pudo desactivar el conjunto', provider.error);
+      } else {
+        MensajeOperacion.exito(context, '"${tenant.nombre}" fue desactivado');
+      }
     }
   }
 

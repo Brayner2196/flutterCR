@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
 import '../../providers/anuncio_provider.dart';
 import '../../models/anuncio_model.dart';
@@ -286,7 +287,16 @@ class _AnuncioAdminCard extends StatelessWidget {
           ],
         ),
       );
-      if (ok == true) await provider.eliminarAnuncio(anuncio.id);
+      if (ok == true) {
+        final eliminado = await provider.eliminarAnuncio(anuncio.id);
+        if (!context.mounted) return;
+        if (!eliminado) {
+          MensajeOperacion.error(
+              context, 'No se pudo eliminar el anuncio', provider.error);
+        } else {
+          MensajeOperacion.exito(context, 'Anuncio eliminado');
+        }
+      }
     } else if (accion == 'EDITAR') {
       await Navigator.push(
         context,

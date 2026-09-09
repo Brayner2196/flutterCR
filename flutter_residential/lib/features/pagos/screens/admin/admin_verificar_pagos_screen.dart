@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/exceptions/api_exception.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
 import '../../models/abono_model.dart';
 import '../../models/pago_model.dart';
@@ -167,20 +169,22 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
 
   Future<void> _verificar(BuildContext context, PagoModel pago) async {
     try {
-      await context.read<PagosProvider>().verificar(pago.id);
+      final provider = context.read<PagosProvider>();
+      // Hay que mirar el booleano: el provider atrapa la excepción y devuelve
+      // false, así que el catch de abajo NO corre en un error de negocio.
+      // Sin esto la pantalla decía "Pago verificado correctamente" aunque el
+      // backend lo hubiera rechazado — y esto mueve dinero.
+      final ok = await provider.verificar(pago.id);
       if (mounted) _cargar();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Pago verificado correctamente'),
-          backgroundColor: Colors.green,
-        ));
+      if (!context.mounted) return;
+      if (!ok) {
+        MensajeOperacion.error(context, 'No se pudo verificar el pago', provider.error);
+        return;
       }
+      MensajeOperacion.exito(context, 'Pago verificado correctamente');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ));
+        MensajeOperacion.error(context, 'Error al verificar el pago', ApiException.extract(e));
       }
     }
   }
@@ -189,40 +193,37 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
     final motivo = await _dialogMotivo(context, 'Rechazar pago');
     if (motivo == null || motivo.trim().isEmpty) return;
     try {
-      await context.read<PagosProvider>().rechazar(pago.id, motivo);
+      if (!context.mounted) return;
+      final provider = context.read<PagosProvider>();
+      final ok = await provider.rechazar(pago.id, motivo);
       if (mounted) _cargar();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Pago rechazado'),
-          backgroundColor: Colors.orange,
-        ));
+      if (!context.mounted) return;
+      if (!ok) {
+        MensajeOperacion.error(context, 'No se pudo rechazar el pago', provider.error);
+        return;
       }
+      MensajeOperacion.exito(context, 'Pago rechazado');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ));
+        MensajeOperacion.error(context, 'Error al rechazar el pago', ApiException.extract(e));
       }
     }
   }
 
   Future<void> _verificarAbono(BuildContext context, AbonoModel abono) async {
     try {
-      await context.read<AbonoProvider>().verificar(abono.id);
+      final provider = context.read<AbonoProvider>();
+      final ok = await provider.verificar(abono.id);
       if (mounted) _cargar();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Abono verificado y distribuido correctamente'),
-          backgroundColor: Colors.green,
-        ));
+      if (!context.mounted) return;
+      if (!ok) {
+        MensajeOperacion.error(context, 'No se pudo verificar el abono', provider.error);
+        return;
       }
+      MensajeOperacion.exito(context, 'Abono verificado y distribuido correctamente');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ));
+        MensajeOperacion.error(context, 'Error al verificar el abono', ApiException.extract(e));
       }
     }
   }
@@ -231,21 +232,22 @@ class _AdminVerificarPagosScreenState extends State<AdminVerificarPagosScreen>
     final motivo = await _dialogMotivo(context, 'Rechazar abono');
     if (motivo == null || motivo.trim().isEmpty) return;
     try {
-      if(!context.mounted) return;
-      context.read<AbonoProvider>().rechazar(abono.id, motivo);
+      if (!context.mounted) return;
+      final provider = context.read<AbonoProvider>();
+      // Faltaba el await: la llamada salía disparada y _cargar() recargaba la
+      // lista antes de que el rechazo se aplicara, así que el abono seguía
+      // apareciendo como pendiente hasta el siguiente refresco.
+      final ok = await provider.rechazar(abono.id, motivo);
       if (mounted) _cargar();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Abono rechazado'),
-          backgroundColor: Colors.orange,
-        ));
+      if (!context.mounted) return;
+      if (!ok) {
+        MensajeOperacion.error(context, 'No se pudo rechazar el abono', provider.error);
+        return;
       }
+      MensajeOperacion.exito(context, 'Abono rechazado');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ));
+        MensajeOperacion.error(context, 'Error al rechazar el abono', ApiException.extract(e));
       }
     }
   }

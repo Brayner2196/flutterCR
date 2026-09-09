@@ -43,6 +43,12 @@ class ResidenteDashboardScreen extends StatefulWidget {
 class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
   bool _estadisticasCargadas = false;
 
+  /// Instancia a la que se le registro el listener. Se guarda para poder
+  /// soltarlo en dispose() SIN pasar por context: ahi el elemento ya esta
+  /// desactivado y cualquier lookup de ancestro lanza
+  /// "Looking up a deactivated widget's ancestor is unsafe".
+  PropiedadProvider? _propProvider;
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +87,7 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
       if (pid != null) {
         _cargarEstadisticas(pid);
       } else {
+        _propProvider = propProvider;
         propProvider.addListener(_onPropiedadLista);
       }
     });
@@ -88,10 +95,11 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
 
   void _onPropiedadLista() {
     if (_estadisticasCargadas || !mounted) return;
-    final pid = context.read<PropiedadProvider>().propiedadActual?.propiedadId;
+    final pid = _propProvider?.propiedadActual?.propiedadId;
     if (pid == null) return;
     _estadisticasCargadas = true;
-    context.read<PropiedadProvider>().removeListener(_onPropiedadLista);
+    _propProvider?.removeListener(_onPropiedadLista);
+    _propProvider = null;
     _cargarEstadisticas(pid);
   }
 
@@ -139,7 +147,8 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
 
   @override
   void dispose() {
-    context.read<PropiedadProvider>().removeListener(_onPropiedadLista);
+    _propProvider?.removeListener(_onPropiedadLista);
+    _propProvider = null;
     super.dispose();
   }
 

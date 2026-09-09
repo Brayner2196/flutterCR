@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/exceptions/api_exception.dart';
+import '../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
-import 'package:toastification/toastification.dart';
 import '../providers/usuario_provider.dart';
 import '../../../shared/theme/app_theme.dart';
 import 'steps/usuario_wizard_step_rol.dart';
@@ -190,7 +191,8 @@ class _UsuarioWizardScreenState extends State<UsuarioWizardScreen> {
       final propiedadPath =
           _requierePropiedad ? _propiedadPath : <Map<String, dynamic>>[];
 
-      await context.read<UsuarioProvider>().crear({
+      final provider = context.read<UsuarioProvider>();
+      final creado = await provider.crear({
         'nombre': _nombreCtrl.text.trim(),
         'email': _emailCtrl.text.trim().toLowerCase(),
         'password': _passwordCtrl.text,
@@ -201,25 +203,33 @@ class _UsuarioWizardScreenState extends State<UsuarioWizardScreen> {
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(
-          '${_nombreCtrl.text.trim()} fue creado correctamente.',
-        ),backgroundColor: AppColors.ok,),
+
+      // Hay que preguntar por el booleano: el provider atrapa la excepción y
+      // devuelve false, así que el catch de abajo NO se dispara en un error de
+      // negocio (correo repetido, rol inválido). Sin esto, el wizard felicitaba
+      // al admin y se cerraba aunque el backend hubiera respondido 409.
+      if (!creado) {
+        MensajeOperacion.error(
+          context,
+          'No se pudo crear el usuario',
+          provider.error,
+        );
+        return;
+      }
+
+      MensajeOperacion.exito(
+        context,
+        '${_nombreCtrl.text.trim()} fue creado correctamente.',
       );
       Navigator.of(context).pop(true);
     } catch (e) {
+      // Queda para lo que sí llega como excepción: sin conexión, timeout,
+      // sesión expirada.
       if (!mounted) return;
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        style: ToastificationStyle.flatColored,
-        title: const Text('Error al crear usuario'),
-        description:
-            Text(e.toString().replaceFirst('Exception: ', '')),
-        alignment: Alignment.topRight,
-        autoCloseDuration: const Duration(seconds: 5),
-        showProgressBar: true,
-        closeOnClick: true,
+      MensajeOperacion.error(
+        context,
+        'Error al crear usuario',
+        ApiException.extract(e),
       );
     } finally {
       if (mounted) setState(() => _creando = false);

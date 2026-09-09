@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../providers/cobros_provider.dart';
@@ -81,13 +82,21 @@ class CobrosTabViewState extends State<CobrosTabView>
     if (confirmado != true) return;
     try {
       if (!mounted) return;
-      context.read<CobrosProvider>().cerrarPeriodo(p.id);
-      final periodos = context.read<CobrosProvider>().periodos;
+      final provider = context.read<CobrosProvider>();
+      // Faltaba el await: la lista se releía antes de que el cierre se
+      // aplicara, y el período seguía apareciendo abierto.
+      final cerrado = await provider.cerrarPeriodo(p.id);
+      if (!mounted) return;
+      if (!cerrado) {
+        MensajeOperacion.error(context, 'No se pudo cerrar el período', provider.error);
+        return;
+      }
+      final periodos = provider.periodos;
       setState(() {
         _periodoSeleccionado = periodos.where((x) => x.id == p.id).firstOrNull;
       });
       _snack('Período cerrado correctamente', AppColors.ok);
-      context.read<CobrosProvider>().cargarPeriodos();
+      provider.cargarPeriodos();
     } catch (e) {
       if (!mounted) return;
       _snack(e.toString().replaceFirst('Exception: ', ''), AppColors.danger);

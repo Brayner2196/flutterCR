@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../models/configuracion_plan_pago_model.dart';
 import '../../providers/plan_pago_provider.dart';
+import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
 class AdminConfigPlanPagoScreen extends StatefulWidget {
   const AdminConfigPlanPagoScreen({super.key});
@@ -65,8 +67,14 @@ class _AdminConfigPlanPagoScreenState
     );
 
     try {
-      await context.read<PlanPagoProvider>().guardarConfig(nuevo);
+      final provider = context.read<PlanPagoProvider>();
+      final guardada = await provider.guardarConfig(nuevo);
       if (!mounted) return;
+      if (!guardada) {
+        MensajeOperacion.error(
+            context, 'No se pudo guardar la configuración', provider.error);
+        return;
+      }
       toastification.show(
         context: context,
         type: ToastificationType.success,
@@ -283,12 +291,9 @@ class _SwitchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
+    return PanelTiles(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      color: cs.surfaceContainerHighest,
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
         title: Text(titulo,

@@ -5,6 +5,7 @@ import '../../models/publicacion_model.dart';
 import '../../providers/publicacion_provider.dart';
 import 'mis_publicaciones_screen.dart';
 import 'publicacion_detalle_sheet.dart';
+import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -623,11 +624,10 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
     final prov = context.watch<PublicacionProvider>();
     final marcas = prov.marcasDisponibles;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+    return PanelTiles(
+      color: cs.surface,
+      radioPersonalizado:
+          const BorderRadius.vertical(top: Radius.circular(20)),
       padding: EdgeInsets.fromLTRB(
           20, 0, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(

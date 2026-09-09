@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../models/auditoria_model.dart';
 import '../providers/auditoria_provider.dart';
+import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
 /// Bandeja de auditoría financiera. Exclusiva del TENANT_ADMIN.
 ///
@@ -151,11 +152,12 @@ class _TarjetaRegistro extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final fallido = !registro.exitoso;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(12),
-        // Franja lateral: el ojo distingue un intento rechazado sin leer.
+    return PanelTiles(
+      color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
+      // Franja lateral: el ojo distingue un intento rechazado sin leer.
+      // Va como decoracion interna, sin color: un Border asimetrico no cabe en
+      // el shape del Material y un DecoratedBox transparente no tapa el ripple.
+      decoracionInterna: BoxDecoration(
         border: Border(
           left: BorderSide(
             color: fallido ? cs.error : cs.primary.withValues(alpha: 0.5),

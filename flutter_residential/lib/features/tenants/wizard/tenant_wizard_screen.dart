@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
 import '../providers/tenant_provider.dart';
 import '../../../shared/theme/app_theme.dart';
@@ -189,7 +190,8 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
         .toList();
 
     try {
-      await context.read<TenantProvider>().crear({
+      final provider = context.read<TenantProvider>();
+      final creado = await provider.crear({
         'schemaName': _schemaCtrl.text.trim(),
         'nombre': _nombreCtrl.text.trim(),
         'codigo': _codigoCtrl.text.trim(),
@@ -201,6 +203,15 @@ class _TenantWizardScreenState extends State<TenantWizardScreen> {
         if (tiposJson.isNotEmpty) 'tiposPropiedad': tiposJson,
         if (pasarelasJson.isNotEmpty) 'pasarelas': pasarelasJson,
       });
+
+      if (!mounted) return;
+      // Sin este corte el wizard se cerraba y felicitaba aunque el backend
+      // hubiera rechazado la creación (schema repetido, correo en uso...).
+      if (!creado) {
+        MensajeOperacion.error(
+            context, 'No se pudo crear el conjunto', provider.error);
+        return;
+      }
 
       if (mounted) {
         Navigator.pop(context);

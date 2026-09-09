@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:flutter_residential/core/utils/currency_formatter.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cobros_provider.dart';
@@ -52,18 +53,20 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
     );
     if (confirmado != true) return;
     try {
-      await context.read<CobrosProvider>().cerrarPeriodo(p.id);
+      final provider = context.read<CobrosProvider>();
+      final cerrado = await provider.cerrarPeriodo(p.id);
       if (!mounted) return;
+      if (!cerrado) {
+        MensajeOperacion.error(context, 'No se pudo cerrar el período', provider.error);
+        return;
+      }
       // Re-sincronizar con el objeto actualizado en la lista del provider
-      final periodos = context.read<CobrosProvider>().periodos;
+      final periodos = provider.periodos;
       setState(() {
         _periodoSeleccionado = periodos.where((x) => x.id == p.id).firstOrNull;
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Período cerrado correctamente'),
-        backgroundColor: Colors.green,
-      ));
-      context.read<CobrosProvider>().cargarPeriodos();
+      MensajeOperacion.exito(context, 'Período cerrado correctamente');
+      provider.cargarPeriodos();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

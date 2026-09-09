@@ -12,6 +12,7 @@ import '../../services/usuario_service.dart';
 import '../../../contador/screens/permisos_contador_sheet.dart';
 import '../../../propiedades/services/propiedad_service.dart';
 import '../../../pagos/screens/admin/admin_ver_como_residente_screen.dart';
+import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
 class UsuarioDetalleSheet extends StatelessWidget {
   final UsuarioResponse usuario;
@@ -35,11 +36,10 @@ class UsuarioDetalleSheet extends StatelessWidget {
       maxChildSize: 0.95,
       expand: false,
       builder: (_, controller) {
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
+        return PanelTiles(
+          color: theme.colorScheme.surface,
+          radioPersonalizado:
+              const BorderRadius.vertical(top: Radius.circular(20)),
           child: Column(
             children: [
               Container(
@@ -976,11 +976,8 @@ class _AdminControlesSectionState extends State<_AdminControlesSection> {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(12),
-          ),
+        PanelTiles(
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
           child: Column(
             children: [
               // Toggle activo

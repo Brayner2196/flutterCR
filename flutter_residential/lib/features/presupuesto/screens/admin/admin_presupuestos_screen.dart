@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../shared/theme/app_theme.dart';
@@ -84,17 +85,24 @@ class _AdminPresupuestosScreenState extends State<AdminPresupuestosScreen> {
   Future<void> _toggleActivo(
       BuildContext context, PresupuestoModel p, bool activo) async {
     try {
-      await context.read<PresupuestoProvider>().toggleActivo(p.id, activo: activo);
-      if (context.mounted) {
-        toastification.show(
-          context: context,
-          type: ToastificationType.success,
-          title: Text(activo
-              ? 'Presupuesto ${p.anio} activado'
-              : 'Presupuesto ${p.anio} desactivado'),
-          autoCloseDuration: const Duration(seconds: 2),
-        );
+      final provider = context.read<PresupuestoProvider>();
+      final ok = await provider.toggleActivo(p.id, activo: activo);
+      if (!context.mounted) return;
+      // El provider atrapa la excepción y devuelve false: sin este corte el
+      // toast de éxito salía igual aunque el backend hubiera fallado.
+      if (!ok) {
+        MensajeOperacion.error(
+            context, 'No se pudo cambiar el estado del presupuesto', provider.error);
+        return;
       }
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        title: Text(activo
+            ? 'Presupuesto ${p.anio} activado'
+            : 'Presupuesto ${p.anio} desactivado'),
+        autoCloseDuration: const Duration(seconds: 2),
+      );
     } catch (e) {
       if (context.mounted) {
         toastification.show(

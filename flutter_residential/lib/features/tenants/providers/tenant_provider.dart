@@ -15,30 +15,48 @@ class TenantProvider extends BaseProvider {
     }
   }
 
-  Future<void> crear(Map<String, dynamic> datos) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> crear(Map<String, dynamic> datos) async {
     final nuevo = await ejecutar(() => TenantService.crear(datos));
-    if (nuevo != null) {
-      agregarAlFinal(_tenants, nuevo);
-    }
+    if (nuevo == null) return false;
+    agregarAlFinal(_tenants, nuevo);
+    return true;
   }
 
-  Future<void> actualizar(int id, Map<String, dynamic> datos) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> actualizar(int id, Map<String, dynamic> datos) async {
     final actualizado = await ejecutar(
       () => TenantService.actualizar(id, datos),
     );
-    if (actualizado != null) {
-      reemplazar(_tenants, actualizado, (t) => t.id);
-    }
+    if (actualizado == null) return false;
+    reemplazar(_tenants, actualizado, (t) => t.id);
+    return true;
   }
 
-  Future<void> desactivar(int id) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> desactivar(int id) async {
     await ejecutar(() => TenantService.desactivar(id));
+    // Sin el corte, el conjunto se pintaba como desactivado en la lista aunque
+    // el backend hubiera rechazado la operación.
+    if (error != null) return false;
     _actualizarEstado(id, activo: false);
+    return true;
   }
 
-  Future<void> activar(int id) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> activar(int id) async {
     await ejecutar(() => TenantService.activar(id));
+    if (error != null) return false;
     _actualizarEstado(id, activo: true);
+    return true;
   }
 
   // ─── Operaciones destructivas ────────────────────────────────────────────

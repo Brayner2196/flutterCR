@@ -70,11 +70,14 @@ class PresupuestoProvider extends BaseProvider {
     return p;
   }
 
-  Future<void> toggleActivo(int id, {required bool activo}) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> toggleActivo(int id, {required bool activo}) async {
     final p = await ejecutar(
       () => PresupuestoService.toggleActivo(id, activo: activo),
     );
-    if (p == null) return;
+    if (p == null) return false;
     if (activo) {
       _presupuestos = _presupuestos
           .map((e) => e.id == id ? p : _desactivarLocal(e))
@@ -84,6 +87,7 @@ class PresupuestoProvider extends BaseProvider {
     }
     if (_detalle?.id == id) _detalle = p;
     notifyListeners();
+    return true;
   }
 
   Future<GastoRegistradoModel> registrarGasto(
@@ -96,11 +100,19 @@ class PresupuestoProvider extends BaseProvider {
     return gasto;
   }
 
-  Future<void> eliminarGasto(int presupuestoId, int gastoId) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> eliminarGasto(int presupuestoId, int gastoId) async {
     await ejecutar(
       () => PresupuestoService.eliminarGasto(presupuestoId, gastoId),
     );
+    // El servicio devuelve void, así que el resultado del borrado se lee en
+    // [error]. Hay que capturarlo ANTES de cargarDetalle: esa llamada vuelve a
+    // pasar por ejecutar() y limpia el error, borrando la evidencia del fallo.
+    final fallo = error != null;
     await cargarDetalle(presupuestoId);
+    return !fallo;
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

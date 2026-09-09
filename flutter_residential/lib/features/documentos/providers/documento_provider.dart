@@ -57,13 +57,23 @@ class DocumentoProvider extends BaseProvider {
     return actualizado;
   }
 
-  Future<void> eliminarArchivo(int id, int archivoId) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> eliminarArchivo(int id, int archivoId) async {
     await ejecutar(() => DocumentoService.eliminarArchivo(id, archivoId));
+    return error == null;
   }
 
-  Future<void> eliminarDocumento(int id) async {
+  /// Devuelve true si el backend lo aceptó. En false, el motivo real queda en
+  /// [error] — `ejecutar` lo atrapa y NO relanza, así que el llamador tiene que
+  /// mirar este booleano; un `try/catch` alrededor nunca se dispara.
+  Future<bool> eliminarDocumento(int id) async {
     await ejecutar(() => DocumentoService.eliminar(id));
+    // Igual que en anuncios: no sacarlo de la lista local si el backend falló.
+    if (error != null) return false;
     super.eliminar(_documentos, (d) => d.id == id);
+    return true;
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────

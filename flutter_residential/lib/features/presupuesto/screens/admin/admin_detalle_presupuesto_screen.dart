@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/utils/mensaje_operacion.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../shared/theme/app_theme.dart';
@@ -145,15 +146,19 @@ class _AdminDetallePresupuestoScreenState
     );
     if (ok != true || !context.mounted) return;
     try {
-      await context.read<PresupuestoProvider>().eliminarGasto(presupuestoId, g.id);
-      if (context.mounted) {
-        toastification.show(
-          context: context,
-          type: ToastificationType.success,
-          title: const Text('Gasto eliminado'),
-          autoCloseDuration: const Duration(seconds: 2),
-        );
+      final provider = context.read<PresupuestoProvider>();
+      final eliminado = await provider.eliminarGasto(presupuestoId, g.id);
+      if (!context.mounted) return;
+      if (!eliminado) {
+        MensajeOperacion.error(context, 'No se pudo eliminar el gasto', provider.error);
+        return;
       }
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        title: const Text('Gasto eliminado'),
+        autoCloseDuration: const Duration(seconds: 2),
+      );
     } catch (e) {
       if (context.mounted) {
         toastification.show(

@@ -6,6 +6,7 @@ import '../../../../shared/theme/app_theme.dart';
 import '../../models/configuracion_plan_pago_model.dart';
 import '../../providers/plan_pago_provider.dart';
 import 'residente_mi_plan_screen.dart';
+import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
 /// Pantalla que permite al residente seleccionar cobros vencidos/pendientes
 /// y elegir el número de cuotas para solicitar un plan de pago.
@@ -335,18 +336,13 @@ class _CobroCheckTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
+    return PanelTiles(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: seleccionado ? cs.primary : cs.outline,
-          width: seleccionado ? 1.5 : 1,
-        ),
-        color: seleccionado
-            ? cs.primary.withValues(alpha: 0.05)
-            : cs.surface,
+      lado: BorderSide(
+        color: seleccionado ? cs.primary : cs.outline,
+        width: seleccionado ? 1.5 : 1,
       ),
+      color: seleccionado ? cs.primary.withValues(alpha: 0.05) : cs.surface,
       child: CheckboxListTile(
         value: seleccionado,
         onChanged: (v) => onToggle(v ?? false),
