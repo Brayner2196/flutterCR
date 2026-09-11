@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cobros_provider.dart';
+import '../../../propiedades/models/propiedad_admin.dart';
 import '../../../propiedades/services/propiedad_service.dart';
+import '../../../propiedades/widgets/propiedad_final_dropdown.dart';
 
 class AdminCobroEspecialScreen extends StatefulWidget {
   const AdminCobroEspecialScreen({super.key});
@@ -27,10 +29,12 @@ class _AdminCobroEspecialScreenState extends State<AdminCobroEspecialScreen> {
   };
 
   String _conceptoSeleccionado = 'MULTA';
-  Map<String, dynamic>? _propiedadSeleccionada;
+  PropiedadAdmin? _propiedadSeleccionada;
   DateTime _fechaLimite = DateTime.now().add(const Duration(days: 15));
 
-  List<Map<String, dynamic>> _propiedades = [];
+  List<PropiedadAdmin> _propiedades = [];
+  // El selector no es un FormField, asi que su error se controla aparte.
+  String? _errorPropiedad;
   bool _cargandoPropiedades = true;
   bool _enviando = false;
 
@@ -49,7 +53,7 @@ class _AdminCobroEspecialScreenState extends State<AdminCobroEspecialScreen> {
 
   Future<void> _cargarPropiedades() async {
     try {
-      final lista = await PropiedadService.listarPropiedades();
+      final lista = await PropiedadService.getPropiedadesAdmin();
       if (mounted) setState(() => _propiedades = lista);
     } catch (e) {
       if (mounted) {
@@ -77,22 +81,18 @@ class _AdminCobroEspecialScreenState extends State<AdminCobroEspecialScreen> {
   }
 
   Future<void> _enviar() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_propiedadSeleccionada == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona una propiedad'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
+    final formOk = _formKey.currentState!.validate();
+    // Se evalua siempre, no en corto: si faltan las dos cosas, el admin ve los
+    // dos errores de una vez y no uno despues del otro.
+    setState(() => _errorPropiedad =
+        _propiedadSeleccionada == null ? 'Selecciona una propiedad' : null);
+    if (!formOk || _propiedadSeleccionada == null) return;
 
     setState(() => _enviando = true);
     try {
       final monto = double.parse(_montoCtrl.text.replaceAll(',', '.'));
       await context.read<CobrosProvider>().crearCobroEspecial({
-        'propiedadId': _propiedadSeleccionada!['id'],
+        'propiedadId': _propiedadSeleccionada!.id,
         'concepto': _conceptoSeleccionado,
         'descripcion': _descripcionCtrl.text.trim(),
         'monto': monto,
@@ -105,7 +105,7 @@ class _AdminCobroEspecialScreenState extends State<AdminCobroEspecialScreen> {
           SnackBar(
             content: Text(
               '${_etiquetasConcepto[_conceptoSeleccionado]} generada para '
-              '${_propiedadSeleccionada!['pathTexto'] ?? _propiedadSeleccionada!['identificador']}',
+              '${_propiedadSeleccionada!.pathTexto}',
             ),
             backgroundColor: Colors.green,
           ),
@@ -189,32 +189,19 @@ class _AdminCobroEspecialScreenState extends State<AdminCobroEspecialScreen> {
                   const SizedBox(height: 20),
 
                   // ── Propiedad ─────────────────────────────────────
-                  Text('Propiedad',
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelLarge
-                          ?.copyWith(color: cs.onSurfaceVariant)),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<Map<String, dynamic>>(
-                    initialValue: _propiedadSeleccionada,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Selecciona la propiedad',
-                      prefixIcon: Icon(Icons.home_work_outlined),
-                    ),
-                    isExpanded: true,
-                    items: _propiedades.map((p) {
-                      final label = p['pathTexto'] as String? ??
-                          p['identificador'] as String? ??
-                          'Propiedad ${p['id']}';
-                      return DropdownMenuItem<Map<String, dynamic>>(
-                        value: p,
-                        child: Text(label, overflow: TextOverflow.ellipsis),
-                      );
-                    }).toList(),
-                    onChanged: (v) => setState(() => _propiedadSeleccionada = v),
-                    validator: (_) =>
-                        _propiedadSeleccionada == null ? 'Selecciona una propiedad' : null,
+                  // El label va dentro del campo, igual que Descripción y Monto.
+                  // Solo unidades finales: un cobro nunca puede apuntar a un
+                  // nodo intermedio (una Torre, un Piso). Se permiten las no
+                  // facturables, que quedan marcadas en la lista.
+                  PropiedadFinalDropdown(
+                    propiedades: _propiedades,
+                    seleccionada: _propiedadSeleccionada,
+                    errorText: _errorPropiedad,
+                    label: 'Propiedad',
+                    onChanged: (p) => setState(() {
+                      _propiedadSeleccionada = p;
+                      _errorPropiedad = null;
+                    }),
                   ),
                   const SizedBox(height: 16),
 

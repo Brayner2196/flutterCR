@@ -41,13 +41,9 @@ class GestionPropiedadesProvider extends BaseProvider {
     final res = await ejecutar(() => PropiedadService.getPropiedadesAdmin());
     if (res != null) {
       // El backend devuelve TODOS los nodos del árbol (Torre, Piso, Apartamento).
-      // En el listado solo interesan las HOJAS (la unidad final, ej. el
-      // Apartamento), es decir, las propiedades que no son padre de ninguna otra.
-      final idsPadre = res
-          .where((p) => p.parentId != null)
-          .map((p) => p.parentId!)
-          .toSet();
-      _propiedades = res.where((p) => !idsPadre.contains(p.id)).toList();
+      // En el listado solo interesan las unidades FINALES; el filtro vive en la
+      // extension del modelo para que todas las pantallas usen el mismo criterio.
+      _propiedades = res.finales();
     }
   }
 

@@ -173,7 +173,7 @@ class _TarjetaRegistro extends StatelessWidget {
           childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
           title: Text(
             '${registro.accionLegible} · ${registro.entidadLegible}'
-            '${registro.entidadId != null ? " #${registro.entidadId}" : ""}',
+            '${registro.referenciaLegible}',
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
           subtitle: Padding(
@@ -223,11 +223,10 @@ class _TarjetaRegistro extends StatelessWidget {
               _BloqueJson(titulo: 'Antes', json: registro.valoresAntes!),
             if (registro.valoresDespues != null)
               _BloqueJson(titulo: 'Después', json: registro.valoresDespues!),
-            if (registro.endpoint != null)
+            if (registro.ip != null)
               _BloqueTexto(
                 titulo: 'Origen',
-                texto: '${registro.endpoint}'
-                    '${registro.ip != null ? "\ndesde ${registro.ip}" : ""}',
+                texto: 'desde ${registro.ip}',
                 color: cs.onSurfaceVariant,
               ),
           ],

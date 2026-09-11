@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/texto_utils.dart';
+
 /// Resumen de un residente asociado a una propiedad (viene en PropiedadResponse).
 class ResidenteResumen {
   final int usuarioId;
@@ -121,6 +123,14 @@ class PropiedadAdmin {
   String get titulo =>
       pathTextoCorto.isNotEmpty ? pathTextoCorto : pathTexto;
 
+  /// Identidad por id: permite que los selectores reconozcan la misma
+  /// propiedad aunque la lista se haya recargado y sea otra instancia.
+  @override
+  bool operator ==(Object other) => other is PropiedadAdmin && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+
   factory PropiedadAdmin.fromJson(Map<String, dynamic> json) {
     final resList = (json['residentes'] as List?) ?? const [];
     return PropiedadAdmin(
@@ -138,5 +148,33 @@ class PropiedadAdmin {
           .map((e) => ResidenteResumen.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
+  }
+}
+
+/// Operaciones sobre una lista de propiedades tal como llega del backend.
+///
+/// El endpoint devuelve TODOS los nodos del arbol (Torre, Piso, Apartamento),
+/// no solo las unidades finales; estos filtros centralizan esa distincion para
+/// no repetirla en cada pantalla.
+extension PropiedadAdminLista on List<PropiedadAdmin> {
+  /// Ids de las propiedades que son padre de alguna otra.
+  Set<int> get idsConHijos =>
+      {for (final p in this) if (p.parentId != null) p.parentId!};
+
+  /// Propiedades FINALES: las hojas del arbol, las que no tienen ninguna unidad
+  /// por debajo. Es la unica sobre la que aplican cobros y asignaciones.
+  ///
+  /// Ojo: "final" no es lo mismo que "facturable". Un tipo puede ser facturable
+  /// y aun asi tener hijos; por eso se mira el arbol y no el flag.
+  ///
+  /// [soloFacturables] restringe ademas a las unidades que facturan.
+  /// El resultado sale ordenado de forma natural por su titulo (A9 antes de A10).
+  List<PropiedadAdmin> finales({bool soloFacturables = false}) {
+    final padres = idsConHijos;
+    final res = where((p) =>
+            !padres.contains(p.id) && (!soloFacturables || p.esFacturable))
+        .toList();
+    res.sort((a, b) => TextoUtils.compararNatural(a.titulo, b.titulo));
+    return res;
   }
 }

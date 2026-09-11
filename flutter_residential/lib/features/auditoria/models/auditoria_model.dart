@@ -10,6 +10,12 @@ class RegistroAuditoria {
   final String? usuarioRol;
   final String entidad;
   final int? entidadId;
+
+  /// Etiqueta legible del registro tocado ("Agosto 2026", "Apto 501"), congelada
+  /// por el backend al momento del hecho. Se prefiere sobre [entidadId] al pintar
+  /// la tarjeta: un id crudo no le dice nada al administrador, y es lo unico que
+  /// da contexto en las acciones masivas, donde [entidadId] llega en null.
+  final String? valorEntidad;
   final String accion;
   final String? descripcion;
   final String? valoresAntes;
@@ -30,6 +36,7 @@ class RegistroAuditoria {
     this.usuarioRol,
     required this.entidad,
     this.entidadId,
+    this.valorEntidad,
     required this.accion,
     this.descripcion,
     this.valoresAntes,
@@ -48,6 +55,7 @@ class RegistroAuditoria {
         usuarioRol: json['usuarioRol'],
         entidad: json['entidad'] ?? '',
         entidadId: json['entidadId'],
+        valorEntidad: json['valorEntidad'],
         accion: json['accion'] ?? '',
         descripcion: json['descripcion'],
         valoresAntes: json['valoresAntes'],
@@ -65,6 +73,16 @@ class RegistroAuditoria {
   bool get tieneDetalle =>
       (valoresAntes?.isNotEmpty ?? false) || (valoresDespues?.isNotEmpty ?? false);
 
+  /// Qué se muestra junto a la entidad: la etiqueta del backend si vino, el id
+  /// como respaldo para los registros anteriores al campo, y nada si no hay
+  /// ninguno. Vive en el modelo para que ninguna pantalla repita la decisión.
+  String get referenciaLegible {
+    final valor = valorEntidad;
+    if (valor != null && valor.isNotEmpty) return ' $valor';
+    if (entidadId != null) return ' #$entidadId';
+    return '';
+  }
+
   /// Texto legible de la acción, para no mostrar el identificador del enum.
   String get accionLegible => nombreAccion(accion);
 
@@ -73,21 +91,21 @@ class RegistroAuditoria {
   /// Estáticos para que los desplegables de filtros los usen sin tener que
   /// construir un registro falso solo para leer un texto.
   static String nombreAccion(String accion) => switch (accion) {
-        'CREAR' => 'Creó',
-        'ACTUALIZAR' => 'Actualizó',
-        'ELIMINAR' => 'Eliminó',
-        'EXONERAR' => 'Exoneró',
-        'VERIFICAR' => 'Verificó',
+        'CREAR' => 'Se creó',
+        'ACTUALIZAR' => 'Se actualizó',
+        'ELIMINAR' => 'Se eliminó',
+        'EXONERAR' => 'Se exoneró',
+        'VERIFICAR' => 'Se verificó',
         'RECHAZAR' => 'Rechazó',
-        'GENERAR' => 'Generó',
-        'CERRAR' => 'Cerró',
-        'CANCELAR' => 'Canceló',
-        'RECALCULAR' => 'Recalculó',
-        'NOTIFICAR' => 'Notificó',
-        'MIGRAR' => 'Migró',
-        'SIMULAR' => 'Simuló',
-        'OTORGAR_PERMISO' => 'Otorgó permiso',
-        'REVOCAR_PERMISO' => 'Revocó permiso',
+        'GENERAR' => 'Se generó',
+        'CERRAR' => 'Se cerró',
+        'CANCELAR' => 'Se canceló',
+        'RECALCULAR' => 'Se recalculó',
+        'NOTIFICAR' => 'Se notificó',
+        'MIGRAR' => 'Se migró',
+        'SIMULAR' => 'Se simuló',
+        'OTORGAR_PERMISO' => 'Se otorgó permiso',
+        'REVOCAR_PERMISO' => 'Se revocó permiso',
         _ => accion,
       };
 
