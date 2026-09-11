@@ -4,6 +4,7 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
 import '../../models/pasarela_disponible_model.dart';
 import '../../widgets/pasarela_comisiones_widget.dart';
+import '../../config/credenciales_pasarela.dart';
 
 // ─── Modelo de respuesta para admin ───────────────────────────────────────────
 
@@ -17,6 +18,7 @@ class PasarelaConfigModel {
   final bool tienePublicKey;
   final bool tienePrivateKey;
   final bool tieneWebhookSecret;
+  final bool tieneIntegritySecret;
 
   const PasarelaConfigModel({
     required this.id,
@@ -28,6 +30,7 @@ class PasarelaConfigModel {
     required this.tienePublicKey,
     required this.tienePrivateKey,
     required this.tieneWebhookSecret,
+    required this.tieneIntegritySecret,
   });
 
   factory PasarelaConfigModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +44,7 @@ class PasarelaConfigModel {
       tienePublicKey: json['tienePublicKey'] as bool? ?? false,
       tienePrivateKey: json['tienePrivateKey'] as bool? ?? false,
       tieneWebhookSecret: json['tieneWebhookSecret'] as bool? ?? false,
+      tieneIntegritySecret: json['tieneIntegritySecret'] as bool? ?? false,
     );
   }
 }
@@ -308,15 +312,30 @@ class _PasarelaCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
                     _credencial('Public Key', pasarela.tienePublicKey),
-                    const SizedBox(width: 8),
                     _credencial('Private Key', pasarela.tienePrivateKey),
-                    const SizedBox(width: 8),
                     _credencial('Webhook', pasarela.tieneWebhookSecret),
+                    // Solo se muestra donde aplica: el descriptor decide, no un if por tipo.
+                    if (CredencialesPasarela.integritySecret(pasarela.tipoPasarela) != null)
+                      _credencial('Integridad', pasarela.tieneIntegritySecret),
                   ],
                 ),
+
+                // Una pasarela activa sin el secreto que firma el checkout no puede cobrar:
+                // el residente veria un error de la pasarela sin explicacion. Mejor decirlo aqui.
+                if (CredencialesPasarela.requiereIntegritySecret(pasarela.tipoPasarela) &&
+                    !pasarela.tieneIntegritySecret)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _aviso(
+                      'Falta el secreto de integridad: los residentes no podrán pagar con '
+                      '${pasarela.nombre} hasta que lo configures.',
+                    ),
+                  ),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -385,6 +404,30 @@ class _PasarelaCard extends StatelessWidget {
     );
   }
 
+  Widget _aviso(String texto) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.warning_amber_rounded, size: 15, color: Colors.orange),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              texto,
+              style: const TextStyle(fontSize: 11, color: Colors.orange, height: 1.3),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _credencial(String label, bool tiene) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -424,10 +467,12 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
   final _publicKeyCtrl = TextEditingController();
   final _privateKeyCtrl = TextEditingController();
   final _webhookCtrl = TextEditingController();
+  final _integrityCtrl = TextEditingController();
   int _prioridad = 1;
   bool _sandbox = false;
   bool _guardando = false;
   bool _mostrarPrivateKey = false;
+  bool _mostrarIntegrity = false;
 
   @override
   void initState() {
@@ -439,6 +484,15 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
     }
   }
 
+  @override
+  void dispose() {
+    _publicKeyCtrl.dispose();
+    _privateKeyCtrl.dispose();
+    _webhookCtrl.dispose();
+    _integrityCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _guardar() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _guardando = true);
@@ -447,12 +501,19 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
           ? ApiConstants.tenantPasarelas(widget.tenantId!)
           : ApiConstants.adminPasarelas;
 
+      // Un campo vacio NO se manda: el backend conserva la credencial que ya tenia. Asi el
+      // admin puede cambiar solo la prioridad sin volver a pegar todas las llaves (antes ese
+      // guardado las borraba, y con el webhook secret eso apagaba la verificacion de firma).
       final body = {
         'tipoPasarela': _tipo.backendValue,
-        'publicKey': _publicKeyCtrl.text.trim(),
-        'privateKey': _privateKeyCtrl.text.trim(),
-        if (_webhookCtrl.text.isNotEmpty)
+        if (_publicKeyCtrl.text.trim().isNotEmpty)
+          'publicKey': _publicKeyCtrl.text.trim(),
+        if (_privateKeyCtrl.text.trim().isNotEmpty)
+          'privateKey': _privateKeyCtrl.text.trim(),
+        if (_webhookCtrl.text.trim().isNotEmpty)
           'webhookSecret': _webhookCtrl.text.trim(),
+        if (_integrityCtrl.text.trim().isNotEmpty)
+          'integritySecret': _integrityCtrl.text.trim(),
         'sandbox': _sandbox,
         'prioridad': _prioridad,
       };
@@ -483,6 +544,7 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.existente != null;
+    final campoIntegridad = CredencialesPasarela.integritySecret(_tipo);
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -555,18 +617,16 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
               // Public Key
               _campo(
                 ctrl: _publicKeyCtrl,
-                label: _labelPublicKey(_tipo),
-                hint: _hintPublicKey(_tipo),
-                required: true,
+                campo: CredencialesPasarela.publicKey(_tipo),
+                esEdicion: isEdit,
               ),
               const SizedBox(height: 12),
 
               // Private Key
               _campo(
                 ctrl: _privateKeyCtrl,
-                label: _labelPrivateKey(_tipo),
-                hint: _hintPrivateKey(_tipo),
-                required: true,
+                campo: CredencialesPasarela.privateKey(_tipo),
+                esEdicion: isEdit,
                 obscure: !_mostrarPrivateKey,
                 suffix: IconButton(
                   icon: Icon(
@@ -580,12 +640,31 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
               ),
               const SizedBox(height: 12),
 
+              // Secreto de integridad — solo donde el descriptor dice que aplica
+              if (campoIntegridad != null) ...[
+                _campo(
+                  ctrl: _integrityCtrl,
+                  campo: campoIntegridad,
+                  esEdicion: isEdit,
+                  obscure: !_mostrarIntegrity,
+                  suffix: IconButton(
+                    icon: Icon(
+                      _mostrarIntegrity
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () =>
+                        setState(() => _mostrarIntegrity = !_mostrarIntegrity),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
               // Webhook secret
               _campo(
                 ctrl: _webhookCtrl,
-                label: 'Webhook Secret (opcional)',
-                hint: 'Para verificar la firma de webhooks',
-                required: false,
+                campo: CredencialesPasarela.webhookSecret(_tipo),
+                esEdicion: isEdit,
               ),
               const SizedBox(height: 14),
 
@@ -672,19 +751,24 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
     );
   }
 
+  /// Campo de credencial. La etiqueta, el ejemplo y si es obligatorio salen de
+  /// [CampoCredencial]: agregar una credencial nueva no toca este widget.
+  ///
+  /// En edicion nada es obligatorio: vacio significa "conserva la que ya esta guardada",
+  /// porque el backend nunca devuelve los secretos y el formulario no los puede precargar.
   Widget _campo({
     required TextEditingController ctrl,
-    required String label,
-    required String hint,
-    required bool required,
+    required CampoCredencial campo,
+    required bool esEdicion,
     bool obscure = false,
     Widget? suffix,
   }) {
+    final exigir = campo.obligatorio && !esEdicion;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          exigir ? '${campo.label} *' : campo.label,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
         ),
         const SizedBox(height: 6),
@@ -692,12 +776,15 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
           controller: ctrl,
           obscureText: obscure,
           decoration: InputDecoration(
-            hintText: hint,
+            hintText: esEdicion ? 'Déjalo vacío para conservar el actual' : campo.hint,
             border: const OutlineInputBorder(),
             suffixIcon: suffix,
+            helperText: campo.ayuda,
+            helperMaxLines: 3,
+            helperStyle: const TextStyle(fontSize: 11),
           ),
-          validator: required
-              ? (v) => (v == null || v.isEmpty) ? 'Campo requerido' : null
+          validator: exigir
+              ? (v) => (v == null || v.trim().isEmpty) ? 'Campo requerido' : null
               : null,
         ),
       ],
@@ -705,18 +792,7 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
   }
 
   Widget _ayudaPasarela(TipoPasarela tipo) {
-    final texto = switch (tipo) {
-      TipoPasarela.mercadoPago =>
-        'Para MercadoPago: usa la Access Token de tu cuenta. '
-            'La Public Key es la llave pública del checkout.',
-      TipoPasarela.wompi =>
-        'Para Wompi: usa la llave privada como Private Key '
-            'y la llave pública como Public Key. '
-            'El Webhook Secret es el "events_secret" de tu cuenta Wompi.',
-      TipoPasarela.bold =>
-        'Para Bold: usa tu API key como Private Key. '
-            'El Webhook Secret es el secreto de eventos configurado en el panel.',
-    };
+    final texto = CredencialesPasarela.ayudaGeneral(tipo);
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -738,27 +814,4 @@ class _PasarelaFormSheetState extends State<_PasarelaFormSheet> {
     );
   }
 
-  String _labelPublicKey(TipoPasarela tipo) => switch (tipo) {
-    TipoPasarela.mercadoPago => 'Public Key',
-    TipoPasarela.wompi => 'Llave pública',
-    TipoPasarela.bold => 'API Key pública',
-  };
-
-  String _hintPublicKey(TipoPasarela tipo) => switch (tipo) {
-    TipoPasarela.mercadoPago => 'APP_USR-...',
-    TipoPasarela.wompi => 'pub_...',
-    TipoPasarela.bold => 'pk_...',
-  };
-
-  String _labelPrivateKey(TipoPasarela tipo) => switch (tipo) {
-    TipoPasarela.mercadoPago => 'Access Token (Private Key)',
-    TipoPasarela.wompi => 'Llave privada (Private Key)',
-    TipoPasarela.bold => 'API Key privada',
-  };
-
-  String _hintPrivateKey(TipoPasarela tipo) => switch (tipo) {
-    TipoPasarela.mercadoPago => 'APP_USR-...',
-    TipoPasarela.wompi => 'prv_...',
-    TipoPasarela.bold => 'sk_...',
-  };
 }

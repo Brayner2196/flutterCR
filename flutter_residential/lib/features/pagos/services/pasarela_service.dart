@@ -30,7 +30,7 @@ class PasarelaService {
   }) async {
     final body = <String, dynamic>{
       'pasarela': pasarela.backendValue,
-      if (monto != null) 'monto': monto,
+      'monto': ?monto,
     };
 
     final res = await ApiClient.post(

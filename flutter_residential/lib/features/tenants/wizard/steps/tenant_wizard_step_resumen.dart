@@ -3,6 +3,7 @@ import 'package:flutter_residential/features/pagos/models/pasarela_disponible_mo
 import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'tenant_wizard_step_propiedades.dart';
 import 'tenant_wizard_step_pasarelas.dart';
+import '../../../../features/pagos/config/credenciales_pasarela.dart';
 
 class TenantWizardStepResumen extends StatelessWidget {
   final TextEditingController nombreCtrl;
@@ -569,6 +570,11 @@ class _PasarelaChip extends StatelessWidget {
   final PasarelaWizardData pasarela;
   const _PasarelaChip({required this.pasarela});
 
+  /// La pasarela exige el secreto que firma el checkout y el admin no lo escribió.
+  bool get _faltaIntegridad =>
+      CredencialesPasarela.requiereIntegritySecret(pasarela.tipo) &&
+      pasarela.integrityCtrl.text.trim().isEmpty;
+
   @override
   Widget build(BuildContext context) {
     final color = _color(pasarela.tipo);
@@ -584,6 +590,15 @@ class _PasarelaChip extends StatelessWidget {
         children: [
           Icon(_icono(pasarela.tipo), size: 15, color: color),
           const SizedBox(width: 6),
+          if (_faltaIntegridad) ...[
+            Tooltip(
+              message: 'Falta el secreto de integridad: los residentes no podrán pagar '
+                  'con esta pasarela hasta configurarlo.',
+              child: Icon(Icons.warning_amber_rounded,
+                  size: 15, color: Colors.orange.shade800),
+            ),
+            const SizedBox(width: 6),
+          ],
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

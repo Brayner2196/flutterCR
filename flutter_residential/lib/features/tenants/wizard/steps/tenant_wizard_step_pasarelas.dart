@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../features/pagos/models/pasarela_disponible_model.dart';
 import '../../../../features/pagos/widgets/pasarela_comisiones_widget.dart';
+import '../../../../features/pagos/config/credenciales_pasarela.dart';
 
 // ─── Modelo interno del wizard ────────────────────────────────────────────────
 
@@ -14,6 +15,9 @@ class PasarelaWizardData {
   final TextEditingController publicKeyCtrl  = TextEditingController();
   final TextEditingController privateKeyCtrl = TextEditingController();
   final TextEditingController webhookCtrl    = TextEditingController();
+  /// Solo lo usan las pasarelas que firman el checkout (hoy Wompi). Ver
+  /// [CredencialesPasarela.integritySecret].
+  final TextEditingController integrityCtrl  = TextEditingController();
 
   PasarelaWizardData({
     required this.tipo,
@@ -28,6 +32,7 @@ class PasarelaWizardData {
     'publicKey'    : publicKeyCtrl.text.trim().isEmpty ? null : publicKeyCtrl.text.trim(),
     'privateKey'   : privateKeyCtrl.text.trim().isEmpty ? null : privateKeyCtrl.text.trim(),
     'webhookSecret': webhookCtrl.text.trim().isEmpty ? null : webhookCtrl.text.trim(),
+    'integritySecret': integrityCtrl.text.trim().isEmpty ? null : integrityCtrl.text.trim(),
     'sandbox'      : sandbox,
     'prioridad'    : prioridad,
   };
@@ -36,6 +41,7 @@ class PasarelaWizardData {
     publicKeyCtrl.dispose();
     privateKeyCtrl.dispose();
     webhookCtrl.dispose();
+    integrityCtrl.dispose();
   }
 }
 
@@ -137,6 +143,7 @@ class _PasarelaCard extends StatefulWidget {
 class _PasarelaCardState extends State<_PasarelaCard> {
   bool _verPrivateKey   = false;
   bool _verWebhook      = false;
+  bool _verIntegrity    = false;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +152,7 @@ class _PasarelaCardState extends State<_PasarelaCard> {
     final p           = widget.pasarela;
     final color       = _colorPasarela(p.tipo);
     final icono       = _iconoPasarela(p.tipo);
+    final campoIntegridad = CredencialesPasarela.integritySecret(p.tipo);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
@@ -242,46 +250,37 @@ class _PasarelaCardState extends State<_PasarelaCard> {
                   // Public key
                   _CredencialField(
                     controller: p.publicKeyCtrl,
-                    label: _labelPublicKey(p.tipo),
-                    hint: _hintPublicKey(p.tipo),
-                    icono: Icons.key_outlined,
-                    obscure: false,
+                    campo: CredencialesPasarela.publicKey(p.tipo),
                   ),
                   const SizedBox(height: 10),
 
                   // Private key
                   _CredencialField(
                     controller: p.privateKeyCtrl,
-                    label: _labelPrivateKey(p.tipo),
-                    hint: _hintPrivateKey(p.tipo),
-                    icono: Icons.lock_outline,
-                    obscure: !_verPrivateKey,
-                    trailing: IconButton(
-                      icon: Icon(
-                        _verPrivateKey ? Icons.visibility_off : Icons.visibility,
-                        size: 18,
-                        color: cs.onSurfaceVariant,
-                      ),
-                      onPressed: () => setState(() => _verPrivateKey = !_verPrivateKey),
-                    ),
+                    campo: CredencialesPasarela.privateKey(p.tipo),
+                    visible: _verPrivateKey,
+                    onToggleVisible: () => setState(() => _verPrivateKey = !_verPrivateKey),
                   ),
                   const SizedBox(height: 10),
+
+                  // Secreto de integridad — solo en las pasarelas que firman el checkout.
+                  // El descriptor decide si aplica: aqui no hay un if por tipo de pasarela.
+                  if (campoIntegridad != null) ...[
+                    _CredencialField(
+                      controller: p.integrityCtrl,
+                      campo: campoIntegridad,
+                      visible: _verIntegrity,
+                      onToggleVisible: () => setState(() => _verIntegrity = !_verIntegrity),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
 
                   // Webhook secret
                   _CredencialField(
                     controller: p.webhookCtrl,
-                    label: 'Webhook secret',
-                    hint: 'Clave para verificar eventos del servidor',
-                    icono: Icons.webhook_outlined,
-                    obscure: !_verWebhook,
-                    trailing: IconButton(
-                      icon: Icon(
-                        _verWebhook ? Icons.visibility_off : Icons.visibility,
-                        size: 18,
-                        color: cs.onSurfaceVariant,
-                      ),
-                      onPressed: () => setState(() => _verWebhook = !_verWebhook),
-                    ),
+                    campo: CredencialesPasarela.webhookSecret(p.tipo),
+                    visible: _verWebhook,
+                    onToggleVisible: () => setState(() => _verWebhook = !_verWebhook),
                   ),
 
                   // Nota de seguridad
@@ -343,37 +342,6 @@ class _PasarelaCardState extends State<_PasarelaCard> {
     }
   }
 
-  String _labelPublicKey(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago: return 'Public key';
-      case TipoPasarela.wompi:       return 'Llave pública';
-      case TipoPasarela.bold:        return 'API key pública';
-    }
-  }
-
-  String _hintPublicKey(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago: return 'APP_USR-xxxxxxxx...';
-      case TipoPasarela.wompi:       return 'pub_prod_xxxxxxxx...';
-      case TipoPasarela.bold:        return 'pk_xxxxxxxx...';
-    }
-  }
-
-  String _labelPrivateKey(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago: return 'Access token';
-      case TipoPasarela.wompi:       return 'Llave privada';
-      case TipoPasarela.bold:        return 'API key privada (secret)';
-    }
-  }
-
-  String _hintPrivateKey(TipoPasarela tipo) {
-    switch (tipo) {
-      case TipoPasarela.mercadoPago: return 'APP_USR-xxxxxxxx-xxxx...';
-      case TipoPasarela.wompi:       return 'prv_prod_xxxxxxxx...';
-      case TipoPasarela.bold:        return 'sk_xxxxxxxx...';
-    }
-  }
 }
 
 // ─── Widgets auxiliares ───────────────────────────────────────────────────────
@@ -479,47 +447,74 @@ class _PrioridadSelector extends StatelessWidget {
   }
 }
 
+/// Campo de credencial del wizard. Toda la descripcion (etiqueta, ejemplo, si es secreto)
+/// viene de [CampoCredencial], asi que agregar una credencial no toca este widget.
 class _CredencialField extends StatelessWidget {
   final TextEditingController controller;
-  final String label;
-  final String hint;
-  final IconData icono;
-  final bool obscure;
-  final Widget? trailing;
+  final CampoCredencial campo;
+
+  /// Solo aplica a los campos secretos: si el valor se muestra en claro.
+  final bool visible;
+
+  /// Solo aplica a los campos secretos: alterna [visible].
+  final VoidCallback? onToggleVisible;
 
   const _CredencialField({
     required this.controller,
-    required this.label,
-    required this.hint,
-    required this.icono,
-    required this.obscure,
-    this.trailing,
+    required this.campo,
+    this.visible = false,
+    this.onToggleVisible,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icono, size: 18),
-        suffixIcon: trailing,
-        filled: true,
-        fillColor: cs.surfaceContainerLow,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: cs.outlineVariant),
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: controller,
+          obscureText: campo.secreto && !visible,
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+          decoration: InputDecoration(
+            labelText: campo.obligatorio ? '${campo.label} *' : campo.label,
+            hintText: campo.hint,
+            prefixIcon: Icon(campo.icono, size: 18),
+            suffixIcon: (campo.secreto && onToggleVisible != null)
+                ? IconButton(
+                    icon: Icon(
+                      visible ? Icons.visibility_off : Icons.visibility,
+                      size: 18,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    onPressed: onToggleVisible,
+                  )
+                : null,
+            filled: true,
+            fillColor: cs.surfaceContainerLow,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: cs.outlineVariant),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: cs.outlineVariant),
+            ),
+          ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: cs.outlineVariant),
+        // La ayuda va debajo y no en el hint porque el hint desaparece al escribir, y es
+        // justo mientras el admin pega el valor cuando necesita saber que pego lo correcto.
+        Padding(
+          padding: const EdgeInsets.only(top: 4, left: 4),
+          child: Text(
+            campo.ayuda,
+            style: theme.textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
