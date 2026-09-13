@@ -6,6 +6,9 @@ import '../constants/api_constants.dart';
 import '../enums/modulo.dart';
 import '../exceptions/modulo_deshabilitado_exception.dart';
 import '../exceptions/session_expired_exception.dart';
+import '../exceptions/version_obsoleta_exception.dart';
+import '../version/app_version.dart';
+import '../version/version_service.dart';
 import '../storage/token_storage.dart';
 import 'net_error.dart';
 
@@ -16,6 +19,16 @@ class ApiClient {
   /// Emite evento cuando el refresh falla y la sesión debe cerrarse.
   static final _sessionExpiredController = StreamController<void>.broadcast();
   static Stream<void> get sessionExpiredStream => _sessionExpiredController.stream;
+
+  /// Emite cuando el backend responde 426: la app quedó por debajo del build
+  /// mínimo mientras estaba abierta. Lo escucha `ActualizacionGate` para
+  /// levantar la pantalla de bloqueo sin esperar al siguiente arranque.
+  ///
+  /// Es un stream y no una excepción que suba hasta la UI porque cada pantalla
+  /// maneja sus errores a su manera: con 45 pantallas, esperar que todas
+  /// reaccionen igual a esta es garantizar que varias no lo hagan.
+  static final _versionObsoletaController = StreamController<String>.broadcast();
+  static Stream<String> get versionObsoletaStream => _versionObsoletaController.stream;
 
   // ─── Persistir claims de consejo desde JWT ──────────────────────────────
 
@@ -126,6 +139,9 @@ class ApiClient {
     // autenticados, en vez de repetir la comprobación en cada uno.
     _verificarModuloHabilitado(res);
 
+    // 426 → la app quedó por debajo del build mínimo mientras estaba abierta.
+    _verificarVersionVigente(res);
+
     if (res.statusCode != 401) return null; // no era 401, el caller maneja res
 
     final refreshed = await _tryRefresh();
@@ -166,6 +182,29 @@ class ApiClient {
     }
   }
 
+  /// Traduce el 426 del backend a [VersionObsoletaException].
+  ///
+  /// El backend responde `{"error": "VERSION_OBSOLETA", "message": ...}`. Se
+  /// lanza una excepción tipada en vez de devolver la respuesta para que
+  /// ninguna pantalla intente parsear un cuerpo que no es el que espera, y
+  /// para que el gate pueda reaccionar desde un solo lugar.
+  static void _verificarVersionVigente(http.Response res) {
+    if (res.statusCode != 426) return;
+    try {
+      final body = jsonDecode(res.body);
+      if (body is Map<String, dynamic> && body['error'] == 'VERSION_OBSOLETA') {
+        final mensaje = body['message']?.toString() ??
+            'Esta versión de la aplicación ya no es compatible.';
+        _versionObsoletaController.add(mensaje);
+        throw VersionObsoletaException(mensaje);
+      }
+    } on VersionObsoletaException {
+      rethrow;
+    } catch (_) {
+      // Cuerpo vacío o no-JSON: se deja pasar como respuesta normal.
+    }
+  }
+
   // ─── Headers ────────────────────────────────────────────────────────────
 
   static Future<Map<String, String>> _headers({
@@ -174,6 +213,17 @@ class ApiClient {
     String? tenantId,
   }) async {
     final headers = <String, String>{'Content-Type': 'application/json'};
+
+    // Version del cliente en cada peticion. Con esto el backend puede cortar a
+    // una app incompatible aunque nunca se haya reiniciado (y por lo tanto
+    // nunca haya vuelto a consultar /auth/version). Si el build no se conoce
+    // -- un `flutter run` sin defines -- no se manda nada y el backend deja
+    // pasar.
+    if (AppVersion.conocida) {
+      headers['X-App-Build'] = AppVersion.build.toString();
+      headers['X-App-Plataforma'] = VersionService.plataforma;
+    }
+
     if (requiresAuth) {
       // Si se pasan explícitamente (ej: logout) los usa directamente sin leer storage.
       // Esto evita el race condition entre el DELETE de notificaciones y borrarSesion().

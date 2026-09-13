@@ -40,6 +40,8 @@ import 'core/config/app_env.dart';
 import 'core/utils/date_formatter.dart';
 import 'core/network/api_client.dart';
 import 'core/providers/connectivity_provider.dart';
+import 'core/version/version_provider.dart';
+import 'shared/widgets/actualizacion_gate.dart';
 import 'shared/widgets/offline_banner.dart';
 import 'features/initialRouterScreen/screens/initial_router_screen.dart';
 
@@ -96,6 +98,9 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+        // Chequeo de version. Va arriba porque ActualizacionGate lo consulta
+        // en el primer frame, antes de que se resuelva la sesion.
+        ChangeNotifierProvider(create: (_) => VersionProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()..cargarSesionGuardada()),
         ChangeNotifierProvider(create: (_) => AppProvider()),
         ChangeNotifierProvider(create: (_) => UsuarioProvider()),
@@ -141,7 +146,12 @@ class MyApp extends StatelessWidget {
               darkTheme: buildAppTheme(brightness: Brightness.dark),
               home: const _SessionGuard(
                 child: OfflineGuard(
-                  child: InitialRouterScreen()
+                  // Dentro de OfflineGuard a proposito: si se cae la red, su
+                  // banner queda encima del de actualizacion. Sin conexion no
+                  // hay actualizacion posible, asi que ese es el aviso util.
+                  child: ActualizacionGate(
+                    child: InitialRouterScreen(),
+                  ),
                 ),
               ),
             );

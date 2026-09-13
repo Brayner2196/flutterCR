@@ -45,10 +45,14 @@ class CobroTile extends StatelessWidget {
               backgroundColor: ui.color.withValues(alpha: 0.12),
               child: Icon(Icons.home_work, color: ui.color, size: 20),
             ),
-            title: Text(
-              cobro.propiedadIdentificador,
-              style:
-                  TextStyle(fontWeight: FontWeight.w600, color: cs.onSurface),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${cobro.propiedadPathCorto}  *  ${cobro.propiedadIdentificador}",
+                  style: TextStyle(fontWeight: FontWeight.w600, color: cs.onSurface) 
+                ),
+              ],
             ),
             subtitle: Text(
               cobro.concepto,

@@ -291,6 +291,7 @@ class CobrosTabViewState extends State<CobrosTabView>
         id: 0,
         propiedadId: 0,
         propiedadIdentificador: 'Apto 000',
+        propiedadPathCorto: '000',
         concepto: 'Administración mensual',
         montoBase: 150000,
         montoMora: 0,

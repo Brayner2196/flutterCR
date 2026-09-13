@@ -5,6 +5,7 @@ class CobroModel {
   final int? mes;
   final int propiedadId;
   final String propiedadIdentificador;
+  final String propiedadPathCorto;
   final String concepto;
   final String? descripcion;
   final double montoBase;
@@ -24,6 +25,7 @@ class CobroModel {
     this.mes,
     required this.propiedadId,
     required this.propiedadIdentificador,
+    required this.propiedadPathCorto,
     required this.concepto,
     this.descripcion,
     required this.montoBase,
@@ -44,6 +46,7 @@ class CobroModel {
         mes: json['mes'] as int?,
         propiedadId: json['propiedadId'] as int,
         propiedadIdentificador: json['propiedadIdentificador'] as String? ?? '',
+        propiedadPathCorto: json['propiedadPathCorto'] as String? ?? '',
         concepto: json['concepto'] as String,
         descripcion: json['descripcion'] as String?,
         montoBase: (json['montoBase'] as num).toDouble(),
@@ -74,6 +77,7 @@ class CobroModel {
         'mes': mes,
         'propiedadId': propiedadId,
         'propiedadIdentificador': propiedadIdentificador,
+        'propiedadPathCorto': propiedadPathCorto,
         'concepto': concepto,
         'descripcion': descripcion,
         'montoBase': montoBase,

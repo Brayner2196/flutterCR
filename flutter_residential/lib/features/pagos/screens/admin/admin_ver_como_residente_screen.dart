@@ -562,6 +562,7 @@ class _CobroTile extends StatelessWidget {
   String _etiquetaConcepto(String c) {
     switch (c) {
       case 'ADMINISTRACION': return 'Administración';
+      case 'SALDO INICIAL':  return 'Saldo Inicial';
       case 'MULTA':          return 'Multa';
       case 'SANCION':        return 'Sanción';
       case 'RECARGO':        return 'Recargo';

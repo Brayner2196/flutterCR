@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_residential/shared/theme/app_theme.dart';
+import 'package:flutter_residential/shared/utils/breakpoints.dart';
 
 class QuickAccessCard extends StatelessWidget {
   final IconData icon;
@@ -135,43 +136,80 @@ class QuickAccessGrid extends StatelessWidget {
   final double spacing;
   final EdgeInsets padding;
 
+  /// Alto fijo (px) del card cuando la ventana es amplia.
+  ///
+  /// `null` => el card sigue siendo cuadrado en todos los anchos, que es el
+  /// comportamiento historico. Con un valor, el alto deja de depender del
+  /// ancho de la columna: en web una fila de 3 columnas da ~440px de ancho por
+  /// card y el cuadrado convierte eso en 440px de alto.
+  final double? altoCardAmplio;
+
+  /// Ancho maximo por card en ventana amplia. El delegate reparte las columnas
+  /// que quepan en vez de estirar [crossAxisCount] a lo ancho de la pantalla.
+  /// Solo aplica cuando [altoCardAmplio] esta definido.
+  final double anchoMaxCardAmplio;
+
   const QuickAccessGrid({
     super.key,
     required this.cards,
     this.crossAxisCount = 3,
     this.spacing = 20,
     this.padding = const EdgeInsets.only(left: 18, right: 18, top: 0),
+    this.altoCardAmplio,
+    this.anchoMaxCardAmplio = 180,
   });
+
+  /// Unico punto donde se decide la geometria de la grilla, para que las
+  /// pantallas solo declaren el dato (el alto deseado) y no la regla.
+  SliverGridDelegate _delegate(double ancho) {
+    final alto = altoCardAmplio;
+
+    // Movil o ventana angosta: card cuadrado de [crossAxisCount] columnas.
+    if (alto == null || !Breakpoints.esAmplio(ancho)) {
+      return SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: spacing,
+        mainAxisSpacing: spacing,
+        childAspectRatio: 1.0,
+      );
+    }
+
+    // Ventana amplia: mainAxisExtent fija el alto en px y anula la relacion de
+    // aspecto, asi el card no crece con el ancho de la pantalla.
+    return SliverGridDelegateWithMaxCrossAxisExtent(
+      maxCrossAxisExtent: anchoMaxCardAmplio,
+      crossAxisSpacing: spacing,
+      mainAxisSpacing: spacing,
+      mainAxisExtent: alto,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: padding,
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: spacing,
-          mainAxisSpacing: spacing,
-          childAspectRatio: 1.0,
+      child: LayoutBuilder(
+        builder: (context, constraints) => GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: _delegate(constraints.maxWidth),
+          itemCount: cards.length,
+          itemBuilder: (context, index) {
+            final card = cards[index];
+            return QuickAccessCard(
+              icon: card.icon,
+              title: card.title,
+              onTap: card.onTap,
+              backgroundColor: card.backgroundColor,
+              iconBackgroundColor: card.iconBackgroundColor,
+              iconColor: card.iconColor,
+              iconSize: card.iconSize,
+              titleStyle: card.titleStyle,
+              colorText: card.colorText,
+              badge: card.badge,
+            );
+          },
         ),
-        itemCount: cards.length,
-        itemBuilder: (context, index) {
-          final card = cards[index];
-          return QuickAccessCard(
-            icon: card.icon,
-            title: card.title,
-            onTap: card.onTap,
-            backgroundColor: card.backgroundColor,
-            iconBackgroundColor: card.iconBackgroundColor,
-            iconColor: card.iconColor,
-            iconSize: card.iconSize,
-            titleStyle: card.titleStyle,
-            colorText: card.colorText,
-            badge: card.badge,
-          );
-        },
       ),
     );
   }

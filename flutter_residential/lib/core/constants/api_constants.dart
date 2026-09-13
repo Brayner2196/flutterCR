@@ -12,6 +12,8 @@ class ApiConstants {
   static const String seleccionarTenant = '/auth/login/seleccionar';
   static const String registro = '/auth/registro';
   static const String refresh = '/auth/refresh';
+  /// Publico y sin conjunto: se consulta en el arranque, antes del login.
+  static const String version = '/auth/version';
   
   // Usuarios
   static const String usuarios = '/api/usuarios';

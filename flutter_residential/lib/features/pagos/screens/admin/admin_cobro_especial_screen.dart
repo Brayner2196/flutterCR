@@ -19,8 +19,9 @@ class _AdminCobroEspecialScreenState extends State<AdminCobroEspecialScreen> {
   final _descripcionCtrl = TextEditingController();
 
   // Conceptos permitidos para cobros especiales (excluye ADMINISTRACION que es automático)
-  static const _conceptos = ['MULTA', 'SANCION', 'PARQUEADERO', 'ZONA_COMUN', 'OTRO'];
+  static const _conceptos = ['SALDO INICIAL','MULTA', 'SANCION', 'PARQUEADERO', 'ZONA_COMUN', 'OTRO'];
   static const _etiquetasConcepto = {
+    'SALDO INICIAL': 'Saldo Inicial',
     'MULTA': 'Multa',
     'SANCION': 'Sanción',
     'PARQUEADERO': 'Parqueadero',

@@ -89,6 +89,10 @@ class _DashboardAdminScreenState extends State<DashboardAdminScreen> {
             ),
             const SizedBox(height: 8),
             QuickAccessGrid(
+              // En web/escritorio el card deja de ser cuadrado: el alto queda
+              // fijo en los mismos ~104px que ya tiene en un celular de 390px,
+              // en vez de crecer hasta ~440px con el ancho de la ventana.
+              altoCardAmplio: 104,
               cards: [
                 QuickAccessCardData(
                   title: 'Cobros',
