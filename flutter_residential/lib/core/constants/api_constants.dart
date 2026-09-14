@@ -48,6 +48,10 @@ class ApiConstants {
   static const String carteraNotificarMasivo =
       '/api/admin/propiedades/cartera/notificar-masivo';
 
+  // Cobranza — cartera morosa (modulo independiente de cobros)
+  static const String adminCobranza = '/api/admin/cobranza';
+  static const String cobranzaNotificarLote = '/api/admin/cobranza/notificar-lote';
+
   // Propiedades — público (registro)
   static const String authTiposPropiedad = '/auth/tiposPropiedad';
   // Valores permitidos por tipo (público, para dropdowns del registro)
@@ -120,6 +124,7 @@ class ApiConstants {
   static String generarCobros(int anio, int mes) => '/api/admin/cobros/generar/$anio/$mes';
   static String previewGenerarCobros(int anio, int mes) => '/api/admin/cobros/generar/$anio/$mes/preview';
   static const String proximoPeriodo = '/api/admin/cobros/proximo-periodo';
+  static String adminCobro(int id) => '/api/admin/cobros/$id';
   static String exonerarCobro(int id) => '/api/admin/cobros/$id/exonerar';
   static String verificarPago(int id) => '/api/admin/pagos/$id/verificar';
   static String rechazarPago(int id) => '/api/admin/pagos/$id/rechazar';

@@ -41,6 +41,15 @@ class CobroService {
     return BaseApiService.parseList(res, CobroModel.fromJson, 'Error al listar cobros');
   }
 
+  /// Detalle de un cobro para la vista admin. Lo usa cobranza, que lista un
+  /// modelo reducido (sin desglose ni pagos) y necesita el cobro completo al
+  /// abrir el detalle.
+  static Future<CobroModel> getCobroAdmin(int id) async {
+    final res = await ApiClient.get(ApiConstants.adminCobro(id));
+    return BaseApiService.parseSingle(res, CobroModel.fromJson,
+        fallbackMsg: 'Error al obtener el cobro');
+  }
+
   static Future<CobroModel> crearCobroEspecial(Map<String, dynamic> data) async {
     final res = await ApiClient.post(ApiConstants.adminCobrosEspeciales, data, requiresAuth: true);
     return BaseApiService.parseSingle(res, CobroModel.fromJson,

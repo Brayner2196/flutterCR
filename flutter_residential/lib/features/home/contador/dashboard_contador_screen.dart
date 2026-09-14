@@ -12,7 +12,6 @@ import '../../modulos/providers/modulos_provider.dart';
 import '../../pagos/screens/admin/admin_configurar_cuotas_screen.dart';
 import '../../pagos/screens/admin/admin_configurar_mora_screen.dart';
 import '../../pagos/screens/admin/admin_pasarelas_screen.dart';
-import '../../pagos/screens/admin/admin_reporte_morosidad_screen.dart';
 import '../../pagos/screens/admin/admin_verificar_pagos_screen.dart';
 import '../../pagos/screens/admin/cobros_hub_screen.dart';
 import '../../plan_pago/screens/admin/admin_planes_pago_screen.dart';
@@ -122,13 +121,14 @@ class _DashboardContadorScreenState extends State<DashboardContadorScreen> {
         ),
       if (permisos.puede('VER_CARTERA'))
         QuickAccessCardData(
-          title: 'Morosidad',
+          title: 'Cobranza',
           icon: Icons.trending_down,
           backgroundColor: AppColors.bgOrange,
           iconBackgroundColor: Colors.white,
           iconColor: AppColors.orange,
           colorText: AppColors.orange,
-          onTap: () => _abrir(const AdminReporteMorosidadScreen()),
+          // Misma pantalla que usa el administrador: una sola cobranza.
+          onTap: () => _abrir(const CobrosHubScreen(initialTab: 1)),
         ),
       if (permisos.puede('GESTIONAR_PLANES_PAGO') && modulos.activo(Modulo.planesPago))
         QuickAccessCardData(

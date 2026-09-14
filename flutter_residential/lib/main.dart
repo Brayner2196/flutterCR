@@ -7,6 +7,7 @@ import 'package:flutter_residential/shared/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'features/cobranza/providers/cobranza_provider.dart';
 import 'features/pagos/providers/cobros_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
 import 'features/pagos/providers/pagos_provider.dart';
@@ -108,6 +109,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PropiedadProvider()),
         ChangeNotifierProvider(create: (_) => GestionPropiedadesProvider()),
         ChangeNotifierProvider(create: (_) => CobrosProvider()),
+        // Cobranza tiene su propio estado: comparte pantalla con Cobros dentro
+        // del mismo IndexedStack y con una sola lista se pisaban los datos.
+        ChangeNotifierProvider(create: (_) => CobranzaProvider()),
         ChangeNotifierProvider(create: (_) => PagosProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => PqrProvider()),

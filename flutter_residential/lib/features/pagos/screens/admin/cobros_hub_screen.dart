@@ -5,7 +5,7 @@ import '../../../../shared/widgets/segmented_pills.dart';
 import '../../../auditoria/screens/admin_auditoria_screen.dart';
 import '../../../auth/providers/auth_provider.dart';
 import 'cobros_tab_view.dart';
-import 'cobranza_tab_view.dart';
+import '../../../cobranza/screens/cobranza_tab_view.dart';
 import 'cobros_config_screen.dart';
 
 /// Hub unificado del módulo de cobros para el rol admin.
