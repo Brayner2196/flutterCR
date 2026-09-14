@@ -49,7 +49,7 @@ class CobroTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "${cobro.propiedadPathCorto}  *  ${cobro.propiedadIdentificador}",
+                  "${cobro.propiedadPathCorto}  ·  ${cobro.propiedadIdentificador}",
                   style: TextStyle(fontWeight: FontWeight.w600, color: cs.onSurface) 
                 ),
               ],
