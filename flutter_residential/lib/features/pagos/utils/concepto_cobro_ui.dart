@@ -8,6 +8,7 @@ class ConceptoCobroUi {
 
   static const Map<String, String> _mapa = {
     'ADMINISTRACION': 'Administración',
+    'ACUERDO_PAGO': 'Acuerdo de pago',
     'PARQUEADERO': 'Parqueadero',
     'ZONA_COMUN': 'Zona común',
     'MULTA': 'Multa',

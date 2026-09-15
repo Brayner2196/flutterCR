@@ -563,6 +563,7 @@ class _CobroTile extends StatelessWidget {
     switch (c) {
       case 'ADMINISTRACION': return 'Administración';
       case 'SALDO INICIAL':  return 'Saldo Inicial';
+      case 'ACUERDO_PAGO':   return 'Acuerdo de Pago';
       case 'MULTA':          return 'Multa';
       case 'SANCION':        return 'Sanción';
       case 'RECARGO':        return 'Recargo';

@@ -18,7 +18,8 @@ import 'residente_mi_plan_screen.dart';
 /// número que se muestra aquí es el que después se le va a cobrar.
 ///
 /// Los cobros que entran al acuerdo tampoco se eligen aquí: los define la
-/// parametrización del conjunto.
+/// parametrización del conjunto, y solo entran los que ya están vencidos —un
+/// cobro dentro de su plazo no es mora y no se reestructura.
 class ResidenteSolicitarPlanScreen extends StatefulWidget {
   /// Propiedad del acuerdo. Null si el residente tiene una sola.
   final int? propiedadId;
@@ -191,7 +192,7 @@ class _ResidenteSolicitarPlanScreenState
                   ? 'Ahora no pagas nada. Tu solicitud la revisa el administrador; '
                       'cuando la apruebe se generan el pago inicial y las cuotas.'
                   : 'Al enviar, el acuerdo queda celebrado: se generan el pago '
-                      'inicial y las cuotas, y tus cobros actuales se reemplazan.',
+                      'inicial y las cuotas, y tus cobros vencidos se reemplazan.',
               color: AppColors.blue,
               fondo: AppColors.bgBlue,
               icono: Icons.info_outline,

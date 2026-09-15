@@ -592,6 +592,7 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
     'ZONA_COMUN': 'Zona común',
     'OTRO': 'Cobro especial',
     'ADMINISTRACION': 'Administración',
+    'ACUERDO_PAGO': 'Acuerdo de pago',
   };
 
   List<Widget> _buildTimeline(List<CobroModel> cobros) {
@@ -1617,13 +1618,13 @@ class _CobroCardState extends State<_CobroCard> {
   }
 
   String get _periodoTexto {
-    if (cobro.anio == null) {
+    //if (cobro.anio == null) {
       // Cobro especial — mostrar rango emisión → límite
       return 'Emitido: ${_formatFecha(cobro.fechaGeneracion)}  ·  Límite: ${_formatFecha(cobro.fechaLimitePago)}';
-    }
+    /*}
     final inicio = '01 ${widget.abrevMes}';
     final fin = _formatFechaLimite(cobro.fechaLimitePago, widget.abrevMes);
-    return '$inicio - $fin';
+    return '$inicio - $fin';*/
   }
 
   String _formatFechaLimite(String fecha, String defaultAbrev) {
