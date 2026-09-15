@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../shared/theme/app_theme.dart';
-import '../../models/cuota_plan_model.dart';
+import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/format_moneda.dart';
 import '../../providers/plan_pago_provider.dart';
+import '../../widgets/lista_cobros_acuerdo.dart';
 
 class AdminDetallePlanPagoScreen extends StatefulWidget {
   final int planId;
@@ -28,7 +30,7 @@ class _AdminDetallePlanPagoScreenState
     try {
       await context.read<PlanPagoProvider>().decidir(widget.planId, true);
       if (!mounted) return;
-      _toast(ToastificationType.success, 'Plan aprobado — cuotas generadas');
+      _toast(ToastificationType.success, 'Acuerdo aprobado — cobros generados');
     } catch (e) {
       if (!mounted) return;
       _toast(ToastificationType.error,
@@ -59,25 +61,7 @@ class _AdminDetallePlanPagoScreenState
     try {
       await context.read<PlanPagoProvider>().cancelar(widget.planId, nota: nota);
       if (!mounted) return;
-      _toast(ToastificationType.success, 'Plan cancelado');
-    } catch (e) {
-      if (!mounted) return;
-      _toast(ToastificationType.error,
-          e.toString().replaceFirst('Exception: ', ''));
-    }
-  }
-
-  Future<void> _marcarCuotaPagada(CuotaPlanModel cuota) async {
-    final nota = await _pedirMotivo(
-        'Nota del pago (opcional) — Cuota #${cuota.numeroCuota}',
-        required: false);
-    if (!mounted) return;
-    try {
-      await context
-          .read<PlanPagoProvider>()
-          .marcarCuotaPagada(widget.planId, cuota.id, nota: nota);
-      if (!mounted) return;
-      _toast(ToastificationType.success, 'Cuota #${cuota.numeroCuota} marcada como pagada');
+      _toast(ToastificationType.success, 'Acuerdo cancelado — se restauró la deuda original');
     } catch (e) {
       if (!mounted) return;
       _toast(ToastificationType.error,
@@ -193,7 +177,7 @@ class _AdminDetallePlanPagoScreenState
                                 color: fgEstado)),
                       ),
                       Text(
-                        _formatFecha(plan.creadoEn),
+                        DateFormatter.fechaCorta(plan.creadoEn),
                         style: TextStyle(
                             fontSize: 12, color: cs.onSurfaceVariant),
                       ),
@@ -246,15 +230,22 @@ class _AdminDetallePlanPagoScreenState
                       monto: plan.montoTotalPlan,
                       bold: true),
                   const Divider(height: 16),
+                  if (plan.exigeAbonoInicial)
+                    _MontoRow(
+                        label:
+                            'Pago inicial (${plan.porcentajeAbonoInicial.toStringAsFixed(0)}%)'
+                            '${plan.fechaLimiteInicial != null ? ' — hasta ${DateFormatter.fechaCorta(plan.fechaLimiteInicial)}' : ''}',
+                        monto: plan.montoAbonoInicial,
+                        color: AppColors.blue),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                          '${plan.numeroCuotas} cuota${plan.numeroCuotas != 1 ? 's' : ''}',
+                          'Diferido en ${plan.numeroCuotas} cuota${plan.numeroCuotas != 1 ? 's' : ''}',
                           style: const TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 13)),
                       Text(
-                        '\$${(plan.montoTotalPlan / plan.numeroCuotas).toStringAsFixed(0)} / cuota aprox.',
+                        FormatMoneda.format(plan.montoDiferido),
                         style: TextStyle(
                             fontSize: 12, color: cs.onSurfaceVariant),
                       ),
@@ -287,20 +278,17 @@ class _AdminDetallePlanPagoScreenState
               const SizedBox(height: 12),
             ],
 
-            // ── Cuotas ────────────────────────────────────────
-            if (plan.cuotas.isNotEmpty) ...[
-              Text('Cuotas del plan',
+            // ── Cobros del acuerdo ────────────────────────────
+            // Son cobros reales: se pagan y verifican por el flujo de pagos de
+            // siempre, no por un endpoint propio del acuerdo.
+            if (plan.cobros.isNotEmpty) ...[
+              Text('Cobros del acuerdo',
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: cs.primary)),
               const SizedBox(height: 8),
-              ...plan.cuotas.map((c) => _CuotaTile(
-                    cuota: c,
-                    onMarcarPagada: plan.esActivo && !c.esPagada
-                        ? () => _marcarCuotaPagada(c)
-                        : null,
-                  )),
+              ListaCobrosAcuerdo(cobros: plan.cobros),
               const SizedBox(height: 12),
             ],
 
@@ -454,87 +442,6 @@ class _MontoRow extends StatelessWidget {
                 fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
                 color: color ?? cs.onSurface,
               )),
-        ],
-      ),
-    );
-  }
-}
-
-class _CuotaTile extends StatelessWidget {
-  final CuotaPlanModel cuota;
-  final VoidCallback? onMarcarPagada;
-
-  const _CuotaTile({required this.cuota, this.onMarcarPagada});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final Color bgColor;
-    final Color fgColor;
-    final IconData estadoIcon;
-
-    if (cuota.esPagada) {
-      bgColor = AppColors.bgGreen;
-      fgColor = AppColors.ok;
-      estadoIcon = Icons.check_circle_outline;
-    } else if (cuota.vencida) {
-      bgColor = AppColors.dangerSoft;
-      fgColor = AppColors.danger;
-      estadoIcon = Icons.warning_amber_outlined;
-    } else {
-      bgColor = AppColors.warningSoft;
-      fgColor = AppColors.warning;
-      estadoIcon = Icons.schedule_outlined;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: bgColor.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: fgColor.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          Icon(estadoIcon, size: 18, color: fgColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Cuota ${cuota.numeroCuota}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13)),
-                Text(
-                  'Vence: ${cuota.fechaVencimiento}${cuota.fechaPago != null ? '  ·  Pagada: ${cuota.fechaPago}' : ''}',
-                  style:
-                      TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-                ),
-                if (cuota.notaPago != null)
-                  Text(cuota.notaPago!,
-                      style: TextStyle(
-                          fontSize: 11, color: cs.onSurfaceVariant)),
-              ],
-            ),
-          ),
-          Text(
-            '\$${cuota.monto.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
-            style: TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 13, color: fgColor),
-          ),
-          if (onMarcarPagada != null) ...[
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: onMarcarPagada,
-              icon: const Icon(Icons.check_circle_outline, size: 20),
-              color: AppColors.ok,
-              tooltip: 'Marcar pagada',
-              style: IconButton.styleFrom(
-                  minimumSize: const Size(36, 36),
-                  padding: EdgeInsets.zero),
-            ),
-          ],
         ],
       ),
     );

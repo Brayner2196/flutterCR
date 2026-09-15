@@ -1,23 +1,29 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
-import '../../../../features/pagos/models/cobro_model.dart';
+
 import '../../../../shared/theme/app_theme.dart';
-import '../../models/configuracion_plan_pago_model.dart';
 import '../../providers/plan_pago_provider.dart';
+import '../../widgets/preview_acuerdo_pago.dart';
+import '../../widgets/selector_cuotas_acuerdo.dart';
 import 'residente_mi_plan_screen.dart';
-import 'package:flutter_residential/shared/widgets/panel_tiles.dart';
 
-/// Pantalla que permite al residente seleccionar cobros vencidos/pendientes
-/// y elegir el número de cuotas para solicitar un plan de pago.
+/// Solicitud de acuerdo de pago.
+///
+/// El residente elige cuántas cuotas y ve el desglose exacto —cuánto paga hoy
+/// y cuánto queda diferido— antes de comprometerse. Todos los montos los
+/// calcula el backend: la pantalla no multiplica ni divide nada, porque el
+/// número que se muestra aquí es el que después se le va a cobrar.
+///
+/// Los cobros que entran al acuerdo tampoco se eligen aquí: los define la
+/// parametrización del conjunto.
 class ResidenteSolicitarPlanScreen extends StatefulWidget {
-  /// Cobros disponibles para incluir en el plan (pendientes/vencidos del estado de cuenta).
-  final List<CobroModel> cobrosDisponibles;
+  /// Propiedad del acuerdo. Null si el residente tiene una sola.
+  final int? propiedadId;
 
-  const ResidenteSolicitarPlanScreen({
-    super.key,
-    required this.cobrosDisponibles,
-  });
+  const ResidenteSolicitarPlanScreen({super.key, this.propiedadId});
 
   @override
   State<ResidenteSolicitarPlanScreen> createState() =>
@@ -27,47 +33,51 @@ class ResidenteSolicitarPlanScreen extends StatefulWidget {
 class _ResidenteSolicitarPlanScreenState
     extends State<ResidenteSolicitarPlanScreen> {
   final _obsCtrl = TextEditingController();
-  final Set<int> _seleccionados = {};
   int _cuotas = 1;
   bool _enviando = false;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    // Seleccionar todos por defecto
-    _seleccionados.addAll(widget.cobrosDisponibles.map((c) => c.id));
-    // Cargar configuración
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PlanPagoProvider>().cargarConfigResidente();
+    // Tocar un provider en initState revienta en web y escritorio: se difiere
+    // al primer frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final provider = context.read<PlanPagoProvider>();
+      await provider.cargarConfigResidente();
+      final elegibilidad =
+          await provider.cargarElegibilidad(propiedadId: widget.propiedadId);
+      if (!mounted) return;
+      if (elegibilidad.elegible) _simular();
     });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _obsCtrl.dispose();
     super.dispose();
   }
 
-  double get _montoSeleccionado => widget.cobrosDisponibles
-      .where((c) => _seleccionados.contains(c.id))
-      .fold(0, (s, c) => s + c.montoPendiente);
+  /// Simula con retardo: el residente pasa de 3 a 6 cuotas más rápido de lo que
+  /// responde la red, y sin esperar se dispara una petición por cada toque.
+  void _simularConDebounce() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), _simular);
+  }
 
-  double _calcularRecargo(ConfiguracionPlanPagoModel cfg) {
-    if (!cfg.recargoFraccionamiento || cfg.porcentajeRecargo <= 0) return 0;
-    return _montoSeleccionado * cfg.porcentajeRecargo / 100;
+  void _simular() {
+    if (!mounted) return;
+    context
+        .read<PlanPagoProvider>()
+        .simular(propiedadId: widget.propiedadId, numeroCuotas: _cuotas);
   }
 
   Future<void> _solicitar() async {
-    if (_seleccionados.isEmpty) {
-      _toast(ToastificationType.warning,
-          'Selecciona al menos un cobro para incluir en el plan');
-      return;
-    }
-
     setState(() => _enviando = true);
     try {
       final plan = await context.read<PlanPagoProvider>().solicitar(
-            cobrosIds: _seleccionados.toList(),
+            propiedadId: widget.propiedadId,
             numeroCuotas: _cuotas,
             observaciones: _obsCtrl.text.trim(),
           );
@@ -75,18 +85,17 @@ class _ResidenteSolicitarPlanScreenState
       _toast(
         ToastificationType.success,
         plan.esActivo
-            ? 'Plan aprobado automáticamente — cuotas generadas'
+            ? 'Acuerdo aprobado — ya puedes pagar el abono inicial'
             : 'Solicitud enviada — esperando aprobación',
       );
-      // Navegar a mi plan
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const ResidenteMiPlanScreen()),
       );
     } catch (e) {
       if (!mounted) return;
-      _toast(
-          ToastificationType.error, e.toString().replaceFirst('Exception: ', ''));
+      _toast(ToastificationType.error,
+          e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _enviando = false);
     }
@@ -103,396 +112,223 @@ class _ResidenteSolicitarPlanScreenState
 
   @override
   Widget build(BuildContext context) {
-    final cfg = context.watch<PlanPagoProvider>().config;
-    final recargo = _calcularRecargo(cfg);
-    final total = _montoSeleccionado + recargo;
-    final montoCuota = _cuotas > 0 ? total / _cuotas : 0;
+    final provider = context.watch<PlanPagoProvider>();
+    final elegibilidad = provider.elegibilidad;
+    final simulacion = provider.simulacion;
+    final maxCuotas =
+        elegibilidad.maxCuotas > 0 ? elegibilidad.maxCuotas : provider.config.maxCuotas;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Solicitar plan de pago')),
+      appBar: AppBar(title: const Text('Acuerdo de pago')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Indicadores de reglas ─────────────────────────
-          if (cfg.activo) ...[
-            _ReglasCard(cfg: cfg),
+          if (!elegibilidad.elegible && elegibilidad.motivos.isNotEmpty) ...[
+            _MotivosCard(motivos:
+                elegibilidad.motivos.map((m) => m.mensaje).toList()),
             const SizedBox(height: 16),
           ],
 
-          // ── Cobros disponibles ────────────────────────────
-          _SectionLabel('Cobros a incluir en el plan'),
-          const SizedBox(height: 8),
-          if (widget.cobrosDisponibles.isEmpty)
-            _EmptyInfo('No tienes cobros pendientes para fraccionar')
-          else
-            ...widget.cobrosDisponibles.map((cobro) {
-              final sel = _seleccionados.contains(cobro.id);
-              return _CobroCheckTile(
-                cobro: cobro,
-                seleccionado: sel,
-                onToggle: (v) {
-                  setState(() {
-                    if (v) {
-                      _seleccionados.add(cobro.id);
-                    } else {
-                      _seleccionados.remove(cobro.id);
-                    }
-                  });
-                },
-              );
-            }),
-          const SizedBox(height: 20),
-
-          // ── Número de cuotas ──────────────────────────────
-          _SectionLabel('Número de cuotas'),
+          // ── Cuotas ───────────────────────────────────────
+          const _Etiqueta('¿En cuántas cuotas quieres diferir el saldo?'),
           const SizedBox(height: 10),
-          _CuotaSelector(
-            maxCuotas: cfg.maxCuotas,
+          SelectorCuotasAcuerdo(
+            maxCuotas: maxCuotas,
             cuotas: _cuotas,
-            onChanged: (v) => setState(() => _cuotas = v),
+            habilitado: elegibilidad.elegible && !_enviando,
+            onChanged: (v) {
+              setState(() => _cuotas = v);
+              _simularConDebounce();
+            },
           ),
           const SizedBox(height: 20),
 
-          // ── Resumen ───────────────────────────────────────
-          _ResumenCard(
-            montoDeuda: _montoSeleccionado,
-            recargo: recargo,
-            total: total,
-            cuotas: _cuotas,
-            montoCuota: montoCuota.toDouble(),
-            recargoActivo: cfg.recargoFraccionamiento,
-            porcentajeRecargo: cfg.porcentajeRecargo,
-          ),
-          const SizedBox(height: 16),
+          // ── Previsualización ─────────────────────────────
+          const _Etiqueta('Así quedaría tu acuerdo'),
+          const SizedBox(height: 10),
+          if (provider.simulando)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 28),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (provider.errorSimulacion != null)
+            _AvisoCard(
+              texto: provider.errorSimulacion!,
+              color: AppColors.warning,
+              fondo: AppColors.warningSoft,
+              icono: Icons.error_outline,
+            )
+          else if (simulacion != null)
+            PreviewAcuerdoPago.deSimulacion(simulacion)
+          else
+            const _AvisoCard(
+              texto: 'Selecciona el número de cuotas para ver el detalle',
+              color: AppColors.blue,
+              fondo: AppColors.bgBlue,
+              icono: Icons.info_outline,
+            ),
 
-          // ── Observaciones ─────────────────────────────────
+          const SizedBox(height: 18),
+
+          // ── Observaciones ────────────────────────────────
           TextField(
             controller: _obsCtrl,
             maxLines: 3,
+            enabled: elegibilidad.elegible && !_enviando,
             decoration: InputDecoration(
               labelText: 'Observaciones (opcional)',
               hintText: 'Agrega una nota para el administrador...',
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
 
-          // ── Aviso aprobación ──────────────────────────────
-          if (!cfg.aprobacionAutomatica)
-            Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: AppColors.warningSoft,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline,
-                      size: 16, color: AppColors.warning),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Tu solicitud será revisada por el administrador antes de activarse.',
-                      style: TextStyle(
-                          fontSize: 12, color: AppColors.warning),
-                    ),
-                  ),
-                ],
-              ),
+          // ── Qué pasa después ─────────────────────────────
+          if (simulacion != null)
+            _AvisoCard(
+              texto: simulacion.requiereAprobacion
+                  ? 'Ahora no pagas nada. Tu solicitud la revisa el administrador; '
+                      'cuando la apruebe se generan el pago inicial y las cuotas.'
+                  : 'Al enviar, el acuerdo queda celebrado: se generan el pago '
+                      'inicial y las cuotas, y tus cobros actuales se reemplazan.',
+              color: AppColors.blue,
+              fondo: AppColors.bgBlue,
+              icono: Icons.info_outline,
             ),
+          const SizedBox(height: 16),
 
-          // ── Botón enviar ──────────────────────────────────
           FilledButton.icon(
-            onPressed: (_enviando || _seleccionados.isEmpty) ? null : _solicitar,
+            onPressed: (!elegibilidad.elegible ||
+                    _enviando ||
+                    simulacion == null ||
+                    provider.simulando)
+                ? null
+                : _solicitar,
             icon: _enviando
                 ? const SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.send_outlined),
+                : const Icon(Icons.handshake_outlined),
             style: FilledButton.styleFrom(minimumSize: const Size(0, 50)),
-            label: Text(_enviando ? 'Enviando...' : 'Enviar solicitud'),
+            label: Text(_textoBoton(simulacion?.requiereAprobacion ?? true)),
           ),
         ],
       ),
     );
   }
-}
 
-// ── Widgets auxiliares ────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Text(text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: cs.primary,
-          letterSpacing: 0.5,
-        ));
+  String _textoBoton(bool requiereAprobacion) {
+    if (_enviando) return 'Enviando...';
+    return requiereAprobacion ? 'Enviar solicitud' : 'Celebrar acuerdo';
   }
 }
 
-class _EmptyInfo extends StatelessWidget {
+// ── Auxiliares ───────────────────────────────────────────────────────────────
+
+class _Etiqueta extends StatelessWidget {
   final String text;
-  const _EmptyInfo(this.text);
+  const _Etiqueta(this.text);
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Text(text,
-          style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: cs.primary,
+        letterSpacing: 0.4,
+      ),
     );
   }
 }
 
-class _ReglasCard extends StatelessWidget {
-  final ConfiguracionPlanPagoModel cfg;
-  const _ReglasCard({required this.cfg});
+class _AvisoCard extends StatelessWidget {
+  final String texto;
+  final Color color;
+  final Color fondo;
+  final IconData icono;
+
+  const _AvisoCard({
+    required this.texto,
+    required this.color,
+    required this.fondo,
+    required this.icono,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.bgBlue,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.blue.withValues(alpha: 0.2)),
+        color: fondo,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icono, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(texto,
+                style: TextStyle(fontSize: 12, color: color)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MotivosCard extends StatelessWidget {
+  final List<String> motivos;
+  const _MotivosCard({required this.motivos});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warningSoft,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            const Icon(Icons.info_outline, size: 14, color: AppColors.blue),
-            const SizedBox(width: 6),
-            Text('Condiciones del plan',
-                style: const TextStyle(
+          Row(
+            children: const [
+              Icon(Icons.block_outlined, size: 16, color: AppColors.warning),
+              SizedBox(width: 6),
+              Text(
+                'Todavía no puedes solicitar un acuerdo',
+                style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.blue)),
-          ]),
-          const SizedBox(height: 6),
-          _Regla('Máximo ${cfg.maxCuotas} cuotas'),
-          if (cfg.recargoFraccionamiento)
-            _Regla('Recargo del ${cfg.porcentajeRecargo.toStringAsFixed(1)}% sobre la deuda'),
-          _Regla(cfg.moraCongeladaDurantePlan
-              ? 'La mora se congela mientras el plan esté activo'
-              : 'La mora continúa acumulando durante el plan'),
-          _Regla(cfg.aprobacionAutomatica
-              ? 'Aprobación automática'
-              : 'Requiere aprobación del administrador'),
-        ],
-      ),
-    );
-  }
-}
-
-class _Regla extends StatelessWidget {
-  final String text;
-  const _Regla(this.text);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('• ',
-                style: TextStyle(fontSize: 12, color: AppColors.blue)),
-            Expanded(
-              child: Text(text,
-                  style: const TextStyle(fontSize: 12, color: AppColors.blue)),
-            ),
-          ],
-        ),
-      );
-}
-
-class _CobroCheckTile extends StatelessWidget {
-  final CobroModel cobro;
-  final bool seleccionado;
-  final ValueChanged<bool> onToggle;
-
-  const _CobroCheckTile(
-      {required this.cobro,
-      required this.seleccionado,
-      required this.onToggle});
-
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return PanelTiles(
-      margin: const EdgeInsets.only(bottom: 8),
-      lado: BorderSide(
-        color: seleccionado ? cs.primary : cs.outline,
-        width: seleccionado ? 1.5 : 1,
-      ),
-      color: seleccionado ? cs.primary.withValues(alpha: 0.05) : cs.surface,
-      child: CheckboxListTile(
-        value: seleccionado,
-        onChanged: (v) => onToggle(v ?? false),
-        title: Text(
-          cobro.descripcion ??
-              '${cobro.concepto} — ${cobro.propiedadIdentificador}',
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-        ),
-        subtitle: Text(
-          'Pendiente: ${_fmt(cobro.montoPendiente)}  ·  Vence: ${cobro.fechaLimitePago}',
-          style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-        ),
-        secondary: Text(
-          _fmt(cobro.montoPendiente),
-          style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: seleccionado ? cs.primary : cs.onSurface),
-        ),
-        activeColor: cs.primary,
-        controlAffinity: ListTileControlAffinity.leading,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      ),
-    );
-  }
-}
-
-class _CuotaSelector extends StatelessWidget {
-  final int maxCuotas;
-  final int cuotas;
-  final ValueChanged<int> onChanged;
-
-  const _CuotaSelector(
-      {required this.maxCuotas,
-      required this.cuotas,
-      required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: List.generate(maxCuotas, (i) {
-        final n = i + 1;
-        final activo = cuotas == n;
-        return GestureDetector(
-          onTap: () => onChanged(n),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: activo ? cs.primary : cs.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                  color: activo ? cs.primary : cs.outline,
-                  width: activo ? 1.5 : 1),
-            ),
-            child: Center(
-              child: Text(
-                '$n',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: activo ? Colors.white : cs.onSurface,
-                ),
+                    color: AppColors.warning),
               ),
-            ),
+            ],
           ),
-        );
-      }),
-    );
-  }
-}
-
-class _ResumenCard extends StatelessWidget {
-  final double montoDeuda;
-  final double recargo;
-  final double total;
-  final int cuotas;
-  final double montoCuota;
-  final bool recargoActivo;
-  final double porcentajeRecargo;
-
-  const _ResumenCard({
-    required this.montoDeuda,
-    required this.recargo,
-    required this.total,
-    required this.cuotas,
-    required this.montoCuota,
-    required this.recargoActivo,
-    required this.porcentajeRecargo,
-  });
-
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        children: [
-          _Row('Deuda seleccionada', _fmt(montoDeuda)),
-          if (recargoActivo && recargo > 0)
-            _Row('Recargo (${porcentajeRecargo.toStringAsFixed(1)}%)',
-                _fmt(recargo),
-                color: AppColors.warning),
-          const Divider(height: 16),
-          _Row('Total del plan', _fmt(total), bold: true),
-          const SizedBox(height: 4),
-          _Row('$cuotas cuota${cuotas != 1 ? 's' : ''} de',
-              '≈ ${_fmt(montoCuota)}',
-              color: cs.primary),
-        ],
-      ),
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  final String label;
-  final String valor;
-  final Color? color;
-  final bool bold;
-
-  const _Row(this.label, this.valor, {this.color, this.bold = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style:
-                  TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
-          Text(valor,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-                color: color ?? cs.onSurface,
+          const SizedBox(height: 6),
+          ...motivos.map((m) => Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('• ',
+                        style:
+                            TextStyle(fontSize: 12, color: AppColors.warning)),
+                    Expanded(
+                      child: Text(m,
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.warning)),
+                    ),
+                  ],
+                ),
               )),
         ],
       ),

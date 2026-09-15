@@ -13,13 +13,13 @@ class AdminPlanesPagoScreen extends StatefulWidget {
 }
 
 class _AdminPlanesPagoScreenState extends State<AdminPlanesPagoScreen> {
-  String? _filtro = 'PENDIENTE';
+  String? _filtro;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PlanPagoProvider>().cargarPlanesAdmin(estado: 'PENDIENTE');
+      context.read<PlanPagoProvider>().cargarPlanesAdmin();
     });
   }
 
@@ -39,6 +39,9 @@ class _AdminPlanesPagoScreenState extends State<AdminPlanesPagoScreen> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
+            _Chip(label: 'Todos', activo: _filtro == null,
+                onTap: () => _aplicarFiltro(null)),
+            const SizedBox(width: 6),
             _Chip(label: 'Pendientes', activo: _filtro == 'PENDIENTE',
                 onTap: () => _aplicarFiltro('PENDIENTE')),
             const SizedBox(width: 6),
@@ -51,15 +54,15 @@ class _AdminPlanesPagoScreenState extends State<AdminPlanesPagoScreen> {
             _Chip(label: 'Rechazados', activo: _filtro == 'RECHAZADO',
                 onTap: () => _aplicarFiltro('RECHAZADO')),
             const SizedBox(width: 6),
-            _Chip(label: 'Todos', activo: _filtro == null,
-                onTap: () => _aplicarFiltro(null)),
+            _Chip(label: 'Incumplidos', activo: _filtro == 'INCUMPLIDO',
+                onTap: () => _aplicarFiltro('INCUMPLIDO')),
           ],
         ),
       ),
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Planes de pago')),
+      appBar: AppBar(title: const Text('Acuerdos de pago')),
       body: RefreshIndicator(
         onRefresh: () =>
             context.read<PlanPagoProvider>().cargarPlanesAdmin(estado: _filtro),
@@ -185,7 +188,12 @@ class _PlanTile extends StatelessWidget {
                 if (plan.montoRecargo > 0)
                   _Monto(label: 'Recargo', monto: plan.montoRecargo,
                       color: AppColors.warning),
-                _Monto(label: 'Total plan', monto: plan.montoTotalPlan,
+                if (plan.exigeAbonoInicial)
+                  _Monto(
+                      label: 'Pago inicial',
+                      monto: plan.montoAbonoInicial,
+                      color: AppColors.blue),
+                _Monto(label: 'Total acuerdo', monto: plan.montoTotalPlan,
                     bold: true),
               ],
             ),
@@ -203,6 +211,7 @@ class _PlanTile extends StatelessWidget {
         return (AppColors.bgGreen, AppColors.ok);
       case 'RECHAZADO':
       case 'CANCELADO':
+      case 'INCUMPLIDO':
         return (AppColors.dangerSoft, AppColors.danger);
       default: // PENDIENTE
         return (AppColors.warningSoft, AppColors.warning);

@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/format_moneda.dart';
 import '../../../../shared/theme/app_theme.dart';
-import '../../models/cuota_plan_model.dart';
+import '../../../../shared/widgets/panel_tiles.dart';
 import '../../models/plan_pago_model.dart';
 import '../../providers/plan_pago_provider.dart';
+import '../../widgets/lista_cobros_acuerdo.dart';
+import '../../widgets/preview_acuerdo_pago.dart';
 
-/// Vista del residente: plan activo o historial de planes.
+/// Vista del residente: acuerdo vigente e historial.
+///
+/// El acuerdo vigente se pide aparte de la lista porque es el único que trae
+/// sus cobros: el listado es un resumen y el detalle es el que manda.
 class ResidenteMiPlanScreen extends StatefulWidget {
   const ResidenteMiPlanScreen({super.key});
 
@@ -17,60 +25,52 @@ class _ResidenteMiPlanScreenState extends State<ResidenteMiPlanScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PlanPagoProvider>().cargarMisPlanes();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _cargar());
+  }
+
+  Future<void> _cargar() async {
+    final p = context.read<PlanPagoProvider>();
+    await p.cargarMisPlanes();
+    await p.cargarPlanActivo();
   }
 
   @override
   Widget build(BuildContext context) {
     final p = context.watch<PlanPagoProvider>();
 
-    if (p.loading && p.planes.isEmpty) {
+    if (p.loading && p.planes.isEmpty && p.planActivo == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Mi plan de pago')),
+        appBar: AppBar(title: const Text('Mi acuerdo de pago')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // Plan activo o pendiente primero
-    final planActivo = p.planes.where((pl) => pl.esActivo).firstOrNull;
-    final planPendiente =
-        p.planes.where((pl) => pl.esPendiente).firstOrNull;
-    final historial = p.planes
-        .where((pl) => pl.esCompletado || pl.esRechazado || pl.esCancelado)
-        .toList();
+    final vigente = p.planActivo;
+    final historial = p.planes.where((pl) => !pl.estaVigente).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi plan de pago')),
+      appBar: AppBar(title: const Text('Mi acuerdo de pago')),
       body: RefreshIndicator(
-        onRefresh: () => context.read<PlanPagoProvider>().cargarMisPlanes(),
+        onRefresh: _cargar,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // ── Plan activo ────────────────────────────────
-            if (planActivo != null) ...[
-              _SectionLabel('Plan activo'),
+            if (vigente != null) ...[
+              _Etiqueta(vigente.esPendiente
+                  ? 'Solicitud en revisión'
+                  : 'Acuerdo vigente'),
               const SizedBox(height: 8),
-              _PlanActivoCard(plan: planActivo),
-              const SizedBox(height: 20),
+              vigente.esPendiente
+                  ? _SolicitudPendienteCard(plan: vigente)
+                  : _AcuerdoActivoCard(plan: vigente),
+              const SizedBox(height: 22),
             ],
 
-            // ── Solicitud pendiente ────────────────────────
-            if (planPendiente != null) ...[
-              _SectionLabel('Solicitud en revisión'),
-              const SizedBox(height: 8),
-              _PendienteCard(plan: planPendiente),
-              const SizedBox(height: 20),
-            ],
+            if (vigente == null && historial.isEmpty)
+              const _Vacio('No tienes acuerdos de pago'),
 
-            // ── Sin planes activos ─────────────────────────
-            if (planActivo == null && planPendiente == null && historial.isEmpty)
-              _SinPlanesWidget(),
-
-            // ── Historial ──────────────────────────────────
             if (historial.isNotEmpty) ...[
-              _SectionLabel('Historial'),
+              const _Etiqueta('Historial'),
               const SizedBox(height: 8),
               ...historial.map((pl) => _HistorialTile(plan: pl)),
             ],
@@ -81,300 +81,122 @@ class _ResidenteMiPlanScreenState extends State<ResidenteMiPlanScreen> {
   }
 }
 
-// ── Plan activo con cuotas ────────────────────────────────────────────────────
+// ── Acuerdo activo ───────────────────────────────────────────────────────────
 
-class _PlanActivoCard extends StatelessWidget {
+class _AcuerdoActivoCard extends StatelessWidget {
   final PlanPagoModel plan;
-  const _PlanActivoCard({required this.plan});
-
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+  const _AcuerdoActivoCard({required this.plan});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final progreso =
-        plan.numeroCuotas > 0 ? plan.cuotasPagadas / plan.numeroCuotas : 0.0;
+    final inicial = plan.cobroInicial;
+    final inicialPendiente =
+        inicial != null && !inicial.esPagado && inicial.sePuedePagar;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.blue.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Resumen ───────────────────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Total del plan',
-                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
-              Text(_fmt(plan.montoTotalPlan),
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Pagado: ${_fmt(plan.montoPagado)}',
-                  style:
-                      TextStyle(fontSize: 12, color: AppColors.ok)),
-              Text('Pendiente: ${_fmt(plan.montoPendiente)}',
-                  style: TextStyle(
-                      fontSize: 12, color: cs.onSurfaceVariant)),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // ── Barra de progreso ─────────────────────────────
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progreso,
-              minHeight: 8,
-              backgroundColor: cs.surfaceContainerHighest,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.ok),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${plan.cuotasPagadas} de ${plan.numeroCuotas} cuotas pagadas',
-            style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 16),
-
-          // ── Cuotas ────────────────────────────────────────
-          Text('Cuotas',
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: cs.primary)),
-          const SizedBox(height: 8),
-          if (plan.cuotas.isEmpty)
-            Text('Cargando cuotas...',
-                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12))
-          else
-            ...plan.cuotas.map((c) => _ResidenteCuotaTile(cuota: c)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ResidenteCuotaTile extends StatelessWidget {
-  final CuotaPlanModel cuota;
-  const _ResidenteCuotaTile({required this.cuota});
-
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    final Color bg;
-    final Color fg;
-    final IconData icon;
-
-    if (cuota.esPagada) {
-      bg = AppColors.bgGreen;
-      fg = AppColors.ok;
-      icon = Icons.check_circle_outline;
-    } else if (cuota.vencida) {
-      bg = AppColors.dangerSoft;
-      fg = AppColors.danger;
-      icon = Icons.warning_amber_outlined;
-    } else {
-      bg = AppColors.warningSoft;
-      fg = AppColors.warning;
-      icon = Icons.schedule_outlined;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: bg.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: fg.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: fg),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Cuota ${cuota.numeroCuota}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13)),
-                Text(
-                  cuota.esPagada
-                      ? 'Pagada el ${cuota.fechaPago}'
-                      : 'Vence: ${cuota.fechaVencimiento}',
-                  style:
-                      TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            _fmt(cuota.monto),
-            style: TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 13, color: fg),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Plan pendiente ────────────────────────────────────────────────────────────
-
-class _PendienteCard extends StatelessWidget {
-  final PlanPagoModel plan;
-  const _PendienteCard({required this.plan});
-
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.warningSoft,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.hourglass_top_outlined,
-                  size: 16, color: AppColors.warning),
-              const SizedBox(width: 8),
-              const Text('En espera de aprobación',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      color: AppColors.warning)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Solicitaste fraccionar ${_fmt(plan.montoTotalDeuda)} en ${plan.numeroCuotas} cuota${plan.numeroCuotas != 1 ? 's' : ''}.',
-            style: TextStyle(fontSize: 13, color: cs.onSurface),
-          ),
-          if (plan.montoRecargo > 0) ...[
-            const SizedBox(height: 4),
-            Text('Recargo: ${_fmt(plan.montoRecargo)}',
-                style: TextStyle(fontSize: 12, color: AppColors.warning)),
-          ],
-          const SizedBox(height: 4),
-          Text('Total del plan: ${_fmt(plan.montoTotalPlan)}',
-              style: const TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w700)),
-          if (plan.observaciones != null &&
-              plan.observaciones!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text('Nota: ${plan.observaciones}',
-                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ── Historial tile ────────────────────────────────────────────────────────────
-
-class _HistorialTile extends StatelessWidget {
-  final PlanPagoModel plan;
-  const _HistorialTile({required this.plan});
-
-  String _fmt(double v) =>
-      '\$${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final Color bg;
-    final Color fg;
-
-    if (plan.esCompletado) {
-      bg = AppColors.bgGreen;
-      fg = AppColors.ok;
-    } else {
-      bg = AppColors.dangerSoft;
-      fg = AppColors.danger;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: bg.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: fg.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(plan.estadoLegible,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: fg)),
-                Text(
-                  '${plan.numeroCuotas} cuotas · ${_fmt(plan.montoTotalPlan)}',
-                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
-                ),
-                if (plan.motivoRechazo != null)
-                  Text(plan.motivoRechazo!,
-                      style: TextStyle(
-                          fontSize: 11, color: cs.onSurfaceVariant)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Sin planes ────────────────────────────────────────────────────────────────
-
-class _SinPlanesWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Center(
+    return PanelTiles(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
+        padding: const EdgeInsets.all(14),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.payment_outlined, size: 48, color: cs.outline),
+            // ── Encabezado ────────────────────────────────
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Acuerdo #${plan.id}',
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w800)),
+                      Text(
+                        'Celebrado el ${DateFormatter.fechaHoraMinAmPm(plan.fechaDecision ?? plan.creadoEn)}',
+                        style: TextStyle(
+                            fontSize: 11, color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgBlue,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(plan.estadoLegible,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.blue)),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
-            Text('No tienes planes de pago',
-                style:
-                    TextStyle(fontSize: 15, color: cs.onSurfaceVariant)),
+
+            // ── Aviso del abono inicial ───────────────────
+            if (inicialPendiente)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.warningSoft,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Falta el pago inicial',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.warning),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Paga ${FormatMoneda.format(inicial.montoPendiente)} '
+                      'antes del ${DateFormatter.fecha(plan.fechaLimiteInicial)} '
+                      'desde tu estado de cuenta. Si no, el acuerdo se incumple '
+                      'y vuelve tu deuda original.',
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.warning),
+                    ),
+                  ],
+                ),
+              ),
+
+            // ── Progreso ──────────────────────────────────
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: plan.progreso,
+                minHeight: 8,
+                backgroundColor: cs.surfaceContainerHighest,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${FormatMoneda.format(plan.montoPagadoAcuerdo)} pagado de '
+              '${FormatMoneda.format(plan.montoTotalPlan)}  ·  '
+              '${plan.cuotasPagadas} de ${plan.numeroCuotas} cuotas',
+              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Cobros del acuerdo ────────────────────────
+            const _Etiqueta('Pagos del acuerdo'),
+            const SizedBox(height: 8),
+            ListaCobrosAcuerdo(cobros: plan.cobros),
             const SizedBox(height: 4),
-            Text('Ve a tu estado de cuenta para solicitar uno.',
-                style: TextStyle(
-                    fontSize: 12, color: cs.onSurfaceVariant)),
+            Text(
+              'Cada uno aparece en tu estado de cuenta y se paga como cualquier cobro.',
+              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+            ),
           ],
         ),
       ),
@@ -382,11 +204,126 @@ class _SinPlanesWidget extends StatelessWidget {
   }
 }
 
-// ── Section label ─────────────────────────────────────────────────────────────
+// ── Solicitud pendiente ──────────────────────────────────────────────────────
 
-class _SectionLabel extends StatelessWidget {
+class _SolicitudPendienteCard extends StatelessWidget {
+  final PlanPagoModel plan;
+  const _SolicitudPendienteCard({required this.plan});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return PanelTiles(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.hourglass_top_outlined,
+                    size: 18, color: AppColors.warning),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tu solicitud está en revisión',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Todavía no debes pagar nada. Cuando el administrador la apruebe '
+              'se generan el pago inicial y las cuotas.',
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 14),
+            PreviewAcuerdoPago.deAcuerdo(plan),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Historial ────────────────────────────────────────────────────────────────
+
+class _HistorialTile extends StatelessWidget {
+  final PlanPagoModel plan;
+  const _HistorialTile({required this.plan});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final (bg, fg) = _colores(cs);
+
+    return PanelTiles(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Acuerdo #${plan.id}',
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${FormatMoneda.format(plan.montoTotalPlan)}  ·  '
+                    '${DateFormatter.fecha(plan.creadoEn)}',
+                    style:
+                        TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                  ),
+                  if (plan.esRechazado && plan.motivoRechazo != null)
+                    Text('Motivo: ${plan.motivoRechazo}',
+                        style: TextStyle(
+                            fontSize: 11, color: cs.onSurfaceVariant)),
+                  if (plan.esIncumplido)
+                    Text(
+                      'El pago inicial no se realizó a tiempo; tu deuda original volvió a quedar activa.',
+                      style:
+                          TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                    ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(plan.estadoLegible,
+                  style: TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.w700, color: fg)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  (Color, Color) _colores(ColorScheme cs) {
+    if (plan.esCompletado) return (AppColors.bgBlue, AppColors.blue);
+    if (plan.esIncumplido || plan.esRechazado) {
+      return (AppColors.warningSoft, AppColors.warning);
+    }
+    return (cs.surfaceContainerHighest, cs.onSurfaceVariant);
+  }
+}
+
+// ── Auxiliares ───────────────────────────────────────────────────────────────
+
+class _Etiqueta extends StatelessWidget {
   final String text;
-  const _SectionLabel(this.text);
+  const _Etiqueta(this.text);
 
   @override
   Widget build(BuildContext context) {
@@ -396,7 +333,24 @@ class _SectionLabel extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: cs.primary,
-          letterSpacing: 0.5,
+          letterSpacing: 0.4,
         ));
+  }
+}
+
+class _Vacio extends StatelessWidget {
+  final String texto;
+  const _Vacio(this.texto);
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Center(
+        child: Text(texto,
+            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+      ),
+    );
   }
 }

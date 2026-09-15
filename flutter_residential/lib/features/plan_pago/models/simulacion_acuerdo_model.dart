@@ -1,0 +1,98 @@
+/// Cuota diferida dentro de la previsualización.
+class CuotaSimuladaModel {
+  final int numero;
+  final double monto;
+  final String fechaVencimiento;
+
+  const CuotaSimuladaModel({
+    required this.numero,
+    required this.monto,
+    required this.fechaVencimiento,
+  });
+
+  factory CuotaSimuladaModel.fromJson(Map<String, dynamic> json) =>
+      CuotaSimuladaModel(
+        numero: json['numero'] as int,
+        monto: (json['monto'] as num? ?? 0).toDouble(),
+        fechaVencimiento: json['fechaVencimiento'] as String? ?? '',
+      );
+}
+
+/// Previsualización del acuerdo calculada por el backend.
+///
+/// La app NO recalcula nada de esto: antes el resumen se calculaba en Flutter y
+/// el backend lo volvía a calcular al guardar, o sea dos fórmulas para el mismo
+/// número. Aquí solo se pinta lo que llega.
+class SimulacionAcuerdoModel {
+  final double montoDeuda;
+  final int cantidadCobros;
+
+  final bool aplicaRecargo;
+  final double porcentajeRecargo;
+  final double montoRecargo;
+  final double montoTotalAcuerdo;
+
+  final double porcentajeAbonoInicial;
+  final String baseCalculoAbono;
+  final double montoAbonoInicial;
+  final int diasGraciaInicial;
+  final String fechaLimiteAbonoInicial;
+
+  final double montoDiferido;
+  final int numeroCuotas;
+  final double montoPorCuota;
+  final List<CuotaSimuladaModel> cuotas;
+
+  final int maxCuotas;
+  final bool requiereAprobacion;
+  final bool moraCongelada;
+
+  const SimulacionAcuerdoModel({
+    required this.montoDeuda,
+    required this.cantidadCobros,
+    required this.aplicaRecargo,
+    required this.porcentajeRecargo,
+    required this.montoRecargo,
+    required this.montoTotalAcuerdo,
+    required this.porcentajeAbonoInicial,
+    required this.baseCalculoAbono,
+    required this.montoAbonoInicial,
+    required this.diasGraciaInicial,
+    required this.fechaLimiteAbonoInicial,
+    required this.montoDiferido,
+    required this.numeroCuotas,
+    required this.montoPorCuota,
+    required this.cuotas,
+    required this.maxCuotas,
+    required this.requiereAprobacion,
+    required this.moraCongelada,
+  });
+
+  factory SimulacionAcuerdoModel.fromJson(Map<String, dynamic> json) =>
+      SimulacionAcuerdoModel(
+        montoDeuda: (json['montoDeuda'] as num? ?? 0).toDouble(),
+        cantidadCobros: json['cantidadCobros'] as int? ?? 0,
+        aplicaRecargo: json['aplicaRecargo'] as bool? ?? false,
+        porcentajeRecargo: (json['porcentajeRecargo'] as num? ?? 0).toDouble(),
+        montoRecargo: (json['montoRecargo'] as num? ?? 0).toDouble(),
+        montoTotalAcuerdo: (json['montoTotalAcuerdo'] as num? ?? 0).toDouble(),
+        porcentajeAbonoInicial:
+            (json['porcentajeAbonoInicial'] as num? ?? 0).toDouble(),
+        baseCalculoAbono: json['baseCalculoAbono'] as String? ?? 'DEUDA',
+        montoAbonoInicial: (json['montoAbonoInicial'] as num? ?? 0).toDouble(),
+        diasGraciaInicial: json['diasGraciaInicial'] as int? ?? 0,
+        fechaLimiteAbonoInicial:
+            json['fechaLimiteAbonoInicial'] as String? ?? '',
+        montoDiferido: (json['montoDiferido'] as num? ?? 0).toDouble(),
+        numeroCuotas: json['numeroCuotas'] as int? ?? 0,
+        montoPorCuota: (json['montoPorCuota'] as num? ?? 0).toDouble(),
+        cuotas: (json['cuotas'] as List<dynamic>? ?? [])
+            .map((e) => CuotaSimuladaModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        maxCuotas: json['maxCuotas'] as int? ?? 0,
+        requiereAprobacion: json['requiereAprobacion'] as bool? ?? true,
+        moraCongelada: json['moraCongelada'] as bool? ?? false,
+      );
+
+  bool get exigeAbonoInicial => montoAbonoInicial > 0;
+}

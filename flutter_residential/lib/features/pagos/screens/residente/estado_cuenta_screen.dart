@@ -128,6 +128,11 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         _iniciarHistorial();
         context.read<PlanPagoProvider>().cargarConfigResidente();
         context.read<PlanPagoProvider>().cargarMisPlanes();
+        // La elegibilidad la decide el backend: la pantalla no vuelve a
+        // interpretar las condiciones del conjunto por su cuenta.
+        context
+            .read<PlanPagoProvider>()
+            .cargarElegibilidad(propiedadId: _propiedadId);
       });
     }
   }
@@ -407,15 +412,11 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
                     onPagarTodo:
                         _propiedadDePago != null ? _pagarTodaLaDeuda : null,
                     onSolicitarPlan: () {
-                      final cobros = provider.estadoCuenta?.cobrosActivos
-                          .where((c) => !c.estado.contains('PAGADO') &&
-                              !c.estado.contains('EXONERADO'))
-                          .toList() ?? [];
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => ResidenteSolicitarPlanScreen(
-                            cobrosDisponibles: cobros,
+                            propiedadId: _propiedadDePago,
                           ),
                         ),
                       );
@@ -836,16 +837,18 @@ class _BalanceHeader extends StatelessWidget {
             const SizedBox(height: 14),
             Consumer<PlanPagoProvider>(
               builder: (_, planP, __) {
-                final cfg = planP.config;
-                final tienePlanActivo = planP.planes
-                    .any((p) => p.esActivo || p.esPendiente);
-                if (!cfg.activo || tienePlanActivo) {
+                final elegibilidad = planP.elegibilidad;
+                // Con un acuerdo vigente el botón sobra: lo que corresponde es
+                // ver el que ya tiene, no pedir otro.
+                if (!planP.config.activo ||
+                    !elegibilidad.elegible ||
+                    elegibilidad.tieneAcuerdoVigente) {
                   return const SizedBox.shrink();
                 }
                 return OutlinedButton.icon(
                   onPressed: onSolicitarPlan,
                   icon: const Icon(Icons.calendar_month_outlined, size: 16),
-                  label: const Text('Solicitar plan de pago'),
+                  label: const Text('Solicitar acuerdo de pago'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Colors.white54),

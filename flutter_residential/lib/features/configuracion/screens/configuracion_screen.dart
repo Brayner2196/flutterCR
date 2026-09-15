@@ -94,7 +94,7 @@ class ConfiguracionScreen extends StatelessWidget {
                     ConfigSectionTile(
                       icono: Icons.calendar_month_outlined,
                       color: Colors.deepOrange,
-                      titulo: 'Plan de pago',
+                      titulo: 'Acuerdos de pago',
                       subtitulo: 'Fraccionar deuda en cuotas — reglas y aprobación',
                       onTap: () => Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => const AdminConfigPlanPagoScreen(),

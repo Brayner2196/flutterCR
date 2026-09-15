@@ -114,7 +114,7 @@ class RegistroAuditoria {
         'PERIODO_COBRO' => 'Período de cobro',
         'PAGO' => 'Pago',
         'ABONO' => 'Abono',
-        'PLAN_PAGO' => 'Plan de pago',
+        'PLAN_PAGO' => 'Acuerdo de pago',
         'CONFIGURACION_CUOTA' => 'Configuración de cuota',
         'CONFIGURACION_MORA' => 'Configuración de mora',
         'ESTADO_CARTERA' => 'Estado de cartera',

@@ -434,13 +434,12 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
         modulos.activo(Modulo.planesPago) &&
         puede('ESTADO_CUENTA')) {
       final planProvider = context.read<PlanPagoProvider>();
-      final tienePlan =
-          planProvider.planes.any((p) => p.esActivo || p.esPendiente);
+      final tienePlan = planProvider.planes.any((p) => p.estaVigente);
       final moduloActivo = planProvider.config.activo;
       if (tienePlan || moduloActivo) {
         cards.add(QuickAccessCardData.tema(
           isDark: isDark,
-          title: 'Plan de pago',
+          title: 'Acuerdo de pago',
           icon: Icons.calendar_month_outlined,
           bgLight: AppColors.bgPurple,
           fgLight: AppColors.purple,

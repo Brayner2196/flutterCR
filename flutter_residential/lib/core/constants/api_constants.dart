@@ -284,13 +284,16 @@ class ApiConstants {
   static String adminPlanPago(int id) => '/api/admin/planes-pago/$id';
   static String adminDecidirPlan(int id) => '/api/admin/planes-pago/$id/decidir';
   static String adminCancelarPlan(int id) => '/api/admin/planes-pago/$id/cancelar';
-  static String adminMarcarCuotaPagada(int planId, int cuotaId) =>
-      '/api/admin/planes-pago/$planId/cuotas/$cuotaId/pagar';
+
 
   // Plan de Pago — residente
   static const String residentePlanPagoConfig = '/api/residente/planes-pago/configuracion';
   static const String residentePlanesPago = '/api/residente/planes-pago';
   static const String residentePlanActivo = '/api/residente/planes-pago/activo';
+  static const String residenteAcuerdoElegibilidad =
+      '/api/residente/planes-pago/elegibilidad';
+  static const String residenteSimularAcuerdo =
+      '/api/residente/planes-pago/simular';
 
   // Transparencia Presupuesto — admin
   static const String adminPresupuestos = '/api/admin/presupuestos';
