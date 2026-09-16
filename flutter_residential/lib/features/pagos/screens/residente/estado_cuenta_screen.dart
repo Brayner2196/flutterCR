@@ -18,6 +18,7 @@ import '../../providers/cobros_provider.dart';
 import '../../models/pasarela_disponible_model.dart';
 import '../../models/paginated_cobro_response.dart';
 import '../../services/cobro_service.dart';
+import '../../utils/estado_cobro_ui.dart';
 import '../../services/flujo_pago_service.dart';
 import '../../services/pasarela_service.dart';
 import '../../widgets/pagar_deuda_sheet.dart';
@@ -66,6 +67,7 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
     'VENCIDO',
     'PAGADO',
     'EXONERADO',
+    'REESTRUCTURADO',
   ];
 
   static Color _colorEstado(String estado) {
@@ -75,8 +77,12 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
         return Colors.green;
       case 'VENCIDO':
         return Colors.red;
-      default:
+      case 'PENDIENTE':
+      case 'PARCIAL':
         return Colors.orange;
+      default:
+        // Estados de acuerdo de pago (REESTRUCTURADO, ANULADO): mapeo central.
+        return EstadoCobroUi.de(estado).color;
     }
   }
 
@@ -970,6 +976,7 @@ class _TimelineItem extends StatelessWidget {
   Color get _dotColor {
     if (cobro.esPagado || cobro.esExonerado) return Colors.green;
     if (cobro.esVencido) return Colors.red;
+    if (cobro.esCerrado) return EstadoCobroUi.de(cobro.estado).color;
     return Colors.orange;
   }
 
@@ -1558,18 +1565,25 @@ class _CobroCardState extends State<_CobroCard> {
   Color get _badgeColor {
     if (cobro.esPagado || cobro.esExonerado) return Colors.green;
     if (cobro.esVencido) return Colors.red;
+    // REESTRUCTURADO / ANULADO: sin esto caían en el naranja de "pendiente".
+    if (cobro.esCerrado) return EstadoCobroUi.de(cobro.estado).color;
     return Colors.orange;
   }
 
   String get _badgeTexto {
     if (cobro.esPagado) return 'PAGADO';
     if (cobro.esExonerado) return 'EXONERADO';
+    if (cobro.esCerrado) {
+      return EstadoCobroUi.de(cobro.estado).label.toUpperCase();
+    }
     if (cobro.esVencido) return 'ATRASADO';
     if (cobro.esParcial) return 'PARCIAL';
     return 'PENDIENTE';
   }
 
   String get _fechaInfo {
+    if (cobro.esReestructurado) return 'Trasladado a tu acuerdo de pago';
+    if (cobro.esAnulado) return 'Anulado junto con su acuerdo de pago';
     if (cobro.esPagado || cobro.esExonerado) {
       return 'Liquidado antes del ${_formatFecha(cobro.fechaLimitePago)}';
     }
@@ -1603,7 +1617,7 @@ class _CobroCardState extends State<_CobroCard> {
   }
 
   Color get _fechaInfoColor {
-    if (cobro.esPagado || cobro.esExonerado) return Colors.grey.shade500;
+    if (cobro.esCerrado) return Colors.grey.shade500;
     if (cobro.esVencido) return Colors.red;
     return Colors.orange.shade700;
   }
@@ -1753,7 +1767,9 @@ class _CobroCardState extends State<_CobroCard> {
                           Icon(
                             cobro.esPagado || cobro.esExonerado
                                 ? Icons.check_circle_outline
-                                : Icons.schedule_outlined,
+                                : cobro.esCerrado
+                                    ? EstadoCobroUi.de(cobro.estado).icono
+                                    : Icons.schedule_outlined,
                             size: 12,
                             color: _badgeColor,
                           ),

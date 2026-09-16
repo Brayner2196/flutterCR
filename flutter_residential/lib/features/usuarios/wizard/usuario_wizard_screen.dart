@@ -221,7 +221,9 @@ class _UsuarioWizardScreenState extends State<UsuarioWizardScreen> {
         context,
         '${_nombreCtrl.text.trim()} fue creado correctamente.',
       );
-      Navigator.of(context).pop(true);
+      // Devuelve el rol creado para que quien abrió el wizard decida qué
+      // refrescar (p. ej. Propiedades al crear un PROPIETARIO). null = canceló.
+      Navigator.of(context).pop(_rol);
     } catch (e) {
       // Queda para lo que sí llega como excepción: sin conexión, timeout,
       // sesión expirada.

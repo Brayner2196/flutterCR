@@ -55,14 +55,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget? _buildFab(BuildContext context) {
     if (_tabActual == 1) {
       return FloatingActionButton(
-        onPressed: () async {
-          final creado = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(builder: (_) => const UsuarioWizardScreen()),
-          );
-          if (creado == true && context.mounted) {
-            context.read<UsuarioProvider>().cargarTodos();
-          }
-        },
+        onPressed: _crearUsuario,
         child: const Icon(Icons.add),
       );
     }
@@ -74,6 +67,24 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       );
     }
     return null;
+  }
+
+  /// Abre el wizard y refresca lo que la creación dejó desactualizado. El
+  /// wizard devuelve el rol creado (null si se canceló o falló).
+  Future<void> _crearUsuario() async {
+    final rolCreado = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const UsuarioWizardScreen()),
+    );
+    if (rolCreado == null || !mounted) return;
+
+    context.read<UsuarioProvider>().cargarTodos();
+
+    // El propietario queda asignado a una unidad y la pestaña Propiedades
+    // (montada en el IndexedStack) ya cargó sus datos: hay que recargarlos.
+    // INQUILINO no aplica: su unidad ya existe y la creó el propietario.
+    if (rolCreado == 'PROPIETARIO') {
+      context.read<GestionPropiedadesProvider>().cargarTodas();
+    }
   }
 
   Future<void> _crearUnidad() async {

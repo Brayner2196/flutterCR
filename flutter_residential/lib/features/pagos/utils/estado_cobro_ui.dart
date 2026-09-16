@@ -6,7 +6,11 @@ import '../../../shared/theme/app_theme.dart';
 /// Centraliza color / etiqueta / icono por estado y elimina los ternarios
 /// y mapas duplicados que estaban repetidos en cada pantalla de pagos.
 /// Refleja el enum `EstadoCobro` del backend:
-/// PENDIENTE, EN_VERIFICACION, PARCIAL, PAGADO, VENCIDO, EXONERADO.
+/// PENDIENTE, EN_VERIFICACION, PARCIAL, PAGADO, VENCIDO, EXONERADO,
+/// REESTRUCTURADO y ANULADO.
+///
+/// Es la única fuente de verdad: una pantalla que arma su propio mapeo termina
+/// pintando como "Pendiente" cualquier estado que no conozca.
 class EstadoCobroUi {
   final String codigo;
   final String label;
@@ -64,6 +68,20 @@ class EstadoCobroUi {
       color: AppColors.purple,
       icono: Icons.remove_circle_outline,
     ),
+    // La deuda no se perdonó: se trasladó a un acuerdo de pago.
+    'REESTRUCTURADO': EstadoCobroUi._(
+      codigo: 'REESTRUCTURADO',
+      label: 'Reestructurado',
+      color: AppColors.teal,
+      icono: Icons.swap_horiz,
+    ),
+    // Cuota de un acuerdo que se cayó por incumplimiento.
+    'ANULADO': EstadoCobroUi._(
+      codigo: 'ANULADO',
+      label: 'Anulado',
+      color: AppColors.textMidLight,
+      icono: Icons.block,
+    ),
   };
 
   /// Resuelve la presentación de un estado. Nunca lanza: devuelve un
@@ -79,6 +97,8 @@ class EstadoCobroUi {
     'VENCIDO',
     'PAGADO',
     'EXONERADO',
+    'REESTRUCTURADO',
+    'ANULADO',
   ];
 
   /// Lista ordenada de presentaciones (útil para construir leyendas).

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import '../../../../shared/dialogs/confirmacion_destructiva_dialog.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/format_moneda.dart';
@@ -54,14 +55,41 @@ class _AdminDetallePlanPagoScreenState
     }
   }
 
+  /// Cancelar borra los cobros del acuerdo: se confirma con el diálogo de
+  /// acciones irreversibles antes de pedir la nota.
   Future<void> _cancelar() async {
+    final plan = context.read<PlanPagoProvider>().planDetalle;
+    if (plan == null) return;
+
+    final confirmado = await ConfirmacionDestructivaDialog.mostrar(
+      context,
+      titulo: 'Cancelar acuerdo #${plan.id}',
+      mensaje: 'Úsalo para deshacer un acuerdo aprobado por error. Solo es '
+          'posible si el residente no ha pagado ni reportado pagos del acuerdo.',
+      consecuencias: [
+        'Los ${plan.cobros.length} cobros del acuerdo se eliminan del estado de cuenta',
+        'Esta acción no se puede deshacer',
+      ],
+      conservado: const [
+        'La deuda original vuelve a quedar activa, como antes del acuerdo',
+        'El acuerdo queda en el historial como cancelado',
+      ],
+      textoEsperado: '${plan.id}',
+      etiquetaBoton: 'Cancelar acuerdo',
+    );
+    if (confirmado != true || !mounted) return;
+
     final nota = await _pedirMotivo('Nota de cancelación (opcional)',
         required: false);
-    if (!mounted) return;
+    // null = el admin cerró el diálogo: no se cancela nada.
+    if (nota == null || !mounted) return;
     try {
-      await context.read<PlanPagoProvider>().cancelar(widget.planId, nota: nota);
+      await context
+          .read<PlanPagoProvider>()
+          .cancelar(widget.planId, nota: nota.isEmpty ? null : nota);
       if (!mounted) return;
-      _toast(ToastificationType.success, 'Acuerdo cancelado — se restauró la deuda original');
+      _toast(ToastificationType.success,
+          'Acuerdo cancelado: se eliminaron sus cobros y se restauró la deuda original');
     } catch (e) {
       if (!mounted) return;
       _toast(ToastificationType.error,
@@ -69,6 +97,9 @@ class _AdminDetallePlanPagoScreenState
     }
   }
 
+  /// Devuelve `null` si el admin cierra el diálogo y `''` si confirma sin
+  /// escribir (solo posible con [required] en false). Distinguirlos evita que
+  /// "Volver" ejecute la acción igual.
   Future<String?> _pedirMotivo(String titulo, {bool required = true}) =>
       showDialog<String>(
         context: context,
@@ -86,12 +117,12 @@ class _AdminDetallePlanPagoScreenState
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar')),
+                  child: const Text('Volver')),
               FilledButton(
                 onPressed: () {
                   final text = ctrl.text.trim();
                   if (required && text.isEmpty) return;
-                  Navigator.pop(context, text.isEmpty ? null : text);
+                  Navigator.pop(context, text);
                 },
                 style: FilledButton.styleFrom(
                     minimumSize: const Size(88, 44)),

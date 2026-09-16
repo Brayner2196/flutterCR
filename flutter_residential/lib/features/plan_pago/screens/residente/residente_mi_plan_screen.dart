@@ -276,13 +276,16 @@ class _HistorialTile extends StatelessWidget {
                           fontSize: 13, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
                   Text(
-                    '${FormatMoneda.format(plan.montoTotalPlan)}  ·  '
-                    '${DateFormatter.fecha(plan.creadoEn)}',
+                    'Creado el: ${DateFormatter.fechaHoraMinSegAmPm(plan.creadoEn)}',
                     style:
                         TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                   ),
                   if (plan.esRechazado && plan.motivoRechazo != null)
                     Text('Motivo: ${plan.motivoRechazo}',
+                        style: TextStyle(
+                            fontSize: 11, color: cs.onSurfaceVariant)),
+                  if (plan.esCancelado && plan.notaAdmin != null)
+                    Text('Motivo: ${plan.notaAdmin}',
                         style: TextStyle(
                             fontSize: 11, color: cs.onSurfaceVariant)),
                   if (plan.esIncumplido)
@@ -294,16 +297,28 @@ class _HistorialTile extends StatelessWidget {
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(plan.estadoLegible,
+            Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(plan.estadoLegible,
+                      style: TextStyle(
+                          fontSize: 10, fontWeight: FontWeight.w700, color: fg)),
+                ),
+                Text(
+                  FormatMoneda.format(plan.montoTotalPlan),
                   style: TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.w700, color: fg)),
-            ),
+                    color: fg,
+                    fontSize: 16
+                  ),
+                )
+              ],
+            )
+            
           ],
         ),
       ),
@@ -312,9 +327,9 @@ class _HistorialTile extends StatelessWidget {
 
   (Color, Color) _colores(ColorScheme cs) {
     if (plan.esCompletado) return (AppColors.bgBlue, AppColors.blue);
-    if (plan.esIncumplido || plan.esRechazado) {
-      return (AppColors.warningSoft, AppColors.warning);
-    }
+    if (plan.esCancelado) return (AppColors.dangerSoft ,AppColors.danger);
+    if (plan.esIncumplido || plan.esRechazado) return (AppColors.warningSoft, AppColors.warning);
+    
     return (cs.surfaceContainerHighest, cs.onSurfaceVariant);
   }
 }

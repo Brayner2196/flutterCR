@@ -65,6 +65,19 @@ class CobroModel {
   bool get esVencido => estado == 'VENCIDO';
   bool get esPagado => estado == 'PAGADO';
   bool get esExonerado => estado == 'EXONERADO';
+  bool get esReestructurado => estado == 'REESTRUCTURADO';
+  bool get esAnulado => estado == 'ANULADO';
+
+  /// Estados que ya no admiten pagos. Espejo de `EstadoCobro.CERRADOS` del backend.
+  static const Set<String> estadosCerrados = {
+    'PAGADO',
+    'EXONERADO',
+    'REESTRUCTURADO',
+    'ANULADO',
+  };
+
+  /// Ya no admite pagos. Espejo de `EstadoCobro.esCerrado()` del backend.
+  bool get esCerrado => estadosCerrados.contains(estado);
   bool get tieneDeuda => esPendiente || esParcial || esVencido;
 
   double get porcentajePagado =>

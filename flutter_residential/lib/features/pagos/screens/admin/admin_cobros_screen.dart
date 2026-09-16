@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../providers/cobros_provider.dart';
 import '../../models/cobro_model.dart';
 import '../../models/periodo_cobro_model.dart';
+import '../../utils/estado_cobro_ui.dart';
 import '../../../../shared/theme/app_theme.dart';
 import 'admin_cobro_especial_screen.dart';
 import 'admin_configurar_cuotas_screen.dart';
@@ -357,6 +358,11 @@ class _AdminCobrosScreenState extends State<AdminCobrosScreen> {
                   _filtroChip('Parcial', counts['PARCIAL']!, 'PARCIAL', AppColors.orange),
                 if (counts['EXONERADO'] != null)
                   _filtroChip('Exonerado', counts['EXONERADO']!, 'EXONERADO', AppColors.purple),
+                // Estados de acuerdo de pago: color y etiqueta del mapeo central.
+                for (final e in const ['REESTRUCTURADO', 'ANULADO'])
+                  if (counts[e] != null)
+                    _filtroChip(EstadoCobroUi.de(e).label, counts[e]!, e,
+                        EstadoCobroUi.de(e).color),
               ],
             ),
           ),

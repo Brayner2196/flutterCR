@@ -4,6 +4,7 @@ import '../../../../shared/theme/app_theme.dart';
 import '../../models/cobro_model.dart';
 import '../../models/estado_cuenta_model.dart';
 import '../../services/cobro_service.dart';
+import '../../utils/estado_cobro_ui.dart';
 
 class AdminVerComoResidenteScreen extends StatefulWidget {
   final int usuarioId;
@@ -554,6 +555,13 @@ class _CobroTile extends StatelessWidget {
         return (AppColors.danger, AppColors.dangerSoft, 'Vencido');
       case 'EXONERADO':
         return (AppColors.teal, AppColors.bgTeal, 'Exonerado');
+      case 'REESTRUCTURADO':
+      case 'ANULADO':
+        {
+          // Estados de acuerdo de pago: mapeo central, sin caer en "Pendiente".
+          final ui = EstadoCobroUi.de(estado);
+          return (ui.color, ui.color.withValues(alpha: 0.12), ui.label);
+        }
       default:
         return (AppColors.warning, AppColors.warningSoft, 'Pendiente');
     }
