@@ -94,5 +94,43 @@ class SimulacionAcuerdoModel {
         moraCongelada: json['moraCongelada'] as bool? ?? false,
       );
 
+  /// Relleno para `Skeletonizer` mientras llega la simulación.
+  ///
+  /// Copia la forma de [base] (si trae recargo, si exige abono inicial) y solo
+  /// cambia el número de filas: así el esqueleto ocupa lo mismo que el desglose
+  /// real y el contenido de abajo no salta. Los montos son de relleno y nunca
+  /// se ven, porque Skeletonizer los tapa.
+  factory SimulacionAcuerdoModel.skeleton({
+    required int numeroCuotas,
+    SimulacionAcuerdoModel? base,
+  }) {
+    const monto = 1000000.0;
+    const fecha = '2026-01-01';
+    return SimulacionAcuerdoModel(
+      montoDeuda: monto,
+      cantidadCobros: base?.cantidadCobros ?? 1,
+      aplicaRecargo: base?.aplicaRecargo ?? false,
+      porcentajeRecargo: base?.porcentajeRecargo ?? 0,
+      montoRecargo: base?.montoRecargo ?? 0,
+      montoTotalAcuerdo: monto,
+      porcentajeAbonoInicial: base?.porcentajeAbonoInicial ?? 30,
+      baseCalculoAbono: base?.baseCalculoAbono ?? 'DEUDA',
+      montoAbonoInicial: base?.montoAbonoInicial ?? monto,
+      diasGraciaInicial: base?.diasGraciaInicial ?? 5,
+      fechaLimiteAbonoInicial: base?.fechaLimiteAbonoInicial ?? fecha,
+      montoDiferido: monto,
+      numeroCuotas: numeroCuotas,
+      montoPorCuota: monto,
+      cuotas: List.generate(
+        numeroCuotas,
+        (i) => CuotaSimuladaModel(
+            numero: i + 1, monto: monto, fechaVencimiento: fecha),
+      ),
+      maxCuotas: base?.maxCuotas ?? numeroCuotas,
+      requiereAprobacion: base?.requiereAprobacion ?? true,
+      moraCongelada: base?.moraCongelada ?? false,
+    );
+  }
+
   bool get exigeAbonoInicial => montoAbonoInicial > 0;
 }

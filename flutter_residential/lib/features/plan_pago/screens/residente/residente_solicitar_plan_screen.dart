@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:toastification/toastification.dart';
 
 import '../../../../shared/theme/app_theme.dart';
+import '../../models/simulacion_acuerdo_model.dart';
 import '../../providers/plan_pago_provider.dart';
 import '../../widgets/preview_acuerdo_pago.dart';
 import '../../widgets/selector_cuotas_acuerdo.dart';
@@ -38,6 +40,10 @@ class _ResidenteSolicitarPlanScreenState
   bool _enviando = false;
   Timer? _debounce;
 
+  /// true hasta resolver config y elegibilidad: evita mostrar el aviso
+  /// "Selecciona el número de cuotas" justo antes del primer desglose.
+  bool _cargandoInicial = true;
+
   @override
   void initState() {
     super.initState();
@@ -45,10 +51,14 @@ class _ResidenteSolicitarPlanScreenState
     // al primer frame.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<PlanPagoProvider>();
+      // El provider es compartido: descarta la simulación de una visita
+      // anterior (otra propiedad u otro número de cuotas).
+      provider.limpiarSimulacion();
       await provider.cargarConfigResidente();
       final elegibilidad =
           await provider.cargarElegibilidad(propiedadId: widget.propiedadId);
       if (!mounted) return;
+      setState(() => _cargandoInicial = false);
       if (elegibilidad.elegible) _simular();
     });
   }
@@ -119,6 +129,14 @@ class _ResidenteSolicitarPlanScreenState
     final maxCuotas =
         elegibilidad.maxCuotas > 0 ? elegibilidad.maxCuotas : provider.config.maxCuotas;
 
+    // El desglose en pantalla es de otro número de cuotas: el residente ya tocó
+    // otra opción y la simulación sigue en el debounce o en vuelo. Se trata
+    // como carga desde el toque, no 300 ms después.
+    final previewVieja =
+        simulacion != null && simulacion.numeroCuotas != _cuotas;
+    final cargandoPreview =
+        _cargandoInicial || provider.simulando || previewVieja;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Acuerdo de pago')),
       body: ListView(
@@ -147,27 +165,7 @@ class _ResidenteSolicitarPlanScreenState
           // ── Previsualización ─────────────────────────────
           const _Etiqueta('Así quedaría tu acuerdo'),
           const SizedBox(height: 10),
-          if (provider.simulando)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 28),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (provider.errorSimulacion != null)
-            _AvisoCard(
-              texto: provider.errorSimulacion!,
-              color: AppColors.warning,
-              fondo: AppColors.warningSoft,
-              icono: Icons.error_outline,
-            )
-          else if (simulacion != null)
-            PreviewAcuerdoPago.deSimulacion(simulacion)
-          else
-            const _AvisoCard(
-              texto: 'Selecciona el número de cuotas para ver el detalle',
-              color: AppColors.blue,
-              fondo: AppColors.bgBlue,
-              icono: Icons.info_outline,
-            ),
+          _preview(provider, cargandoPreview),
 
           const SizedBox(height: 18),
 
@@ -203,7 +201,7 @@ class _ResidenteSolicitarPlanScreenState
             onPressed: (!elegibilidad.elegible ||
                     _enviando ||
                     simulacion == null ||
-                    provider.simulando)
+                    cargandoPreview)
                 ? null
                 : _solicitar,
             icon: _enviando
@@ -217,6 +215,41 @@ class _ResidenteSolicitarPlanScreenState
             label: Text(_textoBoton(simulacion?.requiereAprobacion ?? true)),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Desglose del acuerdo. Mientras carga se dibuja un esqueleto con la misma
+  /// silueta (en vez de un spinner más bajo), para que las observaciones y el
+  /// botón no salten cada vez que el residente cambia el número de cuotas.
+  Widget _preview(PlanPagoProvider provider, bool cargando) {
+    final simulacion = provider.simulacion;
+
+    if (!cargando && provider.errorSimulacion != null) {
+      return _AvisoCard(
+        texto: provider.errorSimulacion!,
+        color: AppColors.warning,
+        fondo: AppColors.warningSoft,
+        icono: Icons.error_outline,
+      );
+    }
+    if (!cargando && simulacion == null) {
+      return const _AvisoCard(
+        texto: 'Selecciona el número de cuotas para ver el detalle',
+        color: AppColors.blue,
+        fondo: AppColors.bgBlue,
+        icono: Icons.info_outline,
+      );
+    }
+
+    return Skeletonizer(
+      enabled: cargando,
+      enableSwitchAnimation: true,
+      child: PreviewAcuerdoPago.deSimulacion(
+        cargando
+            ? SimulacionAcuerdoModel.skeleton(
+                numeroCuotas: _cuotas, base: simulacion)
+            : simulacion!,
       ),
     );
   }
