@@ -347,7 +347,7 @@ class _AdminDetallePlanPagoScreenState
                       onPressed: _aprobar,
                       style: FilledButton.styleFrom(
                           minimumSize: const Size(88, 48)),
-                      child: const Text('Aprobar'),
+                      child: Text('Aprobar', style: TextStyle(color: cs.onPrimaryContainer),),
                     ),
                   ),
                 ],
