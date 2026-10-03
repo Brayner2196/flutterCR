@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/widgets/boton_exportar_pdf.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/plan_pago_model.dart';
+import '../models/simulacion_acuerdo_model.dart';
 import '../pdf/acuerdo_pago_pdf.dart';
 
 /// Botón de AppBar que exporta un acuerdo de pago a PDF.
@@ -14,7 +15,11 @@ import '../pdf/acuerdo_pago_pdf.dart';
 class BotonPdfAcuerdo extends StatelessWidget {
   final PlanPagoModel plan;
 
-  const BotonPdfAcuerdo({super.key, required this.plan});
+  /// Cronograma estimado de una solicitud pendiente. Solo lo tiene el admin
+  /// (detalle); sin ella el PDF de una pendiente no trae fechas de cuotas.
+  final SimulacionAcuerdoModel? proyeccion;
+
+  const BotonPdfAcuerdo({super.key, required this.plan, this.proyeccion});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +31,11 @@ class BotonPdfAcuerdo extends StatelessWidget {
       nombreArchivo: AcuerdoPagoPdf.nombreArchivo(plan),
       textoCompartir:
           'Acuerdo de pago #${plan.id} — ${plan.propiedadIdentificador}',
-      generar: () => AcuerdoPagoPdf.generar(plan, conjunto: conjunto),
+      generar: () => AcuerdoPagoPdf.generar(
+        plan,
+        conjunto: conjunto,
+        proyeccion: proyeccion,
+      ),
     );
   }
 }

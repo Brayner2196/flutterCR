@@ -9,7 +9,9 @@ import '../../../shared/pdf/pdf_base.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../models/cobro_acuerdo_model.dart';
 import '../models/plan_pago_model.dart';
+import '../models/simulacion_acuerdo_model.dart';
 import '../utils/estado_acuerdo_ui.dart';
+import '../utils/proyeccion_acuerdo_ui.dart';
 
 /// Convierte el detalle de un acuerdo de pago en un PDF.
 ///
@@ -33,9 +35,13 @@ class AcuerdoPagoPdf {
         : 'acuerdo_pago_${plan.id}_$propiedad.pdf';
   }
 
+  /// [proyeccion]: cronograma estimado de una solicitud PENDIENTE (lo que se
+  /// generaría si se aprobara hoy). Sin ella, el PDF de una pendiente solo
+  /// aclara que los cobros nacen al aprobar.
   static Future<Uint8List> generar(
     PlanPagoModel plan, {
     required String conjunto,
+    SimulacionAcuerdoModel? proyeccion,
   }) async {
     final tema = await PdfBase.tema();
     final logo = await PdfBase.logo();
@@ -73,11 +79,13 @@ class AcuerdoPagoPdf {
         ),
         build: (_) => [
           _datos(plan),
-          ..._resumen(plan),
+          ..._resumen(plan, proyeccion),
           if (plan.cobros.isNotEmpty) ...[
             ..._seguimiento(plan),
             ..._cronograma(plan.cobros),
-          ] else if (plan.esPendiente)
+          ] else if (plan.esPendiente && proyeccion != null)
+            ..._cronogramaEstimado(plan, proyeccion, generadoEl)
+          else if (plan.esPendiente)
             ..._sinCobros(),
           ..._notas(plan),
         ],
@@ -99,7 +107,9 @@ class AcuerdoPagoPdf {
           ('Incumplido el', DateFormatter.fechaHoraMinAmPm(plan.fechaIncumplimiento)),
       ]);
 
-  static List<pw.Widget> _resumen(PlanPagoModel plan) => [
+  static List<pw.Widget> _resumen(
+          PlanPagoModel plan, SimulacionAcuerdoModel? proyeccion) =>
+      [
         PdfBase.tituloSeccion('Resumen financiero'),
         PdfBase.caja([
           PdfBase.filaDato(
@@ -118,7 +128,7 @@ class AcuerdoPagoPdf {
           PdfBase.divisor(),
           if (plan.exigeAbonoInicial)
             PdfBase.filaDato(
-              _etiquetaAbono(plan),
+              _etiquetaAbono(plan, proyeccion),
               FormatMoneda.format(plan.montoAbonoInicial),
               color: PdfBase.primario,
             ),
@@ -200,6 +210,54 @@ class AcuerdoPagoPdf {
     ];
   }
 
+  /// Solicitud pendiente: pago inicial y cuotas que se generarían si se
+  /// aprobara hoy. Mismos datos que ve el admin en el detalle.
+  static List<pw.Widget> _cronogramaEstimado(
+    PlanPagoModel plan,
+    SimulacionAcuerdoModel proy,
+    String calculadoEl,
+  ) =>
+      [
+        PdfBase.tituloSeccion('Cronograma estimado'),
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 6),
+          child: pw.Text(
+            '${ProyeccionAcuerdoUi.rotulo}. Calculado el $calculadoEl.',
+            style: PdfBase.estilo(tamano: 9, color: PdfBase.colorTextoSuave),
+          ),
+        ),
+        PdfBase.tabla(
+          encabezados: const ['Concepto', 'Vence', 'Valor'],
+          anchos: {
+            0: pw.FlexColumnWidth(2),
+            1: pw.FlexColumnWidth(2),
+            2: pw.FlexColumnWidth(2),
+          },
+          alinearDerecha: const {2},
+          filas: [
+            if (proy.exigeAbonoInicial)
+              [
+                'Pago inicial',
+                DateFormatter.fecha(proy.fechaLimiteAbonoInicial),
+                FormatMoneda.format(proy.montoAbonoInicial),
+              ],
+            for (final c in proy.cuotas)
+              [
+                'Cuota ${c.numero}',
+                DateFormatter.fecha(c.fechaVencimiento),
+                FormatMoneda.format(c.monto),
+              ],
+          ],
+        ),
+        if (ProyeccionAcuerdoUi.cambioLaDeuda(plan, proy))
+          PdfBase.bloqueTexto(
+            'La deuda cambió desde la solicitud',
+            ProyeccionAcuerdoUi.textoCambioDeuda(plan, proy),
+            fondo: PdfBase.color(AppColors.warningSoft),
+            colorTitulo: PdfBase.color(AppColors.warning),
+          ),
+      ];
+
   static List<pw.Widget> _sinCobros() => [
         PdfBase.tituloSeccion('Cronograma de pagos'),
         pw.Text(
@@ -226,15 +284,17 @@ class AcuerdoPagoPdf {
 
   /// "Pago inicial (30% de la deuda) — hasta el 15 oct 2026". La base de
   /// cálculo solo se aclara cuando hay recargo, que es cuando cambia algo.
-  static String _etiquetaAbono(PlanPagoModel plan) {
+  static String _etiquetaAbono(
+      PlanPagoModel plan, SimulacionAcuerdoModel? proyeccion) {
     final base = plan.montoRecargo <= 0
         ? ''
         : plan.baseCalculoAbono == 'DEUDA_MAS_RECARGO'
             ? ' de deuda + recargo'
             : ' de la deuda';
-    final limite = plan.fechaLimiteInicial == null
+    final fecha = ProyeccionAcuerdoUi.fechaLimiteAbono(plan, proyeccion);
+    final limite = fecha == null || fecha.isEmpty
         ? ''
-        : ' — hasta el ${DateFormatter.fecha(plan.fechaLimiteInicial)}';
+        : ' — hasta el ${DateFormatter.fecha(fecha)}';
     return 'Pago inicial (${_pct(plan.porcentajeAbonoInicial)}$base)$limite';
   }
 

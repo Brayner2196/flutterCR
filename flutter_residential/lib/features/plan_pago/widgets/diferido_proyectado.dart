@@ -6,6 +6,7 @@ import '../../../shared/theme/app_theme.dart';
 import '../../../shared/widgets/aviso_card.dart';
 import '../models/plan_pago_model.dart';
 import '../models/simulacion_acuerdo_model.dart';
+import '../utils/proyeccion_acuerdo_ui.dart';
 import 'cronograma_cuotas.dart';
 
 /// "Diferido en N cuotas" de una solicitud PENDIENTE, con el valor y la fecha
@@ -57,7 +58,7 @@ class DiferidoProyectado extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          'Estimado si se aprueba hoy · las fechas corren desde la aprobación',
+          ProyeccionAcuerdoUi.rotulo,
           style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 8),
@@ -78,13 +79,10 @@ class DiferidoProyectado extends StatelessWidget {
                   .cuotas,
             ),
           ),
-        if (proy != null && _cambioLaDeuda(proy)) ...[
+        if (proy != null && ProyeccionAcuerdoUi.cambioLaDeuda(plan, proy)) ...[
           const SizedBox(height: 8),
           AvisoCard(
-            texto: 'Con la deuda de hoy el acuerdo queda en '
-                '${FormatMoneda.format(proy.montoTotalAcuerdo)} (se solicitó por '
-                '${FormatMoneda.format(plan.montoTotalPlan)}). Las cuotas ya '
-                'usan el valor de hoy.',
+            texto: ProyeccionAcuerdoUi.textoCambioDeuda(plan, proy),
             color: AppColors.warning,
             fondo: AppColors.warningSoft,
             icono: Icons.info_outline,
@@ -93,9 +91,4 @@ class DiferidoProyectado extends StatelessWidget {
       ],
     );
   }
-
-  /// Entre la solicitud y hoy pudo correr la mora o entrar un pago; al
-  /// aprobar se usa la deuda de hoy. Se compara en pesos enteros.
-  bool _cambioLaDeuda(SimulacionAcuerdoModel proy) =>
-      (proy.montoTotalAcuerdo - plan.montoTotalPlan).abs() >= 1;
 }

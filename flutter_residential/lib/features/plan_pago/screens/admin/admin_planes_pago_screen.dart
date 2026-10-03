@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/format_moneda.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../models/plan_pago_model.dart';
 import '../../providers/plan_pago_provider.dart';
@@ -178,23 +180,56 @@ class _PlanTile extends StatelessWidget {
               Text(plan.propiedadIdentificador,
                   style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
             ]),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
 
-            // ── Montos ────────────────────────────────────────
+            // ── Fecha de la solicitud (zona del conjunto) ─────
+            Row(children: [
+              Icon(Icons.schedule, size: 14, color: cs.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Solicitado el ${DateFormatter.fechaHoraMinSegAmPm(plan.creadoEn)}',
+                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 10),
+
+            // ── Montos: deuda | pago inicial | saldo a diferir ─
+            // Tres columnas de igual ancho para que "Pago inicial" quede en el
+            // centro exacto aunque los montos de los lados midan distinto.
+            // La nota del recargo mantiene la cuenta a la vista:
+            // deuda + recargo − pago inicial = saldo a diferir.
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Monto(label: 'Deuda', monto: plan.montoTotalDeuda),
-                if (plan.montoRecargo > 0)
-                  _Monto(label: 'Recargo', monto: plan.montoRecargo,
-                      color: AppColors.warning),
-                if (plan.exigeAbonoInicial)
-                  _Monto(
-                      label: 'Pago inicial',
-                      monto: plan.montoAbonoInicial,
-                      color: AppColors.blue),
-                _Monto(label: 'Total acuerdo', monto: plan.montoTotalPlan,
-                    bold: true),
+                Expanded(
+                  child: _Monto(
+                    label: 'Total deuda',
+                    monto: plan.montoTotalDeuda,
+                    nota: plan.montoRecargo > 0
+                        ? '+ recargo ${FormatMoneda.format(plan.montoRecargo)}'
+                        : null,
+                  ),
+                ),
+                Expanded(
+                  child: _Monto(
+                    label: 'Pago inicial',
+                    monto: plan.exigeAbonoInicial
+                        ? plan.montoAbonoInicial
+                        : null,
+                    color: AppColors.blue,
+                    alineacion: CrossAxisAlignment.center,
+                  ),
+                ),
+                Expanded(
+                  child: _Monto(
+                    label: 'Total saldo a diferir',
+                    monto: plan.montoDiferido,
+                    bold: true,
+                    alineacion: CrossAxisAlignment.end,
+                  ),
+                ),
               ],
             ),
           ],
@@ -219,31 +254,59 @@ class _PlanTile extends StatelessWidget {
   }
 }
 
+/// Monto con su etiqueta, alineable a izquierda, centro o derecha.
+/// [monto] null se muestra como "No aplica" (ej.: acuerdo sin pago inicial),
+/// así la columna conserva su lugar y las otras no se corren.
 class _Monto extends StatelessWidget {
   final String label;
-  final double monto;
+  final double? monto;
   final Color? color;
   final bool bold;
+  final CrossAxisAlignment alineacion;
 
-  const _Monto(
-      {required this.label, required this.monto, this.color, this.bold = false});
+  /// Línea pequeña debajo del monto (ej.: "+ recargo $ 120.000").
+  final String? nota;
+
+  const _Monto({
+    required this.label,
+    required this.monto,
+    this.color,
+    this.bold = false,
+    this.alineacion = CrossAxisAlignment.start,
+    this.nota,
+  });
+
+  TextAlign get _textAlign => switch (alineacion) {
+        CrossAxisAlignment.center => TextAlign.center,
+        CrossAxisAlignment.end => TextAlign.end,
+        _ => TextAlign.start,
+      };
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final valor = monto;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: alineacion,
       children: [
         Text(label,
+            textAlign: _textAlign,
             style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant)),
         Text(
-          '\$${monto.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-            color: color ?? cs.onSurface,
-          ),
+          valor == null ? 'No aplica' : FormatMoneda.format(valor),
+          textAlign: _textAlign,
+          style: valor == null
+              ? TextStyle(fontSize: 12, color: cs.onSurfaceVariant)
+              : TextStyle(
+                  fontSize: 13,
+                  fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                  color: color ?? cs.onSurface,
+                ),
         ),
+        if (nota != null)
+          Text(nota!,
+              textAlign: _textAlign,
+              style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant)),
       ],
     );
   }

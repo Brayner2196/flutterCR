@@ -7,6 +7,7 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/format_moneda.dart';
 import '../../providers/plan_pago_provider.dart';
 import '../../utils/estado_acuerdo_ui.dart';
+import '../../utils/proyeccion_acuerdo_ui.dart';
 import '../../widgets/boton_pdf_acuerdo.dart';
 import '../../widgets/diferido_proyectado.dart';
 import '../../widgets/lista_cobros_acuerdo.dart';
@@ -160,17 +161,14 @@ class _AdminDetallePlanPagoScreenState
 
     final (bgEstado, fgEstado) = EstadoAcuerdoUi.colores(plan.estado);
 
-    // Pendiente: la fecha guardada se calculó el día de la solicitud; la real
-    // corre desde la aprobación, así que se muestra la de la proyección.
-    final fechaLimiteAbono = plan.esPendiente
-        ? p.proyeccion?.fechaLimiteAbonoInicial
-        : plan.fechaLimiteInicial;
+    final fechaLimiteAbono =
+        ProyeccionAcuerdoUi.fechaLimiteAbono(plan, p.proyeccion);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle del plan'),
         actions: [
-          BotonPdfAcuerdo(plan: plan),
+          BotonPdfAcuerdo(plan: plan, proyeccion: p.proyeccion),
           if (plan.esActivo)
             PopupMenuButton<String>(
               onSelected: (v) {
