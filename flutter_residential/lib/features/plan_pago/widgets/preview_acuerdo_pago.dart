@@ -4,6 +4,7 @@ import '../../../core/utils/format_moneda.dart';
 import '../../../shared/theme/app_theme.dart';
 import '../models/plan_pago_model.dart';
 import '../models/simulacion_acuerdo_model.dart';
+import 'cronograma_cuotas.dart';
 
 /// Desglose del acuerdo: deuda, recargo, abono inicial y cuotas diferidas.
 ///
@@ -24,7 +25,7 @@ class PreviewAcuerdoPago extends StatelessWidget {
   final String fechaLimiteAbonoInicial;
   final double montoDiferido;
   final int numeroCuotas;
-  final List<_FilaCuota> _cuotas;
+  final List<CuotaSimuladaModel> _cuotas;
   final bool moraCongelada;
 
   const PreviewAcuerdoPago._({
@@ -40,7 +41,7 @@ class PreviewAcuerdoPago extends StatelessWidget {
     required this.fechaLimiteAbonoInicial,
     required this.montoDiferido,
     required this.numeroCuotas,
-    required List<_FilaCuota> cuotas,
+    required List<CuotaSimuladaModel> cuotas,
     required this.moraCongelada,
   }) : _cuotas = cuotas;
 
@@ -59,9 +60,7 @@ class PreviewAcuerdoPago extends StatelessWidget {
         fechaLimiteAbonoInicial: s.fechaLimiteAbonoInicial,
         montoDiferido: s.montoDiferido,
         numeroCuotas: s.numeroCuotas,
-        cuotas: s.cuotas
-            .map((c) => _FilaCuota(c.numero, c.monto, c.fechaVencimiento))
-            .toList(),
+        cuotas: s.cuotas,
         moraCongelada: s.moraCongelada,
       );
 
@@ -82,8 +81,11 @@ class PreviewAcuerdoPago extends StatelessWidget {
         montoDiferido: p.montoDiferido,
         numeroCuotas: p.numeroCuotas,
         cuotas: p.cuotasDiferidas
-            .map((c) => _FilaCuota(
-                c.numeroCuota ?? 0, c.monto, c.fechaLimitePago ?? ''))
+            .map((c) => CuotaSimuladaModel(
+                  numero: c.numeroCuota ?? 0,
+                  monto: c.monto,
+                  fechaVencimiento: c.fechaLimitePago ?? '',
+                ))
             .toList(),
         moraCongelada: false,
       );
@@ -193,24 +195,7 @@ class PreviewAcuerdoPago extends StatelessWidget {
                 sub: 'en $numeroCuotas cuota${numeroCuotas == 1 ? '' : 's'}',
               ),
               const SizedBox(height: 8),
-              ..._cuotas.map((c) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Cuota ${c.numero}  ·  ${DateFormatter.fecha(c.fecha)}',
-                          style: TextStyle(
-                              fontSize: 12, color: cs.onSurfaceVariant),
-                        ),
-                        Text(
-                          FormatMoneda.format(c.monto),
-                          style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  )),
+              CronogramaCuotas(cuotas: _cuotas),
               if (moraCongelada) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -230,13 +215,6 @@ class PreviewAcuerdoPago extends StatelessWidget {
     final s = v.toStringAsFixed(2);
     return '${s.endsWith('.00') ? s.substring(0, s.length - 3) : s.replaceAll(RegExp(r'0$'), '')}%';
   }
-}
-
-class _FilaCuota {
-  final int numero;
-  final double monto;
-  final String fecha;
-  const _FilaCuota(this.numero, this.monto, this.fecha);
 }
 
 class _Fila extends StatelessWidget {

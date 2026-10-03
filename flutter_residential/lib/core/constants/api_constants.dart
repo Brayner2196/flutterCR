@@ -283,6 +283,7 @@ class ApiConstants {
   static const String adminPlanesPago = '/api/admin/planes-pago';
   static String adminPlanPago(int id) => '/api/admin/planes-pago/$id';
   static String adminDecidirPlan(int id) => '/api/admin/planes-pago/$id/decidir';
+  static String adminProyeccionPlan(int id) => '/api/admin/planes-pago/$id/proyeccion';
   static String adminCancelarPlan(int id) => '/api/admin/planes-pago/$id/cancelar';
 
 

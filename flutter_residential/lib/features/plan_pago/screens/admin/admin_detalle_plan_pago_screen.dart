@@ -6,6 +6,9 @@ import '../../../../shared/theme/app_theme.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/format_moneda.dart';
 import '../../providers/plan_pago_provider.dart';
+import '../../utils/estado_acuerdo_ui.dart';
+import '../../widgets/boton_pdf_acuerdo.dart';
+import '../../widgets/diferido_proyectado.dart';
 import '../../widgets/lista_cobros_acuerdo.dart';
 
 class AdminDetallePlanPagoScreen extends StatefulWidget {
@@ -155,12 +158,19 @@ class _AdminDetallePlanPagoScreenState
       );
     }
 
-    final (bgEstado, fgEstado) = _coloresEstado(plan.estado);
+    final (bgEstado, fgEstado) = EstadoAcuerdoUi.colores(plan.estado);
+
+    // Pendiente: la fecha guardada se calculó el día de la solicitud; la real
+    // corre desde la aprobación, así que se muestra la de la proyección.
+    final fechaLimiteAbono = plan.esPendiente
+        ? p.proyeccion?.fechaLimiteAbonoInicial
+        : plan.fechaLimiteInicial;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle del plan'),
         actions: [
+          BotonPdfAcuerdo(plan: plan),
           if (plan.esActivo)
             PopupMenuButton<String>(
               onSelected: (v) {
@@ -265,23 +275,30 @@ class _AdminDetallePlanPagoScreenState
                     _MontoRow(
                         label:
                             'Pago inicial (${plan.porcentajeAbonoInicial.toStringAsFixed(0)}%)'
-                            '${plan.fechaLimiteInicial != null ? ' — hasta ${DateFormatter.fechaCorta(plan.fechaLimiteInicial)}' : ''}',
+                            '${fechaLimiteAbono != null && fechaLimiteAbono.isNotEmpty ? ' — hasta ${DateFormatter.fechaCorta(fechaLimiteAbono)}' : ''}',
                         monto: plan.montoAbonoInicial,
                         color: AppColors.blue),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                          'Diferido en ${plan.numeroCuotas} cuota${plan.numeroCuotas != 1 ? 's' : ''}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13)),
-                      Text(
-                        FormatMoneda.format(plan.montoDiferido),
-                        style: TextStyle(
-                            fontSize: 12, color: cs.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
+                  if (plan.esPendiente)
+                    DiferidoProyectado(
+                      plan: plan,
+                      proyeccion: p.proyeccion,
+                      error: p.errorProyeccion,
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                            'Diferido en ${plan.numeroCuotas} cuota${plan.numeroCuotas != 1 ? 's' : ''}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 13)),
+                        Text(
+                          FormatMoneda.format(plan.montoDiferido),
+                          style: TextStyle(
+                              fontSize: 12, color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -359,28 +376,6 @@ class _AdminDetallePlanPagoScreenState
     );
   }
 
-  (Color, Color) _coloresEstado(String estado) {
-    switch (estado) {
-      case 'ACTIVO':
-        return (AppColors.bgBlue, AppColors.blue);
-      case 'COMPLETADO':
-        return (AppColors.bgGreen, AppColors.ok);
-      case 'RECHAZADO':
-      case 'CANCELADO':
-        return (AppColors.dangerSoft, AppColors.danger);
-      default:
-        return (AppColors.warningSoft, AppColors.warning);
-    }
-  }
-
-  String _formatFecha(String iso) {
-    try {
-      final d = DateTime.parse(iso);
-      return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-    } catch (_) {
-      return iso.length > 10 ? iso.substring(0, 10) : iso;
-    }
-  }
 }
 
 // ── Widgets de detalle ────────────────────────────────────────────────────────
@@ -451,11 +446,6 @@ class _MontoRow extends StatelessWidget {
       this.color,
       this.bold = false});
 
-  String _fmt(double v) => '\$${v.toStringAsFixed(0).replaceAllMapped(
-        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]}.',
-      )}';
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -467,7 +457,7 @@ class _MontoRow extends StatelessWidget {
           Text(label,
               style: TextStyle(
                   fontSize: 13, color: cs.onSurfaceVariant)),
-          Text(_fmt(monto),
+          Text(FormatMoneda.format(monto),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: bold ? FontWeight.w700 : FontWeight.w500,

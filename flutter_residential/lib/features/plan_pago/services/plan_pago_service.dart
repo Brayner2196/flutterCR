@@ -54,6 +54,15 @@ class PlanPagoService {
         fallbackMsg: 'Error al obtener el acuerdo');
   }
 
+  /// Cronograma que se generaría si la solicitud pendiente se aprobara hoy.
+  /// Mismo contrato que la simulación del residente.
+  static Future<SimulacionAcuerdoModel> proyeccion(int id) async {
+    final res = await ApiClient.get(
+        ApiConstants.adminProyeccionPlan(id), requiresAuth: true);
+    return BaseApiService.parseSingle(res, SimulacionAcuerdoModel.fromJson,
+        fallbackMsg: 'Error al calcular el cronograma del acuerdo');
+  }
+
   static Future<PlanPagoModel> decidir(int id, bool aprobar,
       {String? motivoRechazo, String? nota}) async {
     final res = await ApiClient.post(

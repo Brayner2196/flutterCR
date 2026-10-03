@@ -52,4 +52,25 @@ class CobroAcuerdoModel {
   String get titulo => esAbonoInicial
       ? 'Abono inicial'
       : 'Cuota ${numeroCuota ?? ''}';
+
+  /// Texto corto del estado. Lo comparten el listado de cobros y el PDF del
+  /// acuerdo para que los dos digan lo mismo.
+  String get estadoLegible {
+    switch (estado) {
+      case 'PAGADO':
+        return 'PAGADO';
+      case 'PARCIAL':
+        return 'PARCIAL';
+      case 'EN_VERIFICACION':
+        return 'EN REVISIÓN';
+      case 'VENCIDO':
+        return 'VENCIDO';
+      case 'ANULADO':
+        return 'ANULADO';
+      case 'EXONERADO':
+        return 'EXONERADO';
+      default:
+        return 'PENDIENTE';
+    }
+  }
 }

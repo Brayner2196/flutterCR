@@ -7,6 +7,7 @@ import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/panel_tiles.dart';
 import '../../models/plan_pago_model.dart';
 import '../../providers/plan_pago_provider.dart';
+import '../../widgets/boton_pdf_acuerdo.dart';
 import '../../widgets/lista_cobros_acuerdo.dart';
 import '../../widgets/preview_acuerdo_pago.dart';
 
@@ -49,7 +50,12 @@ class _ResidenteMiPlanScreenState extends State<ResidenteMiPlanScreen> {
     final historial = p.planes.where((pl) => !pl.estaVigente).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi acuerdo de pago')),
+      appBar: AppBar(
+        title: const Text('Mi acuerdo de pago'),
+        actions: [
+          if (vigente != null) BotonPdfAcuerdo(plan: vigente),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _cargar,
         child: ListView(

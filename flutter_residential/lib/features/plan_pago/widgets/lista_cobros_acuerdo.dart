@@ -107,7 +107,7 @@ class _CobroTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
-                    _estadoLegible(),
+                    cobro.estadoLegible,
                     style: TextStyle(
                         fontSize: 10, fontWeight: FontWeight.w700, color: fg),
                   ),
@@ -137,25 +137,6 @@ class _CobroTile extends StatelessWidget {
       return '$fecha  ·  abonado ${FormatMoneda.format(cobro.montoPagado)}';
     }
     return cobro.vencido ? '$fecha  ·  vencida' : fecha;
-  }
-
-  String _estadoLegible() {
-    switch (cobro.estado) {
-      case 'PAGADO':
-        return 'PAGADO';
-      case 'PARCIAL':
-        return 'PARCIAL';
-      case 'EN_VERIFICACION':
-        return 'EN REVISIÓN';
-      case 'VENCIDO':
-        return 'VENCIDO';
-      case 'ANULADO':
-        return 'ANULADO';
-      case 'EXONERADO':
-        return 'EXONERADO';
-      default:
-        return 'PENDIENTE';
-    }
   }
 
   (Color, Color) _colores(ColorScheme cs) {

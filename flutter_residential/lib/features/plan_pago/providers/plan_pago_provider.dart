@@ -20,6 +20,13 @@ class PlanPagoProvider extends BaseProvider {
   bool _simulando = false;
   String? _errorSimulacion;
 
+  /// Cronograma estimado de la solicitud pendiente abierta en el detalle.
+  /// Estado propio y no `loading`: llega después del detalle y no debe tapar
+  /// la pantalla mientras carga.
+  SimulacionAcuerdoModel? _proyeccion;
+  bool _cargandoProyeccion = false;
+  String? _errorProyeccion;
+
   /// Contador de simulaciones en vuelo. El residente cambia de 3 a 6 cuotas más
   /// rápido de lo que responde la red, y sin esto la respuesta de la petición
   /// vieja puede llegar después y pintar el desglose que ya no corresponde.
@@ -37,6 +44,9 @@ class PlanPagoProvider extends BaseProvider {
   SimulacionAcuerdoModel? get simulacion => _simulacion;
   bool get simulando => _simulando;
   String? get errorSimulacion => _errorSimulacion;
+  SimulacionAcuerdoModel? get proyeccion => _proyeccion;
+  bool get cargandoProyeccion => _cargandoProyeccion;
+  String? get errorProyeccion => _errorProyeccion;
 
   /// Acuerdo vigente (pendiente o activo) dentro de los ya cargados.
   PlanPagoModel? get acuerdoVigente {
@@ -69,8 +79,42 @@ class PlanPagoProvider extends BaseProvider {
     _planes = await ejecutar(() => PlanPagoService.misPlanes()) ?? [];
   }
 
+  /// Si el acuerdo está pendiente pide además su proyección, sin esperarla:
+  /// el detalle se pinta de una vez y el cronograma llega después.
   Future<void> cargarDetalle(int id) async {
+    _limpiarProyeccion();
     _planDetalle = await ejecutar(() => PlanPagoService.detalle(id));
+    if (_planDetalle?.esPendiente ?? false) cargarProyeccion(id);
+  }
+
+  /// Cuotas que se generarían si la solicitud [id] se aprobara hoy. Las
+  /// calcula el backend con el mismo código que la aprobación: si falla se
+  /// muestra el motivo, nunca un cronograma calculado en la app.
+  Future<void> cargarProyeccion(int id) async {
+    _cargandoProyeccion = true;
+    _errorProyeccion = null;
+    notifyListeners();
+
+    try {
+      final res = await PlanPagoService.proyeccion(id);
+      if (_planDetalle?.id != id) return; // ya se abrió otro acuerdo
+      _proyeccion = res;
+    } catch (e) {
+      if (_planDetalle?.id != id) return;
+      _proyeccion = null;
+      _errorProyeccion = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      if (_planDetalle?.id == id) {
+        _cargandoProyeccion = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  void _limpiarProyeccion() {
+    _proyeccion = null;
+    _cargandoProyeccion = false;
+    _errorProyeccion = null;
   }
 
   /// Sin acuerdo vigente es un caso normal: se resuelve a null sin marcar error.
@@ -160,6 +204,7 @@ class PlanPagoProvider extends BaseProvider {
     if (result == null) throw Exception(error ?? 'Error al decidir el acuerdo');
     reemplazar(_planes, result, (p) => p.id);
     _planDetalle = result;
+    _limpiarProyeccion(); // ya no está pendiente: sus cuotas son cobros reales
     notifyListeners();
     return result;
   }
