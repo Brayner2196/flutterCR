@@ -48,6 +48,11 @@ class _AdminConfigPlanPagoScreenState
 
   bool _guardando = false;
 
+  /// Error al traer la configuración guardada. Es local y no `p.error` del
+  /// provider: ese también se llena si falla el guardado, y ahí el formulario
+  /// debe quedarse con lo que el admin digitó.
+  String? _errorCarga;
+
   /// Conceptos que pueden entrar a un acuerdo. ACUERDO_PAGO queda fuera a
   /// propósito: refinanciar las cuotas de un acuerdo dentro de otro encadena
   /// reestructuraciones sobre la misma plata.
@@ -63,10 +68,20 @@ class _AdminConfigPlanPagoScreenState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      context.read<PlanPagoProvider>().cargarConfigAdmin();
-      _initFromConfig(context.read<PlanPagoProvider>().config);
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _cargarConfig());
+  }
+
+  /// Llena el formulario solo cuando ya llegó la configuración guardada.
+  Future<void> _cargarConfig() async {
+    final provider = context.read<PlanPagoProvider>(); // se lee antes del await
+    setState(() => _errorCarga = null);
+    await provider.cargarConfigAdmin();
+    if (!mounted) return;
+    if (provider.error != null) {
+      setState(() => _errorCarga = provider.error);
+      return;
+    }
+    _initFromConfig(provider.config);
   }
 
   void _initFromConfig(ConfiguracionPlanPagoModel cfg) {
@@ -200,6 +215,27 @@ class _AdminConfigPlanPagoScreenState
       return Scaffold(
         appBar: AppBar(title: const Text('Acuerdos de pago')),
         body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Falló la carga: no se muestra el formulario con defaults,
+    // porque guardarlo pisaría la configuración real del conjunto.
+    if (_errorCarga != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Acuerdos de pago')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_errorCarga!, textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: _cargarConfig,
+                child: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 

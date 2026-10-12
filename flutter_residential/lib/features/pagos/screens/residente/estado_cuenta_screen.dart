@@ -363,7 +363,7 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
 
   List<CobroModel> get _cobrosFiltrados => _historial.where((c) {
     // Cobros especiales (sin período) pasan siempre los filtros de año/mes
-    if (c.anio == null) {
+    if (c.esEspecial) {
       if (_estadoFiltro != null && c.estado != _estadoFiltro) return false;
       return true;
     }
@@ -605,7 +605,7 @@ class _EstadoCuentaScreenState extends State<EstadoCuentaScreen> {
     return List.generate(cobros.length, (i) {
       final cobro = cobros[i];
       final esUltimo = i == cobros.length - 1;
-      final esEspecial = cobro.anio == null;
+      final esEspecial = cobro.esEspecial;
       return _TimelineItem(
         cobro: cobro,
         esUltimo: esUltimo,
@@ -1150,18 +1150,18 @@ class _CobroCardState extends State<_CobroCard> {
             Text(
               cobro.esParcial
                   ? 'Pagar saldo restante'
-                  : cobro.anio == null
+                  : cobro.esEspecial
                       ? 'Pagar ${widget.nombreMes}'
                       : 'Elige cómo pagar',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             Text(
-              cobro.anio == null && cobro.descripcion != null
+              cobro.esEspecial && cobro.descripcion != null
                   ? cobro.descripcion!
                   : 'Pendiente: ${widget.formatMonto(cobro.montoPendiente)}',
               style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
             ),
-            if (cobro.anio == null) ...[
+            if (cobro.esEspecial) ...[
               const SizedBox(height: 2),
               Text(
                 'Pendiente: ${widget.formatMonto(cobro.montoPendiente)}',
@@ -1449,7 +1449,7 @@ class _CobroCardState extends State<_CobroCard> {
         builder: (_) => MercadoPagoWebViewScreen(
           checkoutUrl: url,
           tipoPasarela: tipoPasarela,
-          tituloCobro: cobro.anio != null
+          tituloCobro: !cobro.esEspecial
               ? '${cobro.concepto} ${widget.nombreMes}/${cobro.anio}'
               : cobro.concepto,
         ),
@@ -1705,7 +1705,7 @@ class _CobroCardState extends State<_CobroCard> {
                           Row(
                             children: [
                               Text(
-                                cobro.anio != null
+                                !cobro.esEspecial
                                     ? '${widget.nombreMes} ${cobro.anio}'
                                     : widget.nombreMes,
                                 style: const TextStyle(
@@ -1713,7 +1713,7 @@ class _CobroCardState extends State<_CobroCard> {
                                   fontSize: 15,
                                 ),
                               ),
-                              if (cobro.anio == null) ...[
+                              if (cobro.esEspecial) ...[
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(

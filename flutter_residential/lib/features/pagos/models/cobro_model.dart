@@ -42,8 +42,8 @@ class CobroModel {
   factory CobroModel.fromJson(Map<String, dynamic> json) => CobroModel(
         id: json['id'] as int,
         periodoId: json['periodoId'] as int?,
-        anio: json['anio'] as int?,
-        mes: json['mes'] as int?,
+        anio: _periodoONull(json['anio']),
+        mes: _periodoONull(json['mes']),
         propiedadId: json['propiedadId'] as int,
         propiedadIdentificador: json['propiedadIdentificador'] as String? ?? '',
         propiedadPathCorto: json['propiedadPathCorto'] as String? ?? '',
@@ -59,6 +59,16 @@ class CobroModel {
         estado: json['estado'] as String,
         tieneMovimientos: json['tieneMovimientos'] as bool? ?? false,
       );
+
+  /// Sin período = null. Un 0 se trata igual, para que un dato raro del backend
+  /// no haga pasar un cobro especial por uno de período (y tumbe la pantalla).
+  static int? _periodoONull(Object? v) {
+    final n = v as int?;
+    return (n == null || n <= 0) ? null : n;
+  }
+
+  /// Cobro sin período: multa, parqueadero, cuota de acuerdo de pago...
+  bool get esEspecial => anio == null || mes == null;
 
   bool get esPendiente => estado == 'PENDIENTE';
   bool get esParcial => estado == 'PARCIAL';
