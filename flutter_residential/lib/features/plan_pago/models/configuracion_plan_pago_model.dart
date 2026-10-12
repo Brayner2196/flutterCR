@@ -11,6 +11,10 @@ class ConfiguracionPlanPagoModel {
   final double porcentajeAbonoInicial;
   final int diasGraciaInicial;
 
+  /// Días de gracia tras el vencimiento de cada cuota antes de declarar el
+  /// acuerdo incumplido. 0 = sin gracia.
+  final int diasGraciaCuota;
+
   /// DEUDA | DEUDA_MAS_RECARGO
   final String baseCalculoAbono;
 
@@ -43,6 +47,7 @@ class ConfiguracionPlanPagoModel {
     required this.maxCuotas,
     required this.porcentajeAbonoInicial,
     required this.diasGraciaInicial,
+    this.diasGraciaCuota = 0,
     required this.baseCalculoAbono,
     required this.recargoFraccionamiento,
     required this.porcentajeRecargo,
@@ -70,6 +75,7 @@ class ConfiguracionPlanPagoModel {
         porcentajeAbonoInicial:
             (json['porcentajeAbonoInicial'] as num? ?? 0).toDouble(),
         diasGraciaInicial: json['diasGraciaInicial'] as int? ?? 0,
+        diasGraciaCuota: json['diasGraciaCuota'] as int? ?? 0,
         baseCalculoAbono: json['baseCalculoAbono'] as String? ?? 'DEUDA',
         recargoFraccionamiento: json['recargoFraccionamiento'] as bool? ?? false,
         porcentajeRecargo: (json['porcentajeRecargo'] as num? ?? 0).toDouble(),
@@ -100,6 +106,7 @@ class ConfiguracionPlanPagoModel {
         'maxCuotas': maxCuotas,
         'porcentajeAbonoInicial': porcentajeAbonoInicial,
         'diasGraciaInicial': diasGraciaInicial,
+        'diasGraciaCuota': diasGraciaCuota,
         'baseCalculoAbono': baseCalculoAbono,
         'recargoFraccionamiento': recargoFraccionamiento,
         'porcentajeRecargo': porcentajeRecargo,
@@ -123,6 +130,7 @@ class ConfiguracionPlanPagoModel {
     int? maxCuotas,
     double? porcentajeAbonoInicial,
     int? diasGraciaInicial,
+    int? diasGraciaCuota,
     String? baseCalculoAbono,
     bool? recargoFraccionamiento,
     double? porcentajeRecargo,
@@ -147,6 +155,7 @@ class ConfiguracionPlanPagoModel {
         porcentajeAbonoInicial:
             porcentajeAbonoInicial ?? this.porcentajeAbonoInicial,
         diasGraciaInicial: diasGraciaInicial ?? this.diasGraciaInicial,
+        diasGraciaCuota: diasGraciaCuota ?? this.diasGraciaCuota,
         baseCalculoAbono: baseCalculoAbono ?? this.baseCalculoAbono,
         recargoFraccionamiento:
             recargoFraccionamiento ?? this.recargoFraccionamiento,

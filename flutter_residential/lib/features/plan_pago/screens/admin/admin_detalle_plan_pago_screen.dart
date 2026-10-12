@@ -65,15 +65,26 @@ class _AdminDetallePlanPagoScreenState
     final plan = context.read<PlanPagoProvider>().planDetalle;
     if (plan == null) return;
 
+    // Con pagos, el backend no elimina las cuotas: las anula y traslada lo
+    // pagado a la deuda original (igual que en un incumplimiento).
+    final huboPagos = plan.cobros.any((c) => c.montoPagado > 0);
+
     final confirmado = await ConfirmacionDestructivaDialog.mostrar(
       context,
       titulo: 'Cancelar acuerdo #${plan.id}',
-      mensaje: 'Úsalo para deshacer un acuerdo aprobado por error. Solo es '
-          'posible si el residente no ha pagado ni reportado pagos del acuerdo.',
-      consecuencias: [
-        'Los ${plan.cobros.length} cobros del acuerdo se eliminan del estado de cuenta',
-        'Esta acción no se puede deshacer',
-      ],
+      mensaje: 'Úsalo para deshacer un acuerdo aprobado por error o que ya no se '
+          'va a cumplir. No es posible mientras haya un comprobante del acuerdo '
+          'en revisión.',
+      consecuencias: huboPagos
+          ? [
+              'Los ${plan.cobros.length} cobros del acuerdo se anulan (quedan en el historial)',
+              'Lo ya pagado se aplica a la deuda original, de la más vencida a la más reciente',
+              'Esta acción no se puede deshacer',
+            ]
+          : [
+              'Los ${plan.cobros.length} cobros del acuerdo se eliminan del estado de cuenta',
+              'Esta acción no se puede deshacer',
+            ],
       conservado: const [
         'La deuda original vuelve a quedar activa, como antes del acuerdo',
         'El acuerdo queda en el historial como cancelado',
@@ -92,8 +103,11 @@ class _AdminDetallePlanPagoScreenState
           .read<PlanPagoProvider>()
           .cancelar(widget.planId, nota: nota.isEmpty ? null : nota);
       if (!mounted) return;
-      _toast(ToastificationType.success,
-          'Acuerdo cancelado: se eliminaron sus cobros y se restauró la deuda original');
+      _toast(
+          ToastificationType.success,
+          huboPagos
+              ? 'Acuerdo cancelado: lo pagado se aplicó a la deuda original'
+              : 'Acuerdo cancelado: se eliminaron sus cobros y se restauró la deuda original');
     } catch (e) {
       if (!mounted) return;
       _toast(ToastificationType.error,

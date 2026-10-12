@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../enums/modulo.dart';
+import '../exceptions/limite_excedido_exception.dart';
 import '../exceptions/modulo_deshabilitado_exception.dart';
 import '../exceptions/session_expired_exception.dart';
 import '../exceptions/version_obsoleta_exception.dart';
@@ -100,6 +101,10 @@ class ApiClient {
           )
           .timeout(_timeout);
 
+      // 429 = rate limiting. La sesión sigue viva: hay que esperar, no cerrarla.
+      // Se lanza (no `return false`) para que _handleUnauthorized no dispare logout.
+      _verificarLimiteTasa(res);
+
       if (res.statusCode == 200) {
         final rawBody = res.body.trim();
         if (rawBody.isEmpty) return false;
@@ -116,6 +121,8 @@ class ApiClient {
         return true;
       }
       return false;
+    } on LimiteExcedidoException {
+      rethrow;
     } catch (_) {
       return false;
     }
@@ -142,10 +149,18 @@ class ApiClient {
     // 426 → la app quedó por debajo del build mínimo mientras estaba abierta.
     _verificarVersionVigente(res);
 
+    // 429 → rate limiting. Excepción tipada con el mensaje y el tiempo de espera.
+    _verificarLimiteTasa(res);
+
     if (res.statusCode != 401) return null; // no era 401, el caller maneja res
 
     final refreshed = await _tryRefresh();
-    if (refreshed) return await retry();
+    if (refreshed) {
+      // El reintento con el token nuevo también puede chocar con el rate limiting.
+      final reintento = await retry();
+      _verificarLimiteTasa(reintento);
+      return reintento;
+    }
 
     // Refresh falló.
     if (suppressSessionExpiry) {
@@ -203,6 +218,17 @@ class ApiClient {
     } catch (_) {
       // Cuerpo vacío o no-JSON: se deja pasar como respuesta normal.
     }
+  }
+
+  /// Traduce el 429 del backend a [LimiteExcedidoException].
+  ///
+  /// El backend responde `{"error": "LIMITE_EXCEDIDO", "message": ...}` con la
+  /// cabecera `Retry-After` en segundos. Se lanza una excepción tipada (como con
+  /// módulo y versión) para que ninguna pantalla intente parsear el 429 como
+  /// si fuera la respuesta que esperaba.
+  static void _verificarLimiteTasa(http.Response res) {
+    if (res.statusCode != 429) return;
+    throw LimiteExcedidoException.desdeRespuesta(res.body, res.headers['retry-after']);
   }
 
   // ─── Headers ────────────────────────────────────────────────────────────
@@ -291,7 +317,11 @@ class ApiClient {
           .post(uri, headers: await _headers(requiresAuth: requiresAuth), body: encodedBody)
           .timeout(_timeout);
 
-      if (!requiresAuth) return res; // login/registro no necesitan retry
+      if (!requiresAuth) {
+        // login/registro no necesitan retry, pero sí reconocer el rate limiting.
+        _verificarLimiteTasa(res);
+        return res;
+      }
       return await _handleUnauthorized(
             res,
             () async => http

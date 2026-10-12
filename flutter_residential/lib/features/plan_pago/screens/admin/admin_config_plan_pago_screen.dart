@@ -23,6 +23,7 @@ class _AdminConfigPlanPagoScreenState
   final _recargoCtrl = TextEditingController();
   final _abonoCtrl = TextEditingController();
   final _graciaCtrl = TextEditingController();
+  final _graciaCuotaCtrl = TextEditingController();
   final _deudaMinCtrl = TextEditingController();
   final _moraMinCtrl = TextEditingController();
   final _esperaIncumplimientoCtrl = TextEditingController();
@@ -82,6 +83,7 @@ class _AdminConfigPlanPagoScreenState
           ? cfg.porcentajeAbonoInicial.toString()
           : '';
       _graciaCtrl.text = cfg.diasGraciaInicial.toString();
+      _graciaCuotaCtrl.text = cfg.diasGraciaCuota.toString();
 
       _exigeDeudaMinima = cfg.exigeDeudaMinima;
       _deudaMinCtrl.text = cfg.montoDeudaMinima > 0
@@ -108,6 +110,15 @@ class _AdminConfigPlanPagoScreenState
   int _entero(TextEditingController c, {int porDefecto = 0}) =>
       int.tryParse(c.text.trim()) ?? porDefecto;
 
+  /// Días de gracia (abono inicial y cuotas): vacío = 0; si no, entre 0 y 90.
+  /// El backend valida el mismo rango (@Min(0) @Max(90)).
+  static String? _validarDiasGracia(String? v) {
+    if (v == null || v.trim().isEmpty) return null;
+    final n = int.tryParse(v);
+    if (n == null || n < 0 || n > 90) return 'Entre 0 y 90 días';
+    return null;
+  }
+
   Future<void> _guardar() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
@@ -118,6 +129,7 @@ class _AdminConfigPlanPagoScreenState
       maxCuotas: _entero(_maxCuotasCtrl, porDefecto: 3),
       porcentajeAbonoInicial: _numero(_abonoCtrl),
       diasGraciaInicial: _entero(_graciaCtrl),
+      diasGraciaCuota: _entero(_graciaCuotaCtrl),
       baseCalculoAbono: _baseCalculoAbono,
       recargoFraccionamiento: _recargoActivo,
       porcentajeRecargo: _recargoActivo ? _numero(_recargoCtrl) : 0,
@@ -172,6 +184,7 @@ class _AdminConfigPlanPagoScreenState
     _recargoCtrl.dispose();
     _abonoCtrl.dispose();
     _graciaCtrl.dispose();
+    _graciaCuotaCtrl.dispose();
     _deudaMinCtrl.dispose();
     _moraMinCtrl.dispose();
     _esperaIncumplimientoCtrl.dispose();
@@ -253,17 +266,28 @@ class _AdminConfigPlanPagoScreenState
                   Icons.event_available_outlined),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return null;
-                final n = int.tryParse(v);
-                if (n == null || n < 0 || n > 90) return 'Entre 0 y 90 días';
-                return null;
-              },
+              validator: _validarDiasGracia,
+            ),
+            const SizedBox(height: 20),
+
+            // ── Cuotas e incumplimiento ──────────────────────────
+            _SectionLabel('Cuotas del acuerdo'),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _graciaCuotaCtrl,
+              decoration: _deco(
+                  'Días de gracia por cuota vencida (0 = sin gracia)',
+                  Icons.event_busy_outlined),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: _validarDiasGracia,
             ),
             const SizedBox(height: 8),
             Text(
-              'Si el pago inicial no entra dentro del plazo, el acuerdo queda '
-              'incumplido: sus cobros se anulan y la deuda original vuelve.',
+              'Si el pago inicial o cualquier cuota no se paga dentro de su plazo, '
+              'el acuerdo queda incumplido: sus cobros se anulan, la deuda original '
+              'vuelve y lo ya pagado se aplica a ella, de la más vencida a la más '
+              'reciente. El recargo por fraccionar no se cobra.',
               style: TextStyle(
                   fontSize: 11,
                   color: Theme.of(context).colorScheme.onSurfaceVariant),
