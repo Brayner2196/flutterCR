@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/version/version_provider.dart';
 import '../theme/app_theme.dart';
@@ -70,17 +69,16 @@ class ActualizacionObligatoriaScreen extends StatelessWidget {
                   const SizedBox(height: 32),
                   _BotonPrincipal(version: version),
 
-                  // Respaldo: instalaciones fuera de Play, emulador sin Play
-                  // Services, iOS. Sin esto el usuario queda encerrado sin
-                  // ninguna forma de salir.
-                  if (version.fase == FaseActualizacion.noDisponible &&
-                      info.urlTienda != null &&
-                      info.urlTienda!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => _abrirTienda(info.urlTienda!),
-                      icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                      label: Text(kIsWeb ? 'Abrir la versión nueva' : 'Abrir la tienda'),
+                  // Cuando el botón principal es "Ir a la tienda", queda la vía
+                  // manual para re-consultar. Al volver de la tienda el gate ya
+                  // re-verifica solo (`resumed`); esto es por si acaso.
+                  if ((version.fase == FaseActualizacion.noDisponible ||
+                          version.fase == FaseActualizacion.fallo) &&
+                      version.puedeAbrirTienda) ...[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => version.verificar(forzar: true),
+                      child: const Text('Ya actualicé · Reintentar'),
                     ),
                   ],
 
@@ -101,12 +99,6 @@ class ActualizacionObligatoriaScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _abrirTienda(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
 
@@ -129,11 +121,23 @@ class _BotonPrincipal extends StatelessWidget {
           ),
         );
 
+      // Android: abre la pantalla inmediata de Play. Web: recarga.
       case FaseActualizacion.listaParaAplicar:
         return FilledButton.icon(
           onPressed: version.aplicar,
-          icon: const Icon(Icons.restart_alt_rounded, size: 20),
-          label: Text(kIsWeb ? 'Recargar ahora' : 'Instalar y reiniciar'),
+          icon: const Icon(Icons.system_update_rounded, size: 20),
+          label: Text(kIsWeb ? 'Recargar ahora' : 'Actualizar ahora'),
+        );
+
+      // Play no puede desde aquí (instalada fuera de Play, otro track, iOS):
+      // la tienda pasa a ser la acción principal porque es la única salida
+      // real de esta pantalla.
+      case FaseActualizacion.noDisponible || FaseActualizacion.fallo
+          when version.puedeAbrirTienda:
+        return FilledButton.icon(
+          onPressed: version.abrirTienda,
+          icon: const Icon(Icons.open_in_new_rounded, size: 20),
+          label: Text(kIsWeb ? 'Abrir la versión nueva' : 'Ir a la tienda'),
         );
 
       case FaseActualizacion.noDisponible:

@@ -1,7 +1,7 @@
 name: flutter_residential
 description: "My proyect is My CR."
 
-version: 1.1.0+75
+version: 1.1.0+78
 
 environment:
   sdk: ^3.9.2

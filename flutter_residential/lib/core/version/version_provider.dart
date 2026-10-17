@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'actualizador.dart';
 import 'estado_version.dart';
 import 'resultado_actualizacion.dart';
+import 'tienda_app.dart';
 import 'version_service.dart';
 
 /// Estado de la actualización dentro de la app.
@@ -110,12 +111,30 @@ class VersionProvider extends ChangeNotifier {
         ? await Actualizador.actualizarBloqueando()
         : await Actualizador.completar();
 
-    // `aplicada` no necesita notificar: la app se está reiniciando o
-    // recargando y este objeto deja de existir en un instante.
-    if (resultado == ResultadoActualizacion.fallo) {
-      _fase = FaseActualizacion.fallo;
-      notifyListeners();
+    switch (resultado) {
+      // `aplicada` no necesita notificar: la app se está reiniciando o
+      // recargando y este objeto deja de existir en un instante.
+      case ResultadoActualizacion.aplicada:
+      // El usuario cerró la pantalla de Play: sigue lista, puede volver a pulsar.
+      case ResultadoActualizacion.canceladaPorUsuario:
+        return;
+      case ResultadoActualizacion.fallo:
+        _fase = FaseActualizacion.fallo;
+      // `noDisponible` / `sinNovedad`: Play no puede actualizar desde aquí.
+      // La salida es la tienda, y la UI la ofrece en esta fase.
+      default:
+        _fase = FaseActualizacion.noDisponible;
     }
+    notifyListeners();
+  }
+
+  /// Hay a dónde mandar al usuario si la actualización nativa no aplica: la
+  /// URL del backend o, en Android, la ficha de Play armada localmente.
+  bool get puedeAbrirTienda => TiendaApp.url(_info.urlTienda) != null;
+
+  /// Respaldo compartido por la pantalla de bloqueo y el banner.
+  Future<void> abrirTienda() async {
+    await TiendaApp.abrir(_info.urlTienda);
   }
 
   // ─── Interno ─────────────────────────────────────────────────────────────
@@ -124,7 +143,13 @@ class VersionProvider extends ChangeNotifier {
     _fase = FaseActualizacion.descargando;
     notifyListeners();
 
-    final resultado = await Actualizador.descargarEnSegundoPlano();
+    // Obligatoria: solo se consulta a Play, sin abrir ningún diálogo. La
+    // pantalla de Play se abre cuando el usuario pulsa "Actualizar ahora";
+    // abrirla sola aquí haría bucle (cancelar → resumed → verificar → abrir).
+    // Sugerida: descarga flexible en segundo plano, como siempre.
+    final resultado = _info.bloquea
+        ? await Actualizador.prepararObligatoria()
+        : await Actualizador.descargarEnSegundoPlano();
 
     _fase = switch (resultado) {
       ResultadoActualizacion.listaParaAplicar => FaseActualizacion.listaParaAplicar,

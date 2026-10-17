@@ -129,19 +129,33 @@ class _Accion extends StatelessWidget {
       );
     }
 
+    // Play no puede desde aquí (instalada fuera de Play, otro track): el
+    // subtítulo ya dice "Actualízala desde la tienda", así que hace falta el
+    // botón que lleve a ella.
+    if (version.fase == FaseActualizacion.noDisponible &&
+        version.puedeAbrirTienda) {
+      return TextButton(
+        onPressed: version.abrirTienda,
+        style: _estilo,
+        child: const Text('Tienda'),
+      );
+    }
+
     if (version.fase != FaseActualizacion.listaParaAplicar) {
       return const SizedBox.shrink();
     }
 
     return TextButton(
       onPressed: version.aplicar,
-      style: TextButton.styleFrom(
-        foregroundColor: AppColors.warning,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        minimumSize: const Size(0, 36),
-        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-      ),
+      style: _estilo,
       child: const Text('Reiniciar'),
     );
   }
+
+  static final ButtonStyle _estilo = TextButton.styleFrom(
+    foregroundColor: AppColors.warning,
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    minimumSize: const Size(0, 36),
+    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+  );
 }

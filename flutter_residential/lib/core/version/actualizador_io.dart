@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:in_app_update/in_app_update.dart';
 
 import 'resultado_actualizacion.dart';
@@ -43,7 +44,8 @@ class Actualizador {
       return resultado == AppUpdateResult.success
           ? ResultadoActualizacion.listaParaAplicar
           : ResultadoActualizacion.canceladaPorUsuario;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Actualizador] startFlexibleUpdate: $e');
       return ResultadoActualizacion.noDisponible;
     }
   }
@@ -53,8 +55,29 @@ class Actualizador {
     try {
       await InAppUpdate.completeFlexibleUpdate();
       return ResultadoActualizacion.aplicada;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Actualizador] completeFlexibleUpdate: $e');
       return ResultadoActualizacion.fallo;
+    }
+  }
+
+  /// Obligatoria: solo PREGUNTA a Play si puede hacer la actualización
+  /// inmediata. No abre nada; la pantalla de Play se abre cuando el usuario
+  /// pulsa "Actualizar ahora" (`actualizarBloqueando`).
+  ///
+  /// El backend ya dijo que hay una versión nueva. Si Play no la ofrece aquí
+  /// (app instalada fuera de Play, otro track de pruebas, caché de Play), la
+  /// única salida es la tienda: por eso devuelve `noDisponible` y no
+  /// `sinNovedad`, que dejaría al usuario sin botón para salir.
+  static Future<ResultadoActualizacion> prepararObligatoria() async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      return _puedeInmediato(info)
+          ? ResultadoActualizacion.listaParaAplicar
+          : ResultadoActualizacion.noDisponible;
+    } catch (e) {
+      debugPrint('[Actualizador] checkForUpdate: $e');
+      return ResultadoActualizacion.noDisponible;
     }
   }
 
@@ -64,18 +87,26 @@ class Actualizador {
   static Future<ResultadoActualizacion> actualizarBloqueando() async {
     try {
       final info = await InAppUpdate.checkForUpdate();
-
-      if (info.updateAvailability != UpdateAvailability.updateAvailable ||
-          !info.immediateUpdateAllowed) {
-        return ResultadoActualizacion.noDisponible;
-      }
+      if (!_puedeInmediato(info)) return ResultadoActualizacion.noDisponible;
 
       final resultado = await InAppUpdate.performImmediateUpdate();
       return resultado == AppUpdateResult.success
           ? ResultadoActualizacion.aplicada
           : ResultadoActualizacion.canceladaPorUsuario;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Actualizador] performImmediateUpdate: $e');
       return ResultadoActualizacion.noDisponible;
     }
   }
+
+  // ─── Interno ─────────────────────────────────────────────────────────────
+
+  /// Play permite el modo inmediato y hay algo que instalar. Incluye el
+  /// update inmediato que quedó a medias (el usuario salió de la app mientras
+  /// Play instalaba): Google pide retomarlo en vez de dejarlo colgado.
+  static bool _puedeInmediato(AppUpdateInfo info) =>
+      info.immediateUpdateAllowed &&
+      (info.updateAvailability == UpdateAvailability.updateAvailable ||
+          info.updateAvailability ==
+              UpdateAvailability.developerTriggeredUpdateInProgress);
 }

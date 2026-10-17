@@ -50,6 +50,12 @@ class Actualizador {
   /// una recarga. Lo que cambia es la pantalla que la pide.
   static Future<ResultadoActualizacion> actualizarBloqueando() => completar();
 
+  /// La obligatoria se prepara igual que la sugerida: confirmar que el hosting
+  /// ya sirve el build nuevo antes de ofrecer la recarga. Mismo contrato que
+  /// en Android, donde solo se consulta a Play sin abrir nada.
+  static Future<ResultadoActualizacion> prepararObligatoria() =>
+      descargarEnSegundoPlano();
+
   // ─── Interno ─────────────────────────────────────────────────────────────
 
   /// Lee el `version.json` que Flutter genera en cada build web.
