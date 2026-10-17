@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -40,14 +42,16 @@ import 'features/modulos/providers/modulos_provider.dart';
 import 'core/config/app_env.dart';
 import 'core/utils/date_formatter.dart';
 import 'core/network/api_client.dart';
+import 'core/session/sesion_expirada_estado.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/version/version_provider.dart';
 import 'shared/widgets/actualizacion_gate.dart';
 import 'shared/widgets/offline_banner.dart';
+import 'shared/widgets/sesion_expirada_dialog.dart';
 import 'features/initialRouterScreen/screens/initial_router_screen.dart';
 
-/// Escucha el stream de sesión expirada del ApiClient y llama a AuthProvider.sesionExpirada().
-/// No necesita NavigatorKey porque InitialRouterScreen ya reacciona al status de AuthProvider.
+/// Escucha el stream de sesión expirada del ApiClient: muestra el modal con
+/// cuenta regresiva, cierra las pantallas apiladas y deja al usuario en el login.
 class _SessionGuard extends StatefulWidget {
   final Widget child;
   const _SessionGuard({required this.child});
@@ -57,15 +61,44 @@ class _SessionGuard extends StatefulWidget {
 }
 
 class _SessionGuardState extends State<_SessionGuard> {
-  late final _sub = ApiClient.sessionExpiredStream.listen((_) {
-    if (mounted) {
-      context.read<AuthProvider>().sesionExpirada();
+  StreamSubscription<void>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Se suscribe aquí y no con `late final _sub = ...listen()`: un `late final`
+    // con valor inicial es perezoso y solo corre al leer la variable. Como solo
+    // se leía en dispose(), el listener nunca llegaba a registrarse.
+    _sub = ApiClient.sessionExpiredStream.listen((_) => _cerrarSesion());
+  }
+
+  Future<void> _cerrarSesion() async {
+    if (!mounted) return;
+    final auth = context.read<AuthProvider>();
+    if (!auth.isLoggedIn) return;
+    if (!SesionExpiradaEstado.iniciar()) return; // ya hay un modal en curso
+
+    try {
+      final navigator = Navigator.of(context);
+      toastification.dismissAll(delayForAnimation: false);
+
+      await SesionExpiradaDialog.mostrar(context);
+      if (!mounted) return;
+
+      // Primero se cierran las pantallas apiladas encima de la home (detalles,
+      // hojas, diálogos). Si no, la home cambia a login por debajo pero el
+      // usuario sigue viendo la pantalla de arriba.
+      navigator.popUntil((route) => route.isFirst);
+      await auth.sesionExpirada(); // status → noAutenticado → InitialRouterScreen muestra el login
+      toastification.dismissAll(delayForAnimation: false);
+    } finally {
+      SesionExpiradaEstado.terminar();
     }
-  });
+  }
 
   @override
   void dispose() {
-    _sub.cancel();
+    _sub?.cancel();
     super.dispose();
   }
 

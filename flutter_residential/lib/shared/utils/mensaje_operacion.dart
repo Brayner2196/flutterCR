@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 
+import '../../core/session/sesion_expirada_estado.dart';
 import '../theme/app_theme.dart';
 
 /// Avisos de resultado de una operación, en un solo sitio.
@@ -34,6 +35,8 @@ class MensajeOperacion {
   /// Falla de una operación. [detalle] es el `provider.error`, que ya viene con
   /// el `message` real del backend gracias a `BaseApiService`.
   static void error(BuildContext context, String titulo, String? detalle) {
+    // Durante el modal de sesión expirada no se apilan toasts encima.
+    if (SesionExpiradaEstado.enCurso) return;
     toastification.show(
       context: context,
       type: ToastificationType.error,

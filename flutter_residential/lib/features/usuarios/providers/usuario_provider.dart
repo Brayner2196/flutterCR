@@ -66,6 +66,14 @@ class UsuarioProvider extends BaseProvider {
     return true;
   }
 
+  /// Devuelve true si el backend lo aceptó. El servicio devuelve void, así que
+  /// no hay resultado que comparar: se mira [error] justo después de ejecutar.
+  /// No toca la lista local: la contraseña no forma parte de UsuarioResponse.
+  Future<bool> cambiarPassword(int id, String nuevaPassword) async {
+    await ejecutar(() => UsuarioService.cambiarPassword(id, nuevaPassword));
+    return error == null;
+  }
+
   void limpiarDatos() {
     _todos.clear();
     limpiarError();

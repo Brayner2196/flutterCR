@@ -61,4 +61,14 @@ class UsuarioService {
         '${ApiConstants.cambiarRolUsuario(id)}?rol=$rol');
     BaseApiService.assertSuccess(res, fallbackMsg: 'Error al cambiar rol');
   }
+
+  /// Solo TENANT_ADMIN. El backend valida la política y cierra las sesiones del usuario.
+  static Future<void> cambiarPassword(int id, String nuevaPassword) async {
+    final res = await ApiClient.patch(
+      ApiConstants.cambiarPasswordUsuario(id),
+      {'nuevaPassword': nuevaPassword},
+    );
+    BaseApiService.assertSuccess(res,
+        fallbackMsg: 'Error al cambiar la contraseña');
+  }
 }

@@ -277,6 +277,7 @@ class ApiConstants {
   static String activarUsuario(int id) => '/api/usuarios/$id/activar';
   static String desactivarUsuario(int id) => '/api/usuarios/$id/desactivar';
   static String cambiarRolUsuario(int id) => '/api/usuarios/$id/rol';
+  static String cambiarPasswordUsuario(int id) => '/api/usuarios/$id/password';
 
   // Plan de Pago — admin
   static const String adminPlanPagoConfig = '/api/admin/planes-pago/configuracion';

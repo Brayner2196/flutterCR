@@ -69,6 +69,13 @@ class PasswordPolicy {
     if (!isValid(value)) return 'La contraseña no cumple con la política de seguridad';
     return null;
   }
+
+  /// Validador del campo "Confirmar contraseña". Reutilizable en registro/wizards.
+  static String? validateConfirmacion(String? value, String original) {
+    if (value == null || value.isEmpty) return 'Confirma la contraseña';
+    if (value != original) return 'Las contraseñas no coinciden';
+    return null;
+  }
 }
 
 class PolicyRule {

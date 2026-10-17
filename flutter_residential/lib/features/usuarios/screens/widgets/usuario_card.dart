@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../models/usuario_response.dart';
+import '../admin/usuario_cambiar_password_dialog.dart';
 import '../admin/usuario_editar_dialog.dart';
 
 class UsuarioCard extends StatelessWidget {
@@ -14,6 +17,13 @@ class UsuarioCard extends StatelessWidget {
     final cs = theme.colorScheme;
     final rolColor = _colorRol(usuario.rol, theme);
     final estadoColor = _colorEstado(usuario.estado);
+
+    // Solo el admin del conjunto, y nunca sobre sí mismo (el backend también lo bloquea).
+    final puedeCambiarPassword = context.select<AuthProvider, bool>(
+      (auth) =>
+          auth.isAdmin &&
+          (auth.email ?? '').toLowerCase() != usuario.email.toLowerCase(),
+    );
 
     return Card(
       color: cs.scrim,
@@ -101,14 +111,30 @@ class UsuarioCard extends StatelessWidget {
                           Text('Editar'),
                         ]),
                       ),
+                      if (puedeCambiarPassword)
+                        const PopupMenuItem(
+                          value: 'password',
+                          child: Row(children: [
+                            Icon(Icons.lock_reset, size: 18),
+                            SizedBox(width: 8),
+                            Text('Cambiar contraseña'),
+                          ]),
+                        ),
                     ],
                     onSelected: (value) {
-                      if (value == 'editar') {
-                        showDialog(
-                          context: context,
-                          builder: (_) =>
-                              UsuarioEditarDialog(usuario: usuario),
-                        );
+                      switch (value) {
+                        case 'editar':
+                          showDialog(
+                            context: context,
+                            builder: (_) =>
+                                UsuarioEditarDialog(usuario: usuario),
+                          );
+                        case 'password':
+                          showDialog(
+                            context: context,
+                            builder: (_) =>
+                                UsuarioCambiarPasswordDialog(usuario: usuario),
+                          );
                       }
                     },
                   ),

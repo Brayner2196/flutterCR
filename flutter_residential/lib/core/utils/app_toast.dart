@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import '../exceptions/api_exception.dart';
+import '../session/sesion_expirada_estado.dart';
 
 /// Punto único para mostrar toasts en la app.
 /// Unifica las 3 formas distintas de notificación que existían:
@@ -77,6 +78,8 @@ class AppToast {
     String? description,
     required Duration duration,
   }) {
+    // Durante el modal de sesión expirada no se apilan toasts encima.
+    if (SesionExpiradaEstado.enCurso) return;
     toastification.show(
       context: context,
       type: tipo,
